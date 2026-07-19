@@ -425,6 +425,10 @@ tr:hover{background:var(--bg3)}
 
 <div class="toast-container" id="toast-container"></div>
 
+<script src="llm-news-engine.js"></script>
+<script src="llm-game-master.js"></script>
+<script src="competitor-engine.js"></script>
+<script src="world-engine.js"></script>
 <script>
 
 // ======================== CONSTANTS ========================
@@ -1779,6 +1783,13 @@ function init(){
   });
 }
 init();
+if(typeof CompetitorEngine!=='undefined'&&!window._competitorEngine){
+  try{
+    window._competitorEngine=new CompetitorEngine();
+    window._competitorEngine.init({stocks:G.companies.map(function(c){return{symbol:c.ticker,price:c.price,sector:c.sector,volume:c.vol||0,avgVolume:1000000,change:c.change||0}}),currentWeek:G.week});
+  }catch(e){console.warn('Competitor Engine init:',e)}
+}
+if(typeof WorldEngine!=='undefined'&&WorldEngine.install)WorldEngine.install();
 </script>
 </body>
 </html>

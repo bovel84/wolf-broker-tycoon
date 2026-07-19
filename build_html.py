@@ -107,6 +107,7 @@ module_files = [
     'world-engine.js',
     'corporate-lifecycle.js',
     'broker-story.js',
+    'player-life.js',
 ]
 
 modules = []

@@ -11,6 +11,7 @@
   var installed = false;
   var state = null;
   var originalStart = null;
+  var originalLoad = null;
   var originalAdvance = null;
   var pendingChapter = null;
 
@@ -292,7 +293,11 @@
   }
 
   function saveGameIfPossible() {
-    try { if (typeof saveAuto === 'function') saveAuto(); } catch (e) {}
+    try {
+      var g = getGame();
+      if (g && state) g.brokerStory = JSON.parse(JSON.stringify(state));
+      if (typeof saveAuto === 'function') saveAuto();
+    } catch (e) {}
   }
 
   function showPrologue() {
@@ -505,12 +510,31 @@
     if (installed) return;
     installed = true;
     load();
+    var currentGame = getGame();
+    if (currentGame && currentGame.brokerStory) {
+      state = currentGame.brokerStory;
+      save();
+    }
     ensureUI();
     if (typeof wolfStartGame === 'function') {
       originalStart = wolfStartGame;
       global.wolfStartGame = function () {
-        if (!state.prologueSeen) showPrologue();
-        else originalStart();
+        state = createState();
+        save();
+        showPrologue();
+      };
+    }
+    if (typeof wolfLoadGame === 'function') {
+      originalLoad = wolfLoadGame;
+      global.wolfLoadGame = function () {
+        originalLoad();
+        var loadedGame = getGame();
+        if (loadedGame && loadedGame.brokerStory) {
+          state = loadedGame.brokerStory;
+          save();
+        }
+        renderCareerPanel();
+        global.setTimeout(evaluateChapters, 100);
       };
     }
     if (typeof advanceTurn === 'function') {

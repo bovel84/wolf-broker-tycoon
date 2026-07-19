@@ -4,11 +4,14 @@ Gestionale di broker azionario completo e realistico con modalità carriera e as
 
 ## Caratteristiche
 
-- **8 titoli** con prezzo, capitalizzazione, volatilità, dividendi
+- **45 società** con prezzo, capitalizzazione, volatilità, dividendi e identità societaria
 - **10 livelli carriera** da Apprendista a Magnate
 - **10 competitor AI** con personalità e strategie diverse
-- **LLM Game Master 3.0** — un solo turno AI coerente coordina mondo, aziende, rivali ed eventi
+- **LLM Game Master 4.0** — un solo turno AI coerente coordina mondo, aziende, rivali ed eventi
 - **World Engine persistente** — macroregioni, fondamentali, governance e strategie aziendali evolvono nel tempo
+- **Storia di ogni società** — fondazione, sede, missione, tappe storiche e obiettivo pluriennale
+- **Amministratori autonomi** — competenza, etica, influenza, lealtà, agenda e carriera personale
+- **Soci reali** — fondatori, istituzionali, attivisti, dipendenti e azionisti diffusi con quote e interessi diversi
 - **Competitor con memoria** — obiettivi, convinzione, piani, alleanze e rivalità influenzano le operazioni
 - **Assemblee globali** — CdA, blocchi rivali e quota del giocatore determinano votazioni ed effetti reali
 - **LLM News Engine** — notizie di mercato generate da AI (Ollama Cloud)
@@ -59,7 +62,7 @@ Le chiavi API non sono incluse nel codice. Inserisci endpoint, modello e chiave 
 ## Flusso settimanale
 
 1. Il motore di mercato aggiorna prezzi ed eventi.
-2. L'LLM riceve un contesto compatto con macroregioni, fondamentali, memoria dei rivali e storico recente.
+2. L'LLM riceve a rotazione società complete con storia, obiettivi, amministratori, soci, macroregioni e memoria dei rivali.
 3. Il World Engine valida e limita ogni delta prima di applicarlo.
 4. Le decisioni diventano notizie, variazioni fondamentali, piani dei competitor e proposte assembleari.
 5. Se l'LLM non è disponibile, il fallback locale mantiene il gioco pienamente funzionante.
@@ -67,3 +70,7 @@ Le chiavi API non sono incluse nel codice. Inserisci endpoint, modello e chiave 
 ## Storia del broker
 
 Una nuova partita apre il prologo **La chiamata delle 6:17**. Il giocatore sceglie il nome del broker, il suo passato e la promessa che guiderà la carriera. I capitoli non avanzano con una sequenza fissa: si sbloccano in base ai risultati reali, alle perdite, ai rivali, alle assemblee e alle indagini. Il profilo narrativo viene incluso nel contesto del World Engine e salvato insieme alla partita.
+
+## Governance societaria AI
+
+Ogni settimana l'LLM gestisce un gruppo a rotazione di società. Gli amministratori possono sostenere o ostacolare il piano, perdere influenza, cambiare condotta, essere sospesi o dimettersi. I blocchi azionari modificano fiducia e posizione in base ai risultati. Nelle assemblee il voto deriva da CdA, soci reali, competitor e quota posseduta dal giocatore. Tutti i valori prodotti dall'LLM vengono limitati e validati dal World Engine prima dell'applicazione.

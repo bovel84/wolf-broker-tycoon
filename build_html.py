@@ -104,6 +104,7 @@ module_files = [
     'llm-news-engine.js',
     'llm-game-master.js',
     'competitor-engine.js',
+    'world-engine.js',
 ]
 
 modules = []
@@ -135,8 +136,8 @@ function wolfLoadGame(){if(typeof loadAuto==='function'&&loadAuto()){document.ge
 function wolfSwitchView(v){if(typeof switchView==='function'){switchView(v);return}document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});var el=document.getElementById('view-'+v);if(el)el.classList.add('active')}
 function toggleMobileMoreMenu(){var m=document.getElementById('mobileMoreMenu');if(m)m.style.display=(m.style.display==='block')?'none':'block'}
 try{var hasSave=false;for(var i=1;i<=5;i++){if(localStorage.getItem('sbt_save_'+i)){hasSave=true;break}}if(localStorage.getItem('sbt_autosave'))hasSave=true;if(hasSave)document.getElementById('wolfLoadBtn').disabled=false}catch(e){}
-if(typeof LLMNewsEngine!=='undefined'&&LLMNewsEngine.configure){LLMNewsEngine.configure({endpoint:'https://ollama-cors-proxy.vercel.app/api/chat',model:'glm-5.2',apiKey:'b9ac0518ccf1414d9f046cce331009ea.sTbNE0X5t2T_n8fTACWaS8U0',enabled:true})}
-if(typeof LLMGameMaster!=='undefined'&&LLMGameMaster.configure){LLMGameMaster.configure({endpoint:'https://ollama-cors-proxy.vercel.app/api/chat',model:'glm-5.2',apiKey:'b9ac0518ccf1414d9f046cce331009ea.sTbNE0X5t2T_n8fTACWaS8U0',enabled:true})}
+if(typeof LLMNewsEngine!=='undefined'&&LLMNewsEngine.configure){LLMNewsEngine.configure({endpoint:'https://ollama-cors-proxy.vercel.app/api/chat',model:'glm-5.2',enabled:true})}
+if(typeof LLMGameMaster!=='undefined'&&LLMGameMaster.configure){LLMGameMaster.configure({endpoint:'https://ollama-cors-proxy.vercel.app/api/chat',model:'glm-5.2',enabled:true})}
 if(typeof CompetitorEngine!=='undefined'){try{window._competitorEngine=new CompetitorEngine();var _md={stocks:(typeof G!=='undefined'&&G&&G.companies)?G.companies.map(function(c){return{symbol:c.ticker,price:c.price,sector:c.sector,volume:c.vol||0,avgVolume:1000000,change:c.change||0}}):[],currentWeek:(typeof G!=='undefined'&&G)?G.week:1};window._competitorEngine.init(_md)}catch(e){}}
 var _origAdvance=(typeof advanceTurn==='function')?advanceTurn:function(){};
 if(typeof advanceTurn!=='undefined'){window.advanceTurn=function(){_origAdvance();if(window._competitorEngine){try{window._competitorEngine.setMarketData({stocks:(typeof G!=='undefined'&&G&&G.companies)?G.companies.map(function(c){return{symbol:c.ticker,price:c.price,sector:c.sector,volume:c.vol||0,avgVolume:1000000,change:c.change||0}}):[],currentWeek:G?G.week:1});window._competitorEngine.setPlayerData((typeof positions!=='undefined')?Object.keys(positions).map(function(k){return{symbol:k,shares:positions[k].shares}}):[],(typeof cash!=='undefined')?cash:10000,(typeof G!=='undefined'&&G)?G.rep||50:50,(typeof G!=='undefined'&&G)?G.xp||0:0)}catch(e){}}if(typeof LLMNewsEngine!=='undefined'&&LLMNewsEngine.processNewsTurn){var gs={week:(typeof G!=='undefined'&&G)?G.week:1,cash:(typeof cash!=='undefined')?cash:10000,level:(typeof G!=='undefined'&&G)?G.level||1:1,portfolio:(typeof positions!=='undefined')?positions:{},companies:(typeof G!=='undefined'&&G&&G.companies)?G.companies:[]};LLMNewsEngine.processNewsTurn(gs).then(function(r){if(r&&r.length>0&&typeof addNews==='function'){r.forEach(function(n){addNews(n.title,n.impact,n.content)})}}).catch(function(){})}}
@@ -204,11 +205,13 @@ out_path = os.path.join(BASE, 'wolf-broker-tycoon.html')
 with open(out_path, 'w') as f:
     f.write(html_final)
 
-# Copia su Dropbox
-dropbox_path = os.path.expanduser('~/Dropbox/wolf-broker-tycoon.html')
-shutil.copy2(out_path, dropbox_path)
+# Copia opzionale per sviluppo locale
+dropbox_dir = os.path.expanduser('~/Dropbox')
+dropbox_path = os.path.join(dropbox_dir, 'wolf-broker-tycoon.html')
+if os.path.isdir(dropbox_dir):
+    shutil.copy2(out_path, dropbox_path)
 
 size = os.path.getsize(out_path)
 lines = html_final.count('\n')
 print(f"\nDONE: {size} bytes ({size//1024}KB), {lines} lines")
-print(f"Copied to: {dropbox_path}")
+print(f"Local copy: {dropbox_path}" if os.path.isdir(dropbox_dir) else "Local Dropbox copy skipped")

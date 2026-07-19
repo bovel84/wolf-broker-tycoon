@@ -195,6 +195,7 @@
       rivals: rivals,
       globalEvents: [],
       assemblyLog: [],
+      corporateEvents: [],
       openAssembly: null,
       lastBriefing: 'Il mondo finanziario entra in una nuova fase.',
       lastTurn: null
@@ -208,6 +209,7 @@
       if (raw) loaded = JSON.parse(raw);
     } catch (e) { loaded = null; }
     state = loaded && loaded.companies && loaded.rivals ? loaded : createState(game, competitors);
+    if (!(state.corporateEvents instanceof Array)) state.corporateEvents = [];
     var list = game && game.companies ? game.companies : [];
     for (var i = 0; i < list.length; i++) {
       if (!state.companies[list[i].ticker]) state.companies[list[i].ticker] = hydrateCompany(list[i], i);
@@ -286,6 +288,7 @@
       competitors: rivals,
       recentEvents: state.globalEvents.slice(0, 4),
       recentAssemblies: state.assemblyLog.slice(0, 3),
+      recentCorporateEvents: state.corporateEvents.slice(0, 5),
       brokerStory: global.BrokerStory && global.BrokerStory.getContext ? global.BrokerStory.getContext() : null
     };
   }
@@ -334,6 +337,7 @@
         shareholderMoves: [{ blockId: 'institutional', action: direction > 0 ? 'sostegno' : 'richiesta di prudenza', motive: 'Proteggere rendimento e governance.', confidenceDelta: direction * 4, stance: direction > 0 ? 'favorevole' : 'prudente' }]
       }],
       competitors: rivals,
+      corporateEvents: [],
       assembly: null
     };
   }
@@ -344,6 +348,8 @@
     if (!result.macro || typeof result.macro !== 'object') result.macro = fallback.macro;
     if (!(result.companies instanceof Array)) result.companies = fallback.companies;
     if (!(result.competitors instanceof Array)) result.competitors = fallback.competitors;
+    if (!(result.corporateEvents instanceof Array)) result.corporateEvents = [];
+    result.corporateEvents = result.corporateEvents.slice(0, 2);
     result.companies = result.companies.slice(0, 4);
     result.competitors = result.competitors.slice(0, context.competitors.length);
     return result;
@@ -610,6 +616,7 @@
       applyMacro(turn.macro || fallback.macro, game);
       applyCompanyActions(turn.companies || [], game);
       applyRivalPlans(turn.competitors || [], competitors, game);
+      if (global.CorporateLifecycle && global.CorporateLifecycle.processTurn) global.CorporateLifecycle.processTurn(turn.corporateEvents || [], game, context);
       maybeOpenAssembly(game, competitors, turn.assembly);
       saveState();
       render();
@@ -620,6 +627,7 @@
       applyMacro(turn.macro, game);
       applyCompanyActions(turn.companies, game);
       applyRivalPlans(turn.competitors, competitors, game);
+      if (global.CorporateLifecycle && global.CorporateLifecycle.processTurn) global.CorporateLifecycle.processTurn([], game, context);
       maybeOpenAssembly(game, competitors, null);
       saveState();
       render();
@@ -693,9 +701,15 @@
       options += '<option value="' + safeText(companies[i].ticker, 12) + '"' + (companies[i].ticker === selectedCompanyTicker ? ' selected' : '') + '>' + safeText(companies[i].name, 70) + ' (' + safeText(companies[i].ticker, 12) + ')</option>';
     }
     var objective = profile.objective || { label: 'Obiettivo non definito', progress: 0, status: 'in corso' };
+    var lifecycleStatus = profile.status || 'active';
+    var health = profile.financialHealth;
+    if ((health === undefined || health === null) && global.CorporateLifecycle && global.CorporateLifecycle.financialHealth) health = global.CorporateLifecycle.financialHealth(selectedCompanyTicker);
+    if (health === undefined || health === null) health = 50;
+    var statusLabels = { active: 'ATTIVA', distressed: 'IN CRISI', restructuring: 'RISTRUTTURAZIONE', bankrupt: 'FALLITA', acquired: 'ACQUISITA', merged: 'FUSA', spunoff: 'SPIN-OFF' };
+    var statusClass = lifecycleStatus === 'active' ? 'g' : ((lifecycleStatus === 'distressed' || lifecycleStatus === 'restructuring') ? 'y' : 'r');
     var html = '<select onchange="WorldEngine.selectCompany(this.value)" style="width:100%;max-width:420px;background:var(--bg3);color:var(--text);border:1px solid var(--border);padding:8px;border-radius:6px;margin-bottom:10px">' + options + '</select>';
     html += '<div style="display:grid;grid-template-columns:1.15fr .85fr;gap:10px" class="company-governance-grid">';
-    html += '<div><div style="font-size:16px;font-weight:700">' + safeText(profile.name, 80) + '</div><div class="gray" style="font-size:11px">Fondata nel ' + profile.foundedYear + ' · Sede: ' + safeText(profile.headquarters, 60) + '</div><p style="font-size:12px;line-height:1.55">' + safeText(profile.originStory, 420) + '</p><div style="font-size:11px"><strong>Missione:</strong> ' + safeText(profile.mission, 220) + '</div>';
+    html += '<div><div style="font-size:16px;font-weight:700">' + safeText(profile.name, 80) + ' <span class="pill ' + statusClass + '">' + safeText(statusLabels[lifecycleStatus] || lifecycleStatus.toUpperCase(), 30) + '</span></div><div class="gray" style="font-size:11px">Fondata nel ' + profile.foundedYear + ' · Sede: ' + safeText(profile.headquarters, 60) + ' · Salute finanziaria ' + Math.round(health) + '/100</div><p style="font-size:12px;line-height:1.55">' + safeText(profile.originStory, 420) + '</p><div style="font-size:11px"><strong>Missione:</strong> ' + safeText(profile.mission, 220) + '</div>';
     html += '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px"><strong>Obiettivo:</strong><span>' + round(objective.progress, 1) + '% · ' + safeText(objective.status, 30) + '</span></div><div style="font-size:11px;color:var(--text2);margin:3px 0">' + safeText(objective.label, 220) + '</div><div style="height:7px;background:var(--bg4);border-radius:8px;overflow:hidden"><span style="display:block;height:100%;width:' + clamp(objective.progress, 0, 100) + '%;background:linear-gradient(90deg,var(--blue),var(--green))"></span></div></div></div>';
     html += '<div><div style="font-size:11px;margin-bottom:6px"><strong>CdA</strong> · sostegno ' + profile.boardSupport + '%</div>';
     for (var b = 0; b < profile.board.length; b++) {
@@ -711,6 +725,9 @@
     html += '</div></div>';
     if (profile.governanceEvents.length) {
       html += '<div style="margin-top:10px"><strong style="font-size:11px">Ultima dinamica societaria</strong><div style="font-size:10px;color:var(--text2);margin-top:4px">' + safeText(profile.governanceEvents[0].actor, 80) + ': ' + safeText(profile.governanceEvents[0].action, 180) + '</div></div>';
+    }
+    if (profile.lifecycleHistory && profile.lifecycleHistory.length) {
+      html += '<div style="margin-top:10px"><strong style="font-size:11px">Ultimo fatto societario</strong><div style="font-size:10px;color:var(--text2);margin-top:4px">Settimana ' + profile.lifecycleHistory[0].week + ' · ' + safeText(profile.lifecycleHistory[0].reason, 180) + '</div></div>';
     }
     el.innerHTML = html;
   }
@@ -762,6 +779,40 @@
     }
   }
 
+  function registerCompany(company, seed) {
+    if (!company || !company.ticker || !state) return null;
+    var game = getGame();
+    var index = game && game.companies ? game.companies.length - 1 : Object.keys(state.companies).length;
+    var profile = hydrateCompany(company, Math.max(0, index));
+    seed = seed || {};
+    if (seed.originStory) profile.originStory = safeText(seed.originStory, 500);
+    if (seed.mission) profile.mission = safeText(seed.mission, 250);
+    if (seed.objectiveLabel) profile.objective.label = safeText(seed.objectiveLabel, 220);
+    if (seed.headquarters) profile.headquarters = safeText(seed.headquarters, 80);
+    if (seed.foundedYear) profile.foundedYear = seed.foundedYear;
+    if (seed.parentTickers instanceof Array) {
+      profile.parentTickers = seed.parentTickers.slice(0, 3);
+      profile.milestones.unshift({ year: (game && game.year) || 1987, text: 'Nascita da ' + seed.parentTickers.join(' e ') });
+    }
+    profile.status = 'active';
+    profile.distressWeeks = 0;
+    profile.lifecycleHistory = [{ week: game ? game.week : 1, status: 'active', reason: safeText(seed.reason || 'Ingresso sul mercato', 180) }];
+    state.companies[company.ticker] = profile;
+    saveState();
+    return profile;
+  }
+
+  function setCompanyStatus(ticker, status, reason) {
+    if (!state || !state.companies[ticker]) return null;
+    var profile = state.companies[ticker];
+    profile.status = safeText(status, 30);
+    if (!(profile.lifecycleHistory instanceof Array)) profile.lifecycleHistory = [];
+    profile.lifecycleHistory.unshift({ week: (getGame() && getGame().week) || 1, status: profile.status, reason: safeText(reason, 220) });
+    profile.lifecycleHistory = profile.lifecycleHistory.slice(0, 20);
+    saveState();
+    return profile;
+  }
+
   global.WorldEngine = {
     install: install,
     processWorldTurn: processWorldTurn,
@@ -769,6 +820,8 @@
     render: render,
     selectCompany: selectCompany,
     getCompanyProfile: function (ticker) { return state && state.companies ? state.companies[ticker] : null; },
+    registerCompany: registerCompany,
+    setCompanyStatus: setCompanyStatus,
     getState: function () { return state; },
     reset: function () {
       try { if (global.localStorage) global.localStorage.removeItem(STORAGE_KEY); } catch (e) {}

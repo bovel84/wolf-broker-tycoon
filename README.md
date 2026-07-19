@@ -4,10 +4,12 @@ Gestionale di broker azionario completo e realistico con modalità carriera e as
 
 ## Caratteristiche
 
-- **45 società** con prezzo, capitalizzazione, volatilità, dividendi e identità societaria
+- **Mercato societario dinamico** — 45 società iniziali, con nuove quotazioni, fusioni, acquisizioni, spin-off e fallimenti
 - **10 livelli carriera** da Apprendista a Magnate
 - **10 competitor AI** con personalità e strategie diverse
-- **LLM Game Master 4.0** — un solo turno AI coerente coordina mondo, aziende, rivali ed eventi
+- **LLM Game Master 5.0** — un solo turno AI coerente coordina mondo, aziende, rivali ed eventi societari straordinari
+- **Ciclo di vita realistico** — dissesto, ristrutturazione, liquidazione, M&A, IPO e spin-off con validazione economica
+- **Conseguenze di mercato** — posizioni convertite o liquidate, short regolati, contagio settoriale, indici e governance aggiornati
 - **World Engine persistente** — macroregioni, fondamentali, governance e strategie aziendali evolvono nel tempo
 - **Storia di ogni società** — fondazione, sede, missione, tappe storiche e obiettivo pluriennale
 - **Amministratori autonomi** — competenza, etica, influenza, lealtà, agenda e carriera personale
@@ -53,6 +55,7 @@ Genera `wolf-broker-tycoon.html` single-file giocabile.
 | `llm-game-master.js` | Game Master AI, eventi, competitor |
 | `competitor-engine.js` | 10 broker AI con OPA e sfide |
 | `world-engine.js` | Simulazione persistente di mondo, società, rivali e assemblee |
+| `corporate-lifecycle.js` | Fallimenti, ristrutturazioni, fusioni, acquisizioni, IPO e spin-off |
 | `broker-story.js` | Prologo, identità del broker, capitoli reattivi, relazioni e finali |
 | `build_html.py` | Assemblatore finale single-file |
 ## Configurazione sicura LLM
@@ -64,8 +67,9 @@ Le chiavi API non sono incluse nel codice. Inserisci endpoint, modello e chiave 
 1. Il motore di mercato aggiorna prezzi ed eventi.
 2. L'LLM riceve a rotazione società complete con storia, obiettivi, amministratori, soci, macroregioni e memoria dei rivali.
 3. Il World Engine valida e limita ogni delta prima di applicarlo.
-4. Le decisioni diventano notizie, variazioni fondamentali, piani dei competitor e proposte assembleari.
-5. Se l'LLM non è disponibile, il fallback locale mantiene il gioco pienamente funzionante.
+4. Il Corporate Lifecycle verifica la salute finanziaria e applica operazioni straordinarie solo a società ammissibili.
+5. Fallimenti e operazioni M&A modificano titoli, portafoglio, short, peer di settore, indici, notizie e storie societarie.
+6. Se l'LLM non è disponibile, il fallback locale mantiene il gioco pienamente funzionante e può generare eventi societari coerenti.
 
 ## Storia del broker
 

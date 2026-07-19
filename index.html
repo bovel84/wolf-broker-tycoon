@@ -429,6 +429,7 @@ tr:hover{background:var(--bg3)}
 <script src="llm-game-master.js"></script>
 <script src="competitor-engine.js"></script>
 <script src="world-engine.js"></script>
+<script src="corporate-lifecycle.js"></script>
 <script src="broker-story.js"></script>
 <script>
 
@@ -663,6 +664,7 @@ function computeIndices(){
   var sums={SPTX:0,TECH:0,ENERGY:0,FINANCE:0,HEALTH:0,CONSUMER:0,INDU:0};
   var counts={SPTX:0,TECH:0,ENERGY:0,FINANCE:0,HEALTH:0,CONSUMER:0,INDU:0};
   G.companies.forEach(c=>{
+    if(c.listed===false)return;
     sums.SPTX+=c.price;counts.SPTX++;
     if(c.sector==='tech'){sums.TECH+=c.price;counts.TECH++}
     if(c.sector==='energy'){sums.ENERGY+=c.price;counts.ENERGY++}
@@ -696,6 +698,7 @@ function advanceTurn(){
   
   // Apply price movements
   G.companies.forEach(c=>{
+    if(c.listed===false||c.tradingHalted){c.change=0;return}
     var baseVol=c.vol;
     // Apply sector boost
     if(G.activeSectorBoosts[c.sector]){
@@ -713,7 +716,7 @@ function advanceTurn(){
   events.forEach(ev=>{
     if(ev.scope==='ticker'){
       var c=getCompany(ev.ticker);
-      if(c){
+      if(c&&c.listed!==false&&!c.tradingHalted){
         c.price*=(1+ev.impact);
         if(c.price<1)c.price=1;
         c.change=((c.price-c.prevPrice)/c.prevPrice*100);
@@ -721,7 +724,7 @@ function advanceTurn(){
       }
     }else if(ev.scope==='sector'){
       G.companies.forEach(c=>{
-        if(c.sector===ev.sector){
+        if(c.listed!==false&&!c.tradingHalted&&c.sector===ev.sector){
           c.price*=(1+ev.impact);
           if(c.price<1)c.price=1;
           c.change=((c.price-c.prevPrice)/c.prevPrice*100);
@@ -731,6 +734,7 @@ function advanceTurn(){
       G.activeSectorBoosts[ev.sector]={impact:ev.impact*0.3,turns:3};
     }else if(ev.scope==='macro'){
       G.companies.forEach(c=>{
+        if(c.listed===false||c.tradingHalted)return;
         c.price*=(1+ev.impact*(0.5+Math.random()*0.5));
         if(c.price<1)c.price=1;
         c.change=((c.price-c.prevPrice)/c.prevPrice*100);
@@ -810,7 +814,9 @@ function generateEvent(){
   var template=EVENT_TEMPLATES[Math.floor(Math.random()*EVENT_TEMPLATES.length)];
   var ev={scope:template.scope,title:template.title,desc:template.desc,impact:template.impact,vol:template.vol,type:template.type};
   if(template.scope==='ticker'){
-    var c=G.companies[Math.floor(Math.random()*G.companies.length)];
+    var listed=G.companies.filter(function(item){return item.listed!==false&&!item.tradingHalted});
+    if(!listed.length)return null;
+    var c=listed[Math.floor(Math.random()*listed.length)];
     ev.ticker=c.ticker;
     ev.title=template.title(c);
     ev.desc=template.desc(c);
@@ -832,7 +838,7 @@ function generateEvent(){
 function payDividends(){
   var total=0;
   for(var t in G.positions){
-    var c=getCompany(t);if(!c)continue;
+    var c=getCompany(t);if(!c||c.listed===false)continue;
     var div=c.div*0.01*c.price*G.positions[t].shares;
     if(div>0){
       G.cash+=div;
@@ -843,7 +849,7 @@ function payDividends(){
   // Special dividends from assembly decisions
   for(var i=0;i<G.shorts.length;i++){
     var s=G.shorts[i];
-    var c=getCompany(s.ticker);if(!c)continue;
+    var c=getCompany(s.ticker);if(!c||c.listed===false)continue;
     var div=c.div*0.01*c.price*s.shares;
     if(div>0){
       G.cash-=div;
@@ -861,7 +867,7 @@ function payDividends(){
 // ======================== ASSEMBLIES ========================
 function checkAssemblies(){
   for(var t in G.positions){
-    var c=getCompany(t);if(!c)continue;
+    var c=getCompany(t);if(!c||c.listed===false)continue;
     var pct=getOwnershipPct(t);
     if(pct>=10){
       // Check if already has pending assembly
@@ -1004,6 +1010,7 @@ function resolveAssembly(ticker){
 // ======================== TRADING ========================
 function openTradeModal(ticker){
   var c=getCompany(ticker);if(!c)return;
+  if(c.listed===false||c.tradingHalted){toast('warning','Titolo non negoziabile: societa ritirata o contrattazioni sospese');return}
   var owned=G.positions[ticker]?G.positions[ticker].shares:0;
   var lvl=G.level;
   tradeModalState={ticker,owned,mode:'buy',orderType:'market',shares:1,limitPrice:c.price};
@@ -1135,6 +1142,7 @@ function updateTradePreview(){
 function executeTrade(){
   if(!tradeModalState)return;
   var c=getCompany(tradeModalState.ticker);
+  if(!c||c.listed===false||c.tradingHalted){toast('error','Operazione annullata: titolo non negoziabile');closeTradeModal();return}
   var shares=parseInt(document.getElementById('trade-shares').value)||0;
   var price=tradeModalState.orderType==='limit'?parseFloat(document.getElementById('trade-limit-price').value)||c.price:c.price;
   var total=shares*price;
@@ -1173,6 +1181,7 @@ function executeTrade(){
 function executeShort(){
   if(!tradeModalState)return;
   var c=getCompany(tradeModalState.ticker);
+  if(!c||c.listed===false||c.tradingHalted){toast('error','Short non disponibile: titolo non negoziabile');closeTradeModal();return}
   var shares=parseInt(document.getElementById('trade-shares').value)||0;
   var price=tradeModalState.orderType==='limit'?parseFloat(document.getElementById('trade-limit-price').value)||c.price:c.price;
   var total=shares*price;
@@ -1515,7 +1524,9 @@ function renderMarket(){
   filtered.forEach(c=>{
     var ch=c.change||0;
     var chClass=ch>=0?'green':'red';
-    html+='<tr style="cursor:pointer" onclick="openTradeModal(\''+c.ticker+'\')"><td class="ticker-cell">'+c.ticker+'</td><td>'+c.name+'</td><td><span class="pill" style="background:'+SECTOR_COLORS[c.sector]+'22;color:'+SECTOR_COLORS[c.sector]+'">'+SECTOR_NAMES[c.sector]+'</span></td><td class="num">'+formatEur(c.price)+'</td><td class="num '+chClass+'">'+formatPct(ch)+'</td><td class="num">'+(c.cap/1000).toFixed(0)+'M</td><td class="num">'+(c.vol*100).toFixed(1)+'%</td><td class="num '+(c.div>0?'green':'')+'">'+(c.div*100).toFixed(1)+'%</td><td><button class="btn btn-sm btn-blue" onclick="event.stopPropagation();openTradeModal(\''+c.ticker+'\')">Trade</button></td></tr>';
+    var tradeable=c.listed!==false&&!c.tradingHalted;
+    var status=c.listed===false?'RITIRATA':(c.tradingHalted?'SOSPESA':'');
+    html+='<tr style="cursor:'+(tradeable?'pointer':'default')+';opacity:'+(tradeable?'1':'.55')+'"'+(tradeable?' onclick="openTradeModal(\''+c.ticker+'\')"':'')+'><td class="ticker-cell">'+c.ticker+'</td><td>'+c.name+(status?' <span class="pill r">'+status+'</span>':'')+'</td><td><span class="pill" style="background:'+SECTOR_COLORS[c.sector]+'22;color:'+SECTOR_COLORS[c.sector]+'">'+SECTOR_NAMES[c.sector]+'</span></td><td class="num">'+formatEur(c.price)+'</td><td class="num '+chClass+'">'+formatPct(ch)+'</td><td class="num">'+(c.cap/1000).toFixed(0)+'M</td><td class="num">'+(c.vol*100).toFixed(1)+'%</td><td class="num '+(c.div>0?'green':'')+'">'+(c.div*100).toFixed(1)+'%</td><td>'+(tradeable?'<button class="btn btn-sm btn-blue" onclick="event.stopPropagation();openTradeModal(\''+c.ticker+'\')">Trade</button>':'<button class="btn btn-sm" disabled>Non quotata</button>')+'</td></tr>';
   });
   body.innerHTML=html;
 }
@@ -1791,6 +1802,7 @@ if(typeof CompetitorEngine!=='undefined'&&!window._competitorEngine){
   }catch(e){console.warn('Competitor Engine init:',e)}
 }
 if(typeof WorldEngine!=='undefined'&&WorldEngine.install)WorldEngine.install();
+if(typeof CorporateLifecycle!=='undefined'&&CorporateLifecycle.install)CorporateLifecycle.install();
 if(typeof BrokerStory!=='undefined'&&BrokerStory.install)BrokerStory.install();
 </script>
 </body>

@@ -105,6 +105,7 @@ module_files = [
     'llm-game-master.js',
     'competitor-engine.js',
     'world-engine.js',
+    'corporate-lifecycle.js',
     'broker-story.js',
 ]
 

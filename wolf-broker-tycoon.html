@@ -439,6 +439,7 @@ tr:hover{background:var(--bg3)}
 
 
 
+
 <script>
 /* ============================================================
  * market-engine.js — Company & Market Engine
@@ -2600,6 +2601,7 @@ tr:hover{background:var(--bg3)}
   // Export
   return MarketEngine;
 }));
+
 /* ============================================================================
  * WOLF OF WALL STREET - GAME CORE ENGINE
  * Vanilla JS | Exported as window.GameEngine (browser) or module.exports (Node)
@@ -4767,6 +4769,7 @@ tr:hover{background:var(--bg3)}
 
   return GameEngine;
 }));
+
 /**
  * UIEngine - Advanced UI/UX Engine for Wolf of Wall Street Game
  * Vanilla JS + CSS injected dynamically
@@ -5643,6 +5646,7 @@ tr:hover{background:var(--bg3)}
   }
 
 })(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this);
+
 /**
  * Stock Broker Game - Story Engine
  * Sistema narrativo completo stile "The Wolf of Wall Street"
@@ -7585,6 +7589,7 @@ tr:hover{background:var(--bg3)}
 
 })(typeof window !== 'undefined' ? window : this);
 
+
 /**
  * llm-news-engine.js
  * LLM News Engine per Wolf of Wall Street Broker Tycoon
@@ -8379,10 +8384,11 @@ tr:hover{background:var(--bg3)}
   }
 
 })(typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : this);
+
 /*
  * llm-game-master.js
  * LLM Game Master per Wolf of Wall Street Broker Tycoon
- * Versione 4.0.0 - Usa Ollama Cloud via proxy Vercel
+ * Versione 5.0.0 - Usa Ollama Cloud via proxy Vercel
  * Genera contenuto dinamico: notizie, decisioni competitor, dialoghi, eventi.
  *
  * Restrizioni di compatibilita':
@@ -9118,20 +9124,29 @@ tr:hover{background:var(--bg3)}
     return 'Simula una settimana coerente di un ecosistema finanziario mondiale persistente. ' +
       'Ogni societa possiede una storia, una missione e un obiettivo pluriennale. Gli amministratori sono persone autonome: agiscono secondo ruolo, etica, influenza, lealta e agenda. I soci reagiscono secondo quota, fiducia e obiettivo. ' +
       'Fai avanzare o arretrare gli obiettivi in modo causale. Crea conflitti tra CdA e soci, alleanze, dimissioni, richieste attiviste o assemblee solo quando giustificati. ' +
-      'I competitor perseguono obiettivi di medio periodo. Non inventare ticker, amministratori o blocchi diversi da quelli ricevuti. Mantieni memoria e continuita. Contesto: ' + compact + ' ' +
-      'Rispondi con JSON {briefing,macro,companies,competitors,assembly}. ' +
+      'I competitor perseguono obiettivi di medio periodo. Mantieni memoria e continuita. ' +
+      'Puoi proporre al massimo due operazioni straordinarie, ma solo quando fondamentali, crisi, strategia e fatti recenti le rendono credibili. Un fallimento richiede dissesto o crisi prolungata; fusioni e acquisizioni richiedono una logica industriale; IPO e spin-off devono colmare un bisogno reale del mercato. ' +
+      'Usa esclusivamente ticker quotati ricevuti per target, acquirenti e societa madri; nuovi ticker sono ammessi solo per merger, ipo e spinoff. Ogni fatto deve propagarsi a prezzi, settore, azionisti, competitor e indici attraverso gli effetti applicati dal motore. Contesto: ' + compact + ' ' +
+      'Rispondi con JSON {briefing,macro,companies,competitors,corporateEvents,assembly}. ' +
       'macro={region,title,description,growthDelta,inflationDelta,ratesDelta,sentimentImpact}; ' +
       'companies=max 4 elementi {ticker,action,title,description,revenueGrowthDelta,marginDelta,debtDelta,governanceDelta,innovationDelta,priceImpactPct,boardDecision,shareholderMoves}. ' +
       'boardDecision={directorRole,action,motive,supportDelta,objectiveProgress,influenceDelta,competenceDelta,ethicsDelta,status}. status e attivo|dimissionario|rimosso|sospeso. ' +
       'shareholderMoves=max 4 elementi {blockId,action,motive,confidenceDelta,stance}. Usa solo directorRole e blockId presenti nel contesto; ' +
       'competitors={nickname,goal,plan,target,stance,conviction}; ' +
+      'corporateEvents=max 2 elementi, scegli tra: ' +
+      '{type:"bankruptcy",target,recoveryPct,reason}; ' +
+      '{type:"restructuring",target,capitalInjection,dilutionPct,reason}; ' +
+      '{type:"acquisition",acquirer,target,premiumPct,method,synergyPct,debtImpact,reason} con method cash|stock; ' +
+      '{type:"merger",companyA,companyB,newName,newTicker,sector,newPrice,retainedValuePct,mission,objective,reason}; ' +
+      '{type:"ipo",name,ticker,sector,price,cap,volatility,dividend,originStory,mission,objective,headquarters,reason}; ' +
+      '{type:"spinoff",parent,newName,newTicker,sector,capSharePct,newPrice,mission,objective,reason}; ' +
       'assembly=null oppure {ticker,type,title,description,priceImpactPct,growthImpact,debtImpact}. Applica delta piccoli e realistici.';
   }
 
   function generateWorldTurn(context) {
     var ctx = context || {};
     var key = 'world_' + (ctx.week || 1) + '_' + (ctx.year || 1987);
-    var fallback = { briefing: '', macro: null, companies: [], competitors: [], assembly: null };
+    var fallback = { briefing: '', macro: null, companies: [], competitors: [], corporateEvents: [], assembly: null };
     var messages = [
       { role: 'system', content: SYSTEM_PROMPT + ' Mantieni continuita causale tra i turni.' },
       { role: 'user', content: buildWorldPrompt(ctx) }
@@ -9215,6 +9230,7 @@ tr:hover{background:var(--bg3)}
   var _root = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : (typeof self !== 'undefined' ? self : this));
   if (typeof module !== 'undefined' && module.exports) { module.exports = _root.LLMGameMaster; }
 })(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));
+
 /**
  * Competitor Engine — Wolf of Wall Street Broker Tycoon
  * Modulo AI per 10 competitor con strategie, OPA, eventi, sfide e dialoghi
@@ -11265,6 +11281,7 @@ tr:hover{background:var(--bg3)}
 
 })();
 
+
 /*
  * world-engine.js
  * Persistent global simulation for Wolf Broker Tycoon.
@@ -11462,6 +11479,7 @@ tr:hover{background:var(--bg3)}
       rivals: rivals,
       globalEvents: [],
       assemblyLog: [],
+      corporateEvents: [],
       openAssembly: null,
       lastBriefing: 'Il mondo finanziario entra in una nuova fase.',
       lastTurn: null
@@ -11475,6 +11493,7 @@ tr:hover{background:var(--bg3)}
       if (raw) loaded = JSON.parse(raw);
     } catch (e) { loaded = null; }
     state = loaded && loaded.companies && loaded.rivals ? loaded : createState(game, competitors);
+    if (!(state.corporateEvents instanceof Array)) state.corporateEvents = [];
     var list = game && game.companies ? game.companies : [];
     for (var i = 0; i < list.length; i++) {
       if (!state.companies[list[i].ticker]) state.companies[list[i].ticker] = hydrateCompany(list[i], i);
@@ -11553,6 +11572,7 @@ tr:hover{background:var(--bg3)}
       competitors: rivals,
       recentEvents: state.globalEvents.slice(0, 4),
       recentAssemblies: state.assemblyLog.slice(0, 3),
+      recentCorporateEvents: state.corporateEvents.slice(0, 5),
       brokerStory: global.BrokerStory && global.BrokerStory.getContext ? global.BrokerStory.getContext() : null
     };
   }
@@ -11601,6 +11621,7 @@ tr:hover{background:var(--bg3)}
         shareholderMoves: [{ blockId: 'institutional', action: direction > 0 ? 'sostegno' : 'richiesta di prudenza', motive: 'Proteggere rendimento e governance.', confidenceDelta: direction * 4, stance: direction > 0 ? 'favorevole' : 'prudente' }]
       }],
       competitors: rivals,
+      corporateEvents: [],
       assembly: null
     };
   }
@@ -11611,6 +11632,8 @@ tr:hover{background:var(--bg3)}
     if (!result.macro || typeof result.macro !== 'object') result.macro = fallback.macro;
     if (!(result.companies instanceof Array)) result.companies = fallback.companies;
     if (!(result.competitors instanceof Array)) result.competitors = fallback.competitors;
+    if (!(result.corporateEvents instanceof Array)) result.corporateEvents = [];
+    result.corporateEvents = result.corporateEvents.slice(0, 2);
     result.companies = result.companies.slice(0, 4);
     result.competitors = result.competitors.slice(0, context.competitors.length);
     return result;
@@ -11877,6 +11900,7 @@ tr:hover{background:var(--bg3)}
       applyMacro(turn.macro || fallback.macro, game);
       applyCompanyActions(turn.companies || [], game);
       applyRivalPlans(turn.competitors || [], competitors, game);
+      if (global.CorporateLifecycle && global.CorporateLifecycle.processTurn) global.CorporateLifecycle.processTurn(turn.corporateEvents || [], game, context);
       maybeOpenAssembly(game, competitors, turn.assembly);
       saveState();
       render();
@@ -11887,6 +11911,7 @@ tr:hover{background:var(--bg3)}
       applyMacro(turn.macro, game);
       applyCompanyActions(turn.companies, game);
       applyRivalPlans(turn.competitors, competitors, game);
+      if (global.CorporateLifecycle && global.CorporateLifecycle.processTurn) global.CorporateLifecycle.processTurn([], game, context);
       maybeOpenAssembly(game, competitors, null);
       saveState();
       render();
@@ -11960,9 +11985,15 @@ tr:hover{background:var(--bg3)}
       options += '<option value="' + safeText(companies[i].ticker, 12) + '"' + (companies[i].ticker === selectedCompanyTicker ? ' selected' : '') + '>' + safeText(companies[i].name, 70) + ' (' + safeText(companies[i].ticker, 12) + ')</option>';
     }
     var objective = profile.objective || { label: 'Obiettivo non definito', progress: 0, status: 'in corso' };
+    var lifecycleStatus = profile.status || 'active';
+    var health = profile.financialHealth;
+    if ((health === undefined || health === null) && global.CorporateLifecycle && global.CorporateLifecycle.financialHealth) health = global.CorporateLifecycle.financialHealth(selectedCompanyTicker);
+    if (health === undefined || health === null) health = 50;
+    var statusLabels = { active: 'ATTIVA', distressed: 'IN CRISI', restructuring: 'RISTRUTTURAZIONE', bankrupt: 'FALLITA', acquired: 'ACQUISITA', merged: 'FUSA', spunoff: 'SPIN-OFF' };
+    var statusClass = lifecycleStatus === 'active' ? 'g' : ((lifecycleStatus === 'distressed' || lifecycleStatus === 'restructuring') ? 'y' : 'r');
     var html = '<select onchange="WorldEngine.selectCompany(this.value)" style="width:100%;max-width:420px;background:var(--bg3);color:var(--text);border:1px solid var(--border);padding:8px;border-radius:6px;margin-bottom:10px">' + options + '</select>';
     html += '<div style="display:grid;grid-template-columns:1.15fr .85fr;gap:10px" class="company-governance-grid">';
-    html += '<div><div style="font-size:16px;font-weight:700">' + safeText(profile.name, 80) + '</div><div class="gray" style="font-size:11px">Fondata nel ' + profile.foundedYear + ' · Sede: ' + safeText(profile.headquarters, 60) + '</div><p style="font-size:12px;line-height:1.55">' + safeText(profile.originStory, 420) + '</p><div style="font-size:11px"><strong>Missione:</strong> ' + safeText(profile.mission, 220) + '</div>';
+    html += '<div><div style="font-size:16px;font-weight:700">' + safeText(profile.name, 80) + ' <span class="pill ' + statusClass + '">' + safeText(statusLabels[lifecycleStatus] || lifecycleStatus.toUpperCase(), 30) + '</span></div><div class="gray" style="font-size:11px">Fondata nel ' + profile.foundedYear + ' · Sede: ' + safeText(profile.headquarters, 60) + ' · Salute finanziaria ' + Math.round(health) + '/100</div><p style="font-size:12px;line-height:1.55">' + safeText(profile.originStory, 420) + '</p><div style="font-size:11px"><strong>Missione:</strong> ' + safeText(profile.mission, 220) + '</div>';
     html += '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px"><strong>Obiettivo:</strong><span>' + round(objective.progress, 1) + '% · ' + safeText(objective.status, 30) + '</span></div><div style="font-size:11px;color:var(--text2);margin:3px 0">' + safeText(objective.label, 220) + '</div><div style="height:7px;background:var(--bg4);border-radius:8px;overflow:hidden"><span style="display:block;height:100%;width:' + clamp(objective.progress, 0, 100) + '%;background:linear-gradient(90deg,var(--blue),var(--green))"></span></div></div></div>';
     html += '<div><div style="font-size:11px;margin-bottom:6px"><strong>CdA</strong> · sostegno ' + profile.boardSupport + '%</div>';
     for (var b = 0; b < profile.board.length; b++) {
@@ -11978,6 +12009,9 @@ tr:hover{background:var(--bg3)}
     html += '</div></div>';
     if (profile.governanceEvents.length) {
       html += '<div style="margin-top:10px"><strong style="font-size:11px">Ultima dinamica societaria</strong><div style="font-size:10px;color:var(--text2);margin-top:4px">' + safeText(profile.governanceEvents[0].actor, 80) + ': ' + safeText(profile.governanceEvents[0].action, 180) + '</div></div>';
+    }
+    if (profile.lifecycleHistory && profile.lifecycleHistory.length) {
+      html += '<div style="margin-top:10px"><strong style="font-size:11px">Ultimo fatto societario</strong><div style="font-size:10px;color:var(--text2);margin-top:4px">Settimana ' + profile.lifecycleHistory[0].week + ' · ' + safeText(profile.lifecycleHistory[0].reason, 180) + '</div></div>';
     }
     el.innerHTML = html;
   }
@@ -12029,6 +12063,40 @@ tr:hover{background:var(--bg3)}
     }
   }
 
+  function registerCompany(company, seed) {
+    if (!company || !company.ticker || !state) return null;
+    var game = getGame();
+    var index = game && game.companies ? game.companies.length - 1 : Object.keys(state.companies).length;
+    var profile = hydrateCompany(company, Math.max(0, index));
+    seed = seed || {};
+    if (seed.originStory) profile.originStory = safeText(seed.originStory, 500);
+    if (seed.mission) profile.mission = safeText(seed.mission, 250);
+    if (seed.objectiveLabel) profile.objective.label = safeText(seed.objectiveLabel, 220);
+    if (seed.headquarters) profile.headquarters = safeText(seed.headquarters, 80);
+    if (seed.foundedYear) profile.foundedYear = seed.foundedYear;
+    if (seed.parentTickers instanceof Array) {
+      profile.parentTickers = seed.parentTickers.slice(0, 3);
+      profile.milestones.unshift({ year: (game && game.year) || 1987, text: 'Nascita da ' + seed.parentTickers.join(' e ') });
+    }
+    profile.status = 'active';
+    profile.distressWeeks = 0;
+    profile.lifecycleHistory = [{ week: game ? game.week : 1, status: 'active', reason: safeText(seed.reason || 'Ingresso sul mercato', 180) }];
+    state.companies[company.ticker] = profile;
+    saveState();
+    return profile;
+  }
+
+  function setCompanyStatus(ticker, status, reason) {
+    if (!state || !state.companies[ticker]) return null;
+    var profile = state.companies[ticker];
+    profile.status = safeText(status, 30);
+    if (!(profile.lifecycleHistory instanceof Array)) profile.lifecycleHistory = [];
+    profile.lifecycleHistory.unshift({ week: (getGame() && getGame().week) || 1, status: profile.status, reason: safeText(reason, 220) });
+    profile.lifecycleHistory = profile.lifecycleHistory.slice(0, 20);
+    saveState();
+    return profile;
+  }
+
   global.WorldEngine = {
     install: install,
     processWorldTurn: processWorldTurn,
@@ -12036,6 +12104,8 @@ tr:hover{background:var(--bg3)}
     render: render,
     selectCompany: selectCompany,
     getCompanyProfile: function (ticker) { return state && state.companies ? state.companies[ticker] : null; },
+    registerCompany: registerCompany,
+    setCompanyStatus: setCompanyStatus,
     getState: function () { return state; },
     reset: function () {
       try { if (global.localStorage) global.localStorage.removeItem(STORAGE_KEY); } catch (e) {}
@@ -12047,6 +12117,611 @@ tr:hover{background:var(--bg3)}
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = global.WorldEngine;
+  if (typeof document !== 'undefined') global.setTimeout(install, 0);
+})(typeof window !== 'undefined' ? window : this);
+
+/*
+ * corporate-lifecycle.js
+ * Realistic company births, distress, restructuring, failures and M&A.
+ */
+(function (global) {
+  'use strict';
+
+  var VERSION = '1.0.0';
+  var installed = false;
+  var processing = false;
+  var VALID_SECTORS = ['tech', 'energy', 'finance', 'health', 'consumer', 'industrial', 'materials', 'utilities', 'realestate', 'communications'];
+  var EVENT_LABELS = {
+    bankruptcy: 'Fallimento',
+    restructuring: 'Ristrutturazione',
+    acquisition: 'Acquisizione',
+    merger: 'Fusione',
+    ipo: 'Nuova quotazione',
+    spinoff: 'Scissione'
+  };
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, Number(v) || 0)); }
+  function round(v, digits) {
+    var p = Math.pow(10, digits || 0);
+    return Math.round((Number(v) || 0) * p) / p;
+  }
+  function safe(value, max) { return String(value || '').replace(/[<>]/g, '').substring(0, max || 200); }
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function getGame() {
+    try { return typeof G !== 'undefined' ? G : null; } catch (e) { return null; }
+  }
+  function getWorld() {
+    return global.WorldEngine && global.WorldEngine.getState ? global.WorldEngine.getState() : null;
+  }
+  function profile(ticker) {
+    return global.WorldEngine && global.WorldEngine.getCompanyProfile ? global.WorldEngine.getCompanyProfile(ticker) : null;
+  }
+  function company(game, ticker) {
+    var list = game && game.companies ? game.companies : [];
+    for (var i = 0; i < list.length; i++) if (list[i].ticker === ticker) return list[i];
+    return null;
+  }
+  function activeCompanies(game) {
+    return (game.companies || []).filter(function (c) {
+      var p = profile(c.ticker);
+      return c.listed !== false && (!p || !/bankrupt|acquired|merged|liquidated/.test(p.status || ''));
+    });
+  }
+  function validSector(sector) {
+    return VALID_SECTORS.indexOf(sector) >= 0 ? sector : 'industrial';
+  }
+  function addNews(game, title, description, type, ticker) {
+    if (!game.news) game.news = [];
+    game.news.unshift({
+      week: game.week,
+      title: safe(title, 110),
+      desc: safe(description, 260),
+      type: type || 'neutral',
+      scope: ticker ? 'ticker' : 'macro',
+      ticker: ticker || null
+    });
+    game.news = game.news.slice(0, 120);
+  }
+  function addTransactionSafe(type, ticker, shares, price, total) {
+    try {
+      if (typeof addTransaction === 'function') addTransaction(type, ticker, shares, price, total, 0);
+    } catch (e) {}
+  }
+
+  function ensureFields(game) {
+    var world = getWorld();
+    if (!world) return;
+    if (!(world.corporateEvents instanceof Array)) world.corporateEvents = [];
+    for (var i = 0; i < game.companies.length; i++) {
+      var c = game.companies[i];
+      var p = profile(c.ticker);
+      if (typeof c.listed !== 'boolean') c.listed = true;
+      if (typeof c.tradingHalted !== 'boolean') c.tradingHalted = false;
+      if (p) {
+        if (!p.status) p.status = c.listed ? 'active' : 'delisted';
+        if (typeof p.distressWeeks !== 'number') p.distressWeeks = 0;
+        if (!(p.lifecycleHistory instanceof Array)) p.lifecycleHistory = [];
+        if (typeof p.financialHealth !== 'number') p.financialHealth = 60;
+      }
+    }
+  }
+
+  function financialHealth(p) {
+    if (!p) return 50;
+    var marginScore = clamp((p.margin + 5) / 40 * 25, 0, 25);
+    var debtScore = clamp((130 - p.debt) / 130 * 25, 0, 25);
+    var growthScore = clamp((p.revenueGrowth + 15) / 45 * 20, 0, 20);
+    var governanceScore = clamp(p.governance / 100 * 15, 0, 15);
+    var cashScore = clamp(p.cash / 70 * 10, 0, 10);
+    var confidenceScore = clamp((p.shareholderConfidence || 55) / 100 * 5, 0, 5);
+    return round(marginScore + debtScore + growthScore + governanceScore + cashScore + confidenceScore, 1);
+  }
+
+  function evaluateHealth(game) {
+    var candidates = [];
+    var list = activeCompanies(game);
+    for (var i = 0; i < list.length; i++) {
+      var c = list[i];
+      var p = profile(c.ticker);
+      if (!p) continue;
+      var health = financialHealth(p);
+      p.financialHealth = health;
+      if (health < 30) {
+        p.distressWeeks += 1;
+        if (p.distressWeeks >= 2 && p.status === 'active') {
+          p.status = 'distressed';
+          c.tradingHalted = false;
+          addNews(game, c.name + ' entra in crisi', 'Debito, margini e fiducia degli azionisti segnalano tensioni crescenti. Il consiglio valuta misure straordinarie.', 'negative', c.ticker);
+        }
+      } else if (health >= 45) {
+        if (p.status === 'distressed' || p.status === 'restructuring') p.status = 'active';
+        p.distressWeeks = Math.max(0, p.distressWeeks - 1);
+      }
+      if (health < 18 && p.distressWeeks >= 3) candidates.push({ ticker: c.ticker, health: health });
+    }
+    candidates.sort(function (a, b) { return a.health - b.health; });
+    return candidates;
+  }
+
+  function sectorImpact(game, sector, pct, excludeTickers) {
+    var excluded = excludeTickers || [];
+    var list = activeCompanies(game);
+    for (var i = 0; i < list.length; i++) {
+      var c = list[i];
+      if (c.sector !== sector || excluded.indexOf(c.ticker) >= 0) continue;
+      var factor = pct * (0.55 + Math.random() * 0.75);
+      c.price = Math.max(0.05, c.price * (1 + factor / 100));
+      c.change = c.prevPrice ? (c.price - c.prevPrice) / c.prevPrice * 100 : factor;
+    }
+  }
+
+  function settleShorts(game, ticker, settlementPrice) {
+    var remaining = [];
+    for (var i = 0; i < game.shorts.length; i++) {
+      var s = game.shorts[i];
+      if (s.ticker !== ticker) {
+        remaining.push(s);
+        continue;
+      }
+      var profit = (s.entryPrice - settlementPrice) * s.shares;
+      game.cash = Math.max(0, game.cash + profit);
+      if (typeof game.realizedPnL === 'number') game.realizedPnL += profit;
+      addTransactionSafe('cover', ticker, s.shares, settlementPrice, s.shares * settlementPrice);
+    }
+    game.shorts = remaining;
+  }
+
+  function settleCashPosition(game, ticker, settlementPrice, reason) {
+    var pos = game.positions && game.positions[ticker];
+    if (!pos) return;
+    var proceeds = pos.shares * settlementPrice;
+    game.cash += proceeds;
+    if (typeof game.realizedPnL === 'number') game.realizedPnL += (settlementPrice - pos.avgCost) * pos.shares;
+    addTransactionSafe('sell', ticker, pos.shares, settlementPrice, proceeds);
+    delete game.positions[ticker];
+  }
+
+  function convertPosition(game, fromTicker, toTicker, ratio, toPrice) {
+    var pos = game.positions && game.positions[fromTicker];
+    if (!pos || ratio <= 0) return;
+    var newShares = Math.max(1, Math.floor(pos.shares * ratio));
+    var oldValue = pos.shares * pos.avgCost;
+    if (!game.positions[toTicker]) game.positions[toTicker] = { shares: 0, avgCost: 0 };
+    var target = game.positions[toTicker];
+    var targetOldValue = target.shares * target.avgCost;
+    target.shares += newShares;
+    target.avgCost = (targetOldValue + oldValue) / target.shares;
+    addTransactionSafe('sell', fromTicker, pos.shares, toPrice * ratio, oldValue);
+    addTransactionSafe('buy', toTicker, newShares, toPrice, newShares * toPrice);
+    delete game.positions[fromTicker];
+  }
+
+  function recordEvent(game, evt) {
+    var world = getWorld();
+    if (!world) return;
+    evt.week = game.week;
+    evt.year = game.year || 1987;
+    world.corporateEvents.unshift(evt);
+    world.corporateEvents = world.corporateEvents.slice(0, 50);
+    addNews(game, evt.title, evt.description, evt.marketImpact >= 0 ? 'positive' : 'negative', evt.primaryTicker || null);
+    render();
+  }
+
+  function markStatus(ticker, status, reason) {
+    if (global.WorldEngine && global.WorldEngine.setCompanyStatus) global.WorldEngine.setCompanyStatus(ticker, status, reason);
+  }
+
+  function applyBankruptcy(game, event) {
+    var target = company(game, event.target);
+    var p = target ? profile(target.ticker) : null;
+    if (!target || !p || target.listed === false) return null;
+    var health = financialHealth(p);
+    if (health > 25 && (p.distressWeeks || 0) < 2 && p.status !== 'distressed' && p.status !== 'restructuring') return null;
+    var oldPrice = target.price;
+    var oldCap = target.cap;
+    var recovery = clamp(event.recoveryPct, 0, 20);
+    var settlement = Math.max(0.05, oldPrice * recovery / 100);
+    target.prevPrice = oldPrice;
+    target.price = settlement;
+    target.change = (settlement - oldPrice) / oldPrice * 100;
+    target.cap = Math.max(1, target.cap * recovery / 100);
+    target.div = 0;
+    target.listed = false;
+    target.tradingHalted = true;
+    p.status = 'bankrupt';
+    p.phase = 'liquidazione';
+    p.employees = Math.round(p.employees * clamp(recovery / 100, 0.05, 0.25));
+    p.objective.status = 'fallito';
+    p.boardSupport = 0;
+    p.governanceEvents.unshift({ week: game.week, actor: 'Tribunale commerciale', role: 'Procedura concorsuale', action: 'Apre la liquidazione', motive: safe(event.reason || 'Insolvenza non risolta', 180), type: 'bankruptcy' });
+    markStatus(target.ticker, 'bankrupt', event.reason || 'Insolvenza e apertura della liquidazione');
+    settleCashPosition(game, target.ticker, settlement, 'Liquidazione fallimentare');
+    settleShorts(game, target.ticker, settlement);
+    sectorImpact(game, target.sector, -2.5 - Math.min(3, oldCap / 100000), [target.ticker]);
+    var evt = {
+      type: 'bankruptcy',
+      title: target.name + ' dichiara fallimento',
+      description: 'Le contrattazioni sono sospese. Recupero stimato per gli azionisti: ' + recovery + '%. Il fallimento contagia fiducia e valutazioni nel settore ' + target.sector + '.',
+      primaryTicker: target.ticker,
+      affectedTickers: [target.ticker],
+      marketImpact: -8,
+      reason: safe(event.reason, 180)
+    };
+    recordEvent(game, evt);
+    return evt;
+  }
+
+  function applyRestructuring(game, event) {
+    var target = company(game, event.target);
+    var p = target ? profile(target.ticker) : null;
+    if (!target || !p || target.listed === false) return null;
+    var injection = clamp(event.capitalInjection, 2, 35);
+    p.status = 'restructuring';
+    p.debt = round(clamp(p.debt - injection, 0, 150), 1);
+    p.cash = round(clamp(p.cash + injection * 0.6, 0, 100), 1);
+    p.margin = round(clamp(p.margin + 2, -10, 55), 1);
+    p.employees = Math.round(p.employees * clamp(1 - injection / 180, 0.72, 0.98));
+    p.distressWeeks = Math.max(0, p.distressWeeks - 2);
+    target.price = Math.max(0.05, target.price * (1 - clamp(event.dilutionPct, 5, 45) / 100));
+    target.cap = target.cap * (1 + injection / 100);
+    target.tradingHalted = false;
+    markStatus(target.ticker, 'restructuring', event.reason || 'Accordo con creditori e aumento di capitale');
+    if (p.shareholderBlocks) {
+      for (var i = 0; i < p.shareholderBlocks.length; i++) p.shareholderBlocks[i].confidence = Math.round(clamp(p.shareholderBlocks[i].confidence - 4, 0, 100));
+    }
+    var evt = {
+      type: 'restructuring',
+      title: target.name + ' evita il fallimento',
+      description: 'Creditori e soci approvano una ristrutturazione: debito ridotto, nuova liquidita, diluizione degli azionisti e ridimensionamento operativo.',
+      primaryTicker: target.ticker,
+      affectedTickers: [target.ticker],
+      marketImpact: -3,
+      reason: safe(event.reason, 180)
+    };
+    recordEvent(game, evt);
+    return evt;
+  }
+
+  function applyAcquisition(game, event) {
+    var acquirer = company(game, event.acquirer);
+    var target = company(game, event.target);
+    var ap = acquirer ? profile(acquirer.ticker) : null;
+    var tp = target ? profile(target.ticker) : null;
+    if (!acquirer || !target || acquirer === target || !ap || !tp || acquirer.listed === false || target.listed === false) return null;
+    var premium = clamp(event.premiumPct, 10, 60);
+    var offer = target.price * (1 + premium / 100);
+    var method = event.method === 'stock' ? 'stock' : 'cash';
+    if (method === 'stock') {
+      var ratio = offer / Math.max(0.05, acquirer.price);
+      convertPosition(game, target.ticker, acquirer.ticker, ratio, acquirer.price);
+    } else {
+      settleCashPosition(game, target.ticker, offer, 'Acquisizione');
+    }
+    settleShorts(game, target.ticker, offer);
+    target.prevPrice = target.price;
+    target.price = offer;
+    target.change = premium;
+    target.listed = false;
+    target.tradingHalted = true;
+    tp.status = 'acquired';
+    tp.objective.status = 'assorbito';
+    ap.capitalIntegration = (ap.capitalIntegration || 0) + target.cap;
+    ap.employees += Math.round(tp.employees * 0.82);
+    ap.debt = round(clamp(ap.debt + clamp(event.debtImpact, 2, 15), 0, 150), 1);
+    acquirer.cap += target.cap * 0.85;
+    acquirer.price *= 1 + clamp(event.synergyPct, -5, 12) / 100;
+    ap.milestones.unshift({ year: game.year || 1987, text: 'Acquisizione di ' + target.name });
+    ap.governanceEvents.unshift({ week: game.week, actor: ap.board[1].name, role: ap.board[1].role, action: 'Completa l acquisizione di ' + target.name, motive: safe(event.reason || 'Crescita strategica', 160), type: 'acquisition' });
+    markStatus(target.ticker, 'acquired', 'Acquisita da ' + acquirer.name);
+    sectorImpact(game, target.sector, 1.2, [target.ticker, acquirer.ticker]);
+    var evt = {
+      type: 'acquisition',
+      title: acquirer.name + ' acquisisce ' + target.name,
+      description: 'Offerta con premio del ' + premium + '% pagata in ' + (method === 'stock' ? 'azioni' : 'contanti') + '. Il titolo acquisito viene ritirato dal mercato.',
+      primaryTicker: target.ticker,
+      affectedTickers: [acquirer.ticker, target.ticker],
+      marketImpact: premium,
+      reason: safe(event.reason, 180)
+    };
+    recordEvent(game, evt);
+    return evt;
+  }
+
+  function uniqueTicker(game, preferred, sector) {
+    var base = safe(preferred, 5).toUpperCase().replace(/[^A-Z]/g, '');
+    if (base.length < 2) {
+      var prefixes = { tech: 'NXT', energy: 'NRG', finance: 'FIN', health: 'MED', consumer: 'CNS', industrial: 'IND', materials: 'MAT', utilities: 'UTL', realestate: 'REA', communications: 'COM' };
+      base = prefixes[validSector(sector)] || 'NEW';
+    }
+    var candidate = base;
+    var n = 1;
+    while (company(game, candidate)) {
+      candidate = (base.substring(0, 4) + n).substring(0, 5);
+      n++;
+    }
+    return candidate;
+  }
+
+  function createListedCompany(game, data, parents) {
+    var sector = validSector(data.sector);
+    var ticker = uniqueTicker(game, data.ticker, sector);
+    var price = round(clamp(data.price, 8, 250), 2);
+    var cap = Math.round(clamp(data.cap, 8000, 500000));
+    var created = {
+      ticker: ticker,
+      name: safe(data.name || ('Nuova ' + sector + ' Holdings'), 70),
+      sector: sector,
+      price: price,
+      prevPrice: price,
+      cap: cap,
+      vol: clamp(data.vol || 0.032, 0.01, 0.08),
+      div: clamp(data.div || 0, 0, 0.08),
+      change: 0,
+      weekHistory: [price],
+      listed: true,
+      tradingHalted: false,
+      bornWeek: game.week
+    };
+    game.companies.push(created);
+    var p = global.WorldEngine.registerCompany(created, {
+      originStory: safe(data.originStory || ('Nata sul mercato nella settimana ' + game.week + ' da capitale, tecnologia e persone provenienti da societa precedenti.'), 480),
+      mission: safe(data.mission || 'Costruire una posizione sostenibile nel proprio settore.', 220),
+      objectiveLabel: safe(data.objective || 'Raggiungere scala e redditivita entro due anni.', 220),
+      headquarters: safe(data.headquarters || 'Nova City', 70),
+      foundedYear: game.year || 1987,
+      parentTickers: parents || [],
+      reason: safe(data.reason || 'Nuova quotazione', 180)
+    });
+    return { company: created, profile: p };
+  }
+
+  function applyIPO(game, event) {
+    var result = createListedCompany(game, {
+      ticker: event.ticker,
+      name: event.name,
+      sector: event.sector,
+      price: event.price || 35 + Math.random() * 65,
+      cap: event.cap || 18000 + Math.random() * 90000,
+      vol: event.volatility || 0.04,
+      div: event.dividend || 0,
+      originStory: event.originStory,
+      mission: event.mission,
+      objective: event.objective,
+      headquarters: event.headquarters,
+      reason: event.reason
+    }, []);
+    sectorImpact(game, result.company.sector, 0.8, [result.company.ticker]);
+    var evt = {
+      type: 'ipo',
+      title: result.company.name + ' debutta in borsa',
+      description: 'La nuova societa ' + result.company.ticker + ' raccoglie capitale per ' + safe(result.profile.objective.label, 160) + '. Il debutto aumenta interesse e volatilita nel settore.',
+      primaryTicker: result.company.ticker,
+      affectedTickers: [result.company.ticker],
+      marketImpact: 4,
+      reason: safe(event.reason, 180)
+    };
+    recordEvent(game, evt);
+    return evt;
+  }
+
+  function applyMerger(game, event) {
+    var a = company(game, event.companyA);
+    var b = company(game, event.companyB);
+    var ap = a ? profile(a.ticker) : null;
+    var bp = b ? profile(b.ticker) : null;
+    if (!a || !b || a === b || !ap || !bp || a.listed === false || b.listed === false) return null;
+    var sector = event.sector || (a.sector === b.sector ? a.sector : a.sector);
+    var totalCap = a.cap + b.cap;
+    var result = createListedCompany(game, {
+      ticker: event.newTicker,
+      name: event.newName || (a.name.split(' ')[0] + ' ' + b.name.split(' ')[0] + ' Group'),
+      sector: sector,
+      price: event.newPrice || round((a.price + b.price) / 2, 2),
+      cap: totalCap * clamp(event.retainedValuePct || 92, 65, 115) / 100,
+      vol: (a.vol + b.vol) / 2 * 1.25,
+      div: (a.div + b.div) / 2,
+      originStory: 'Nata dalla fusione tra ' + a.name + ' e ' + b.name + ' dopo una trattativa tra consigli, creditori e grandi azionisti.',
+      mission: event.mission || ap.mission,
+      objective: event.objective || 'Integrare le due organizzazioni e realizzare le sinergie promesse.',
+      headquarters: event.headquarters || ap.headquarters,
+      reason: event.reason
+    }, [a.ticker, b.ticker]);
+    var merged = result.company;
+    convertPosition(game, a.ticker, merged.ticker, a.price / merged.price, merged.price);
+    convertPosition(game, b.ticker, merged.ticker, b.price / merged.price, merged.price);
+    settleShorts(game, a.ticker, a.price);
+    settleShorts(game, b.ticker, b.price);
+    a.listed = false; a.tradingHalted = true;
+    b.listed = false; b.tradingHalted = true;
+    ap.status = 'merged'; bp.status = 'merged';
+    ap.objective.status = 'confluito'; bp.objective.status = 'confluito';
+    markStatus(a.ticker, 'merged', 'Confluita in ' + merged.name);
+    markStatus(b.ticker, 'merged', 'Confluita in ' + merged.name);
+    sectorImpact(game, merged.sector, 1.5, [a.ticker, b.ticker, merged.ticker]);
+    var evt = {
+      type: 'merger',
+      title: a.name + ' e ' + b.name + ' si fondono',
+      description: 'Nasce ' + merged.name + ' (' + merged.ticker + ') con capitalizzazione combinata e un nuovo consiglio. I vecchi titoli vengono convertiti.',
+      primaryTicker: merged.ticker,
+      affectedTickers: [a.ticker, b.ticker, merged.ticker],
+      marketImpact: 6,
+      reason: safe(event.reason, 180)
+    };
+    recordEvent(game, evt);
+    return evt;
+  }
+
+  function applySpinoff(game, event) {
+    var parent = company(game, event.parent);
+    var pp = parent ? profile(parent.ticker) : null;
+    if (!parent || !pp || parent.listed === false) return null;
+    var share = clamp(event.capSharePct, 10, 40) / 100;
+    var result = createListedCompany(game, {
+      ticker: event.newTicker,
+      name: event.newName || (parent.name + ' Ventures'),
+      sector: event.sector || parent.sector,
+      price: event.newPrice || Math.max(8, parent.price * share),
+      cap: parent.cap * share,
+      vol: parent.vol * 1.35,
+      div: 0,
+      originStory: 'Separata da ' + parent.name + ' per liberare una divisione con strategia, management e capitale autonomi.',
+      mission: event.mission || 'Sviluppare il ramo separato con maggiore autonomia.',
+      objective: event.objective || 'Dimostrare redditivita come societa indipendente.',
+      headquarters: event.headquarters || pp.headquarters,
+      reason: event.reason
+    }, [parent.ticker]);
+    parent.cap *= (1 - share);
+    parent.price *= (1 - share * 0.7);
+    var parentPos = game.positions[parent.ticker];
+    if (parentPos) {
+      var granted = Math.floor(parentPos.shares * share);
+      if (granted > 0) game.positions[result.company.ticker] = { shares: granted, avgCost: result.company.price };
+    }
+    pp.milestones.unshift({ year: game.year || 1987, text: 'Scissione di ' + result.company.name });
+    var evt = {
+      type: 'spinoff',
+      title: parent.name + ' separa ' + result.company.name,
+      description: 'La divisione diventa autonoma e viene quotata come ' + result.company.ticker + '. Gli azionisti della capogruppo ricevono nuove azioni.',
+      primaryTicker: result.company.ticker,
+      affectedTickers: [parent.ticker, result.company.ticker],
+      marketImpact: 3,
+      reason: safe(event.reason, 180)
+    };
+    recordEvent(game, evt);
+    return evt;
+  }
+
+  function normalizeEvent(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    var type = String(raw.type || '').toLowerCase();
+    if (!EVENT_LABELS[type]) return null;
+    var out = {};
+    for (var k in raw) if (Object.prototype.hasOwnProperty.call(raw, k)) out[k] = raw[k];
+    out.type = type;
+    return out;
+  }
+
+  function applyEvent(game, raw) {
+    var event = normalizeEvent(raw);
+    if (!event) return null;
+    if (event.type === 'bankruptcy') return applyBankruptcy(game, event);
+    if (event.type === 'restructuring') return applyRestructuring(game, event);
+    if (event.type === 'acquisition') return applyAcquisition(game, event);
+    if (event.type === 'merger') return applyMerger(game, event);
+    if (event.type === 'ipo') return applyIPO(game, event);
+    if (event.type === 'spinoff') return applySpinoff(game, event);
+    return null;
+  }
+
+  function automaticEvent(game, distressCandidates) {
+    if (distressCandidates.length) {
+      var worst = distressCandidates[0];
+      if (worst.health < 10 || Math.random() < 0.35) {
+        return { type: 'bankruptcy', target: worst.ticker, recoveryPct: 2 + Math.random() * 10, reason: 'Liquidita esaurita, creditori non concordi e piano di salvataggio fallito.' };
+      }
+      return { type: 'restructuring', target: worst.ticker, capitalInjection: 12 + Math.random() * 15, dilutionPct: 15 + Math.random() * 25, reason: 'Accordo urgente con banche, obbligazionisti e soci di riferimento.' };
+    }
+    var active = activeCompanies(game);
+    if (game.week >= 12 && active.length >= 2 && Math.random() < 0.025) {
+      var a = pick(active);
+      var peers = active.filter(function (c) { return c.ticker !== a.ticker && c.sector === a.sector; });
+      if (peers.length) {
+        var b = pick(peers);
+        return { type: 'merger', companyA: a.ticker, companyB: b.ticker, reason: 'Pressione competitiva e ricerca di scala industriale.' };
+      }
+    }
+    if (game.week >= 8 && game.week % 8 === 0 && Math.random() < 0.22) {
+      var sector = pick(VALID_SECTORS);
+      return { type: 'ipo', sector: sector, ticker: '', name: 'Nova ' + sector + ' Corporation', reason: 'Nuovi investitori finanziano un progetto industriale ad alta crescita.' };
+    }
+    if (game.week >= 16 && active.length && Math.random() < 0.015) {
+      var parent = pick(active);
+      return { type: 'spinoff', parent: parent.ticker, sector: parent.sector, reason: 'Il consiglio separa una divisione per renderne trasparente il valore.' };
+    }
+    return null;
+  }
+
+  function processTurn(events, game) {
+    if (processing || !game) return [];
+    processing = true;
+    ensureFields(game);
+    var applied = [];
+    var input = events instanceof Array ? events.slice(0, 2) : [];
+    for (var i = 0; i < input.length; i++) {
+      var result = applyEvent(game, input[i]);
+      if (result) applied.push(result);
+    }
+    var distress = evaluateHealth(game);
+    if (!applied.length) {
+      var automatic = automaticEvent(game, distress);
+      if (automatic) {
+        var autoResult = applyEvent(game, automatic);
+        if (autoResult) applied.push(autoResult);
+      }
+    }
+    processing = false;
+    render();
+    try { if (typeof saveAuto === 'function') saveAuto(); } catch (e) {}
+    return applied;
+  }
+
+  function ensureUI() {
+    if (typeof document === 'undefined') return;
+    var dashboard = document.getElementById('view-dashboard');
+    if (dashboard && !document.getElementById('corporate-lifecycle-card')) {
+      var card = document.createElement('div');
+      card.id = 'corporate-lifecycle-card';
+      card.className = 'card';
+      card.innerHTML = '<h3>🏗️ Ciclo di vita delle società</h3><div id="corporate-lifecycle-content"></div>';
+      dashboard.appendChild(card);
+    }
+  }
+
+  function render() {
+    if (typeof document === 'undefined') return;
+    ensureUI();
+    var el = document.getElementById('corporate-lifecycle-content');
+    var game = getGame();
+    var world = getWorld();
+    if (!el || !game || !world) return;
+    var active = activeCompanies(game);
+    var distressed = 0;
+    var failed = 0;
+    for (var k in world.companies) {
+      if (!Object.prototype.hasOwnProperty.call(world.companies, k)) continue;
+      var status = world.companies[k].status || 'active';
+      if (status === 'distressed' || status === 'restructuring') distressed++;
+      if (status === 'bankrupt' || status === 'liquidated') failed++;
+    }
+    var html = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><span class="pill g">Quotate ' + active.length + '</span><span class="pill y">In crisi ' + distressed + '</span><span class="pill r">Fallite ' + failed + '</span></div>';
+    var events = world.corporateEvents || [];
+    if (!events.length) html += '<div class="gray" style="font-size:11px">Nessuna operazione straordinaria registrata.</div>';
+    for (var i = 0; i < events.length && i < 5; i++) {
+      var e = events[i];
+      html += '<div style="padding:7px 0;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;gap:6px"><strong style="font-size:11px">' + safe(e.title, 100) + '</strong><span class="gray" style="font-size:9px">Sett. ' + e.week + '</span></div><div class="gray" style="font-size:10px;margin-top:2px">' + safe(e.description, 220) + '</div></div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function install() {
+    if (installed) return;
+    installed = true;
+    var game = getGame();
+    if (game) ensureFields(game);
+    ensureUI();
+    render();
+  }
+
+  global.CorporateLifecycle = {
+    install: install,
+    processTurn: processTurn,
+    applyEvent: function (event) { return applyEvent(getGame(), event); },
+    financialHealth: function (ticker) { return financialHealth(profile(ticker)); },
+    render: render,
+    version: VERSION
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = global.CorporateLifecycle;
   if (typeof document !== 'undefined') global.setTimeout(install, 0);
 })(typeof window !== 'undefined' ? window : this);
 
@@ -12629,6 +13304,7 @@ tr:hover{background:var(--bg3)}
 
 
 
+
 // ======================== CONSTANTS ========================
 const COMMISSION_RATE=0.001;
 const SECTOR_NAMES={tech:'Tech',energy:'Energia',finance:'Finanza',health:'Sanita',consumer:'Consumi',industrial:'Industriale',materials:'Materiali',utilities:'Utilities',realestate:'Immobiliare',communications:'Comunicazioni'};
@@ -12860,6 +13536,7 @@ function computeIndices(){
   var sums={SPTX:0,TECH:0,ENERGY:0,FINANCE:0,HEALTH:0,CONSUMER:0,INDU:0};
   var counts={SPTX:0,TECH:0,ENERGY:0,FINANCE:0,HEALTH:0,CONSUMER:0,INDU:0};
   G.companies.forEach(c=>{
+    if(c.listed===false)return;
     sums.SPTX+=c.price;counts.SPTX++;
     if(c.sector==='tech'){sums.TECH+=c.price;counts.TECH++}
     if(c.sector==='energy'){sums.ENERGY+=c.price;counts.ENERGY++}
@@ -12893,6 +13570,7 @@ function advanceTurn(){
   
   // Apply price movements
   G.companies.forEach(c=>{
+    if(c.listed===false||c.tradingHalted){c.change=0;return}
     var baseVol=c.vol;
     // Apply sector boost
     if(G.activeSectorBoosts[c.sector]){
@@ -12910,7 +13588,7 @@ function advanceTurn(){
   events.forEach(ev=>{
     if(ev.scope==='ticker'){
       var c=getCompany(ev.ticker);
-      if(c){
+      if(c&&c.listed!==false&&!c.tradingHalted){
         c.price*=(1+ev.impact);
         if(c.price<1)c.price=1;
         c.change=((c.price-c.prevPrice)/c.prevPrice*100);
@@ -12918,7 +13596,7 @@ function advanceTurn(){
       }
     }else if(ev.scope==='sector'){
       G.companies.forEach(c=>{
-        if(c.sector===ev.sector){
+        if(c.listed!==false&&!c.tradingHalted&&c.sector===ev.sector){
           c.price*=(1+ev.impact);
           if(c.price<1)c.price=1;
           c.change=((c.price-c.prevPrice)/c.prevPrice*100);
@@ -12928,6 +13606,7 @@ function advanceTurn(){
       G.activeSectorBoosts[ev.sector]={impact:ev.impact*0.3,turns:3};
     }else if(ev.scope==='macro'){
       G.companies.forEach(c=>{
+        if(c.listed===false||c.tradingHalted)return;
         c.price*=(1+ev.impact*(0.5+Math.random()*0.5));
         if(c.price<1)c.price=1;
         c.change=((c.price-c.prevPrice)/c.prevPrice*100);
@@ -13007,7 +13686,9 @@ function generateEvent(){
   var template=EVENT_TEMPLATES[Math.floor(Math.random()*EVENT_TEMPLATES.length)];
   var ev={scope:template.scope,title:template.title,desc:template.desc,impact:template.impact,vol:template.vol,type:template.type};
   if(template.scope==='ticker'){
-    var c=G.companies[Math.floor(Math.random()*G.companies.length)];
+    var listed=G.companies.filter(function(item){return item.listed!==false&&!item.tradingHalted});
+    if(!listed.length)return null;
+    var c=listed[Math.floor(Math.random()*listed.length)];
     ev.ticker=c.ticker;
     ev.title=template.title(c);
     ev.desc=template.desc(c);
@@ -13029,7 +13710,7 @@ function generateEvent(){
 function payDividends(){
   var total=0;
   for(var t in G.positions){
-    var c=getCompany(t);if(!c)continue;
+    var c=getCompany(t);if(!c||c.listed===false)continue;
     var div=c.div*0.01*c.price*G.positions[t].shares;
     if(div>0){
       G.cash+=div;
@@ -13040,7 +13721,7 @@ function payDividends(){
   // Special dividends from assembly decisions
   for(var i=0;i<G.shorts.length;i++){
     var s=G.shorts[i];
-    var c=getCompany(s.ticker);if(!c)continue;
+    var c=getCompany(s.ticker);if(!c||c.listed===false)continue;
     var div=c.div*0.01*c.price*s.shares;
     if(div>0){
       G.cash-=div;
@@ -13058,7 +13739,7 @@ function payDividends(){
 // ======================== ASSEMBLIES ========================
 function checkAssemblies(){
   for(var t in G.positions){
-    var c=getCompany(t);if(!c)continue;
+    var c=getCompany(t);if(!c||c.listed===false)continue;
     var pct=getOwnershipPct(t);
     if(pct>=10){
       // Check if already has pending assembly
@@ -13201,6 +13882,7 @@ function resolveAssembly(ticker){
 // ======================== TRADING ========================
 function openTradeModal(ticker){
   var c=getCompany(ticker);if(!c)return;
+  if(c.listed===false||c.tradingHalted){toast('warning','Titolo non negoziabile: societa ritirata o contrattazioni sospese');return}
   var owned=G.positions[ticker]?G.positions[ticker].shares:0;
   var lvl=G.level;
   tradeModalState={ticker,owned,mode:'buy',orderType:'market',shares:1,limitPrice:c.price};
@@ -13332,6 +14014,7 @@ function updateTradePreview(){
 function executeTrade(){
   if(!tradeModalState)return;
   var c=getCompany(tradeModalState.ticker);
+  if(!c||c.listed===false||c.tradingHalted){toast('error','Operazione annullata: titolo non negoziabile');closeTradeModal();return}
   var shares=parseInt(document.getElementById('trade-shares').value)||0;
   var price=tradeModalState.orderType==='limit'?parseFloat(document.getElementById('trade-limit-price').value)||c.price:c.price;
   var total=shares*price;
@@ -13370,6 +14053,7 @@ function executeTrade(){
 function executeShort(){
   if(!tradeModalState)return;
   var c=getCompany(tradeModalState.ticker);
+  if(!c||c.listed===false||c.tradingHalted){toast('error','Short non disponibile: titolo non negoziabile');closeTradeModal();return}
   var shares=parseInt(document.getElementById('trade-shares').value)||0;
   var price=tradeModalState.orderType==='limit'?parseFloat(document.getElementById('trade-limit-price').value)||c.price:c.price;
   var total=shares*price;
@@ -13712,7 +14396,9 @@ function renderMarket(){
   filtered.forEach(c=>{
     var ch=c.change||0;
     var chClass=ch>=0?'green':'red';
-    html+='<tr style="cursor:pointer" onclick="openTradeModal(\''+c.ticker+'\')"><td class="ticker-cell">'+c.ticker+'</td><td>'+c.name+'</td><td><span class="pill" style="background:'+SECTOR_COLORS[c.sector]+'22;color:'+SECTOR_COLORS[c.sector]+'">'+SECTOR_NAMES[c.sector]+'</span></td><td class="num">'+formatEur(c.price)+'</td><td class="num '+chClass+'">'+formatPct(ch)+'</td><td class="num">'+(c.cap/1000).toFixed(0)+'M</td><td class="num">'+(c.vol*100).toFixed(1)+'%</td><td class="num '+(c.div>0?'green':'')+'">'+(c.div*100).toFixed(1)+'%</td><td><button class="btn btn-sm btn-blue" onclick="event.stopPropagation();openTradeModal(\''+c.ticker+'\')">Trade</button></td></tr>';
+    var tradeable=c.listed!==false&&!c.tradingHalted;
+    var status=c.listed===false?'RITIRATA':(c.tradingHalted?'SOSPESA':'');
+    html+='<tr style="cursor:'+(tradeable?'pointer':'default')+';opacity:'+(tradeable?'1':'.55')+'"'+(tradeable?' onclick="openTradeModal(\''+c.ticker+'\')"':'')+'><td class="ticker-cell">'+c.ticker+'</td><td>'+c.name+(status?' <span class="pill r">'+status+'</span>':'')+'</td><td><span class="pill" style="background:'+SECTOR_COLORS[c.sector]+'22;color:'+SECTOR_COLORS[c.sector]+'">'+SECTOR_NAMES[c.sector]+'</span></td><td class="num">'+formatEur(c.price)+'</td><td class="num '+chClass+'">'+formatPct(ch)+'</td><td class="num">'+(c.cap/1000).toFixed(0)+'M</td><td class="num">'+(c.vol*100).toFixed(1)+'%</td><td class="num '+(c.div>0?'green':'')+'">'+(c.div*100).toFixed(1)+'%</td><td>'+(tradeable?'<button class="btn btn-sm btn-blue" onclick="event.stopPropagation();openTradeModal(\''+c.ticker+'\')">Trade</button>':'<button class="btn btn-sm" disabled>Non quotata</button>')+'</td></tr>';
   });
   body.innerHTML=html;
 }
@@ -13988,6 +14674,7 @@ if(typeof CompetitorEngine!=='undefined'&&!window._competitorEngine){
   }catch(e){console.warn('Competitor Engine init:',e)}
 }
 if(typeof WorldEngine!=='undefined'&&WorldEngine.install)WorldEngine.install();
+if(typeof CorporateLifecycle!=='undefined'&&CorporateLifecycle.install)CorporateLifecycle.install();
 if(typeof BrokerStory!=='undefined'&&BrokerStory.install)BrokerStory.install();
 
 

@@ -738,6 +738,7 @@
       'Ogni societa possiede una storia, una missione e un obiettivo pluriennale. Gli amministratori sono persone autonome: agiscono secondo ruolo, etica, influenza, lealta e agenda. I soci reagiscono secondo quota, fiducia e obiettivo. ' +
       'Fai avanzare o arretrare gli obiettivi in modo causale. Crea conflitti tra CdA e soci, alleanze, dimissioni, richieste attiviste o assemblee solo quando giustificati. ' +
       'I competitor perseguono obiettivi di medio periodo. Mantieni memoria e continuita. ' +
+      'Il giocatore e una persona nel mondo: considera stress, salute, credibilita, pressione legale, leva, scelte narrative e rischio di rovina ricevuti nel contesto. Non dichiarare arbitrariamente il game over: produci fatti coerenti che il motore personale valutera. ' +
       'Puoi proporre al massimo due operazioni straordinarie, ma solo quando fondamentali, crisi, strategia e fatti recenti le rendono credibili. Un fallimento richiede dissesto o crisi prolungata; fusioni e acquisizioni richiedono una logica industriale; IPO e spin-off devono colmare un bisogno reale del mercato. ' +
       'Usa esclusivamente ticker quotati ricevuti per target, acquirenti e societa madri; nuovi ticker sono ammessi solo per merger, ipo e spinoff. Ogni fatto deve propagarsi a prezzi, settore, azionisti, competitor e indici attraverso gli effetti applicati dal motore. Contesto: ' + compact + ' ' +
       'Rispondi con JSON {briefing,macro,companies,competitors,corporateEvents,assembly}. ' +

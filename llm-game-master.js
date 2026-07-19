@@ -741,7 +741,7 @@
       'Rispondi con JSON {briefing,macro,companies,competitors,assembly}. ' +
       'macro={region,title,description,growthDelta,inflationDelta,ratesDelta,sentimentImpact}; ' +
       'companies=max 4 elementi {ticker,action,title,description,revenueGrowthDelta,marginDelta,debtDelta,governanceDelta,innovationDelta,priceImpactPct,boardDecision,shareholderMoves}. ' +
-      'boardDecision={directorRole,action,motive,supportDelta,objectiveProgress,influenceDelta}. ' +
+      'boardDecision={directorRole,action,motive,supportDelta,objectiveProgress,influenceDelta,competenceDelta,ethicsDelta,status}. status e attivo|dimissionario|rimosso|sospeso. ' +
       'shareholderMoves=max 4 elementi {blockId,action,motive,confidenceDelta,stance}. Usa solo directorRole e blockId presenti nel contesto; ' +
       'competitors={nickname,goal,plan,target,stance,conviction}; ' +
       'assembly=null oppure {ticker,type,title,description,priceImpactPct,growthImpact,debtImpact}. Applica delta piccoli e realistici.';

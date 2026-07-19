@@ -640,6 +640,14 @@
       card.innerHTML = '<h3>🌍 World Intelligence</h3><div id="world-pulse-content"></div>';
       dashboard.appendChild(card);
     }
+    var market = document.getElementById('view-market');
+    if (market && !document.getElementById('company-governance-card')) {
+      var gcard = document.createElement('div');
+      gcard.id = 'company-governance-card';
+      gcard.className = 'card';
+      gcard.innerHTML = '<h3>🏢 Societa, amministratori e soci</h3><div id="company-governance-content"></div>';
+      market.insertBefore(gcard, market.firstChild);
+    }
     var assembly = document.getElementById('view-assembly');
     if (assembly && !document.getElementById('world-assembly-card')) {
       var acard = document.createElement('div');
@@ -648,6 +656,50 @@
       acard.innerHTML = '<h3>🏛️ Assemblea Globale</h3><div id="world-assembly-content"></div>';
       assembly.insertBefore(acard, assembly.firstChild);
     }
+  }
+
+  function selectCompany(ticker) {
+    selectedCompanyTicker = ticker;
+    renderCompanyHub();
+  }
+
+  function renderCompanyHub() {
+    if (typeof document === 'undefined' || !state) return;
+    var el = document.getElementById('company-governance-content');
+    if (!el) return;
+    var game = getGame();
+    var companies = game && game.companies ? game.companies : [];
+    if (!selectedCompanyTicker && companies.length) selectedCompanyTicker = companies[0].ticker;
+    var profile = state.companies[selectedCompanyTicker];
+    if (!profile) {
+      el.innerHTML = '<div class="gray">Profilo societario non disponibile.</div>';
+      return;
+    }
+    var options = '';
+    for (var i = 0; i < companies.length; i++) {
+      options += '<option value="' + safeText(companies[i].ticker, 12) + '"' + (companies[i].ticker === selectedCompanyTicker ? ' selected' : '') + '>' + safeText(companies[i].name, 70) + ' (' + safeText(companies[i].ticker, 12) + ')</option>';
+    }
+    var objective = profile.objective || { label: 'Obiettivo non definito', progress: 0, status: 'in corso' };
+    var html = '<select onchange="WorldEngine.selectCompany(this.value)" style="width:100%;max-width:420px;background:var(--bg3);color:var(--text);border:1px solid var(--border);padding:8px;border-radius:6px;margin-bottom:10px">' + options + '</select>';
+    html += '<div style="display:grid;grid-template-columns:1.15fr .85fr;gap:10px" class="company-governance-grid">';
+    html += '<div><div style="font-size:16px;font-weight:700">' + safeText(profile.name, 80) + '</div><div class="gray" style="font-size:11px">Fondata nel ' + profile.foundedYear + ' · Sede: ' + safeText(profile.headquarters, 60) + '</div><p style="font-size:12px;line-height:1.55">' + safeText(profile.originStory, 420) + '</p><div style="font-size:11px"><strong>Missione:</strong> ' + safeText(profile.mission, 220) + '</div>';
+    html += '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px"><strong>Obiettivo:</strong><span>' + round(objective.progress, 1) + '% · ' + safeText(objective.status, 30) + '</span></div><div style="font-size:11px;color:var(--text2);margin:3px 0">' + safeText(objective.label, 220) + '</div><div style="height:7px;background:var(--bg4);border-radius:8px;overflow:hidden"><span style="display:block;height:100%;width:' + clamp(objective.progress, 0, 100) + '%;background:linear-gradient(90deg,var(--blue),var(--green))"></span></div></div></div>';
+    html += '<div><div style="font-size:11px;margin-bottom:6px"><strong>CdA</strong> · sostegno ' + profile.boardSupport + '%</div>';
+    for (var b = 0; b < profile.board.length; b++) {
+      var d = profile.board[b];
+      html += '<div style="padding:6px;background:var(--bg3);border-radius:5px;margin-bottom:5px"><div style="font-size:11px;font-weight:700">' + safeText(d.name, 60) + '</div><div class="gray" style="font-size:9px">' + safeText(d.role, 50) + ' · influenza ' + d.influence + ' · etica ' + d.ethics + '</div><div style="font-size:10px;margin-top:2px">' + safeText(d.lastMove, 120) + '</div></div>';
+    }
+    html += '</div></div>';
+    html += '<div style="margin-top:12px"><strong style="font-size:11px">Blocchi azionari</strong><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:5px;margin-top:6px">';
+    for (var s = 0; s < profile.shareholderBlocks.length; s++) {
+      var sh = profile.shareholderBlocks[s];
+      html += '<div style="background:var(--bg3);padding:7px;border-radius:5px"><div style="display:flex;justify-content:space-between;font-size:10px"><strong>' + safeText(sh.name, 70) + '</strong><span>' + sh.stake + '%</span></div><div class="gray" style="font-size:9px">' + safeText(sh.stance, 30) + ' · fiducia ' + sh.confidence + '</div><div style="font-size:9px;margin-top:3px">' + safeText(sh.objective, 100) + '</div></div>';
+    }
+    html += '</div></div>';
+    if (profile.governanceEvents.length) {
+      html += '<div style="margin-top:10px"><strong style="font-size:11px">Ultima dinamica societaria</strong><div style="font-size:10px;color:var(--text2);margin-top:4px">' + safeText(profile.governanceEvents[0].actor, 80) + ': ' + safeText(profile.governanceEvents[0].action, 180) + '</div></div>';
+    }
+    el.innerHTML = html;
   }
 
   function render() {
@@ -667,6 +719,7 @@
       if (event) html += '<div style="margin-top:9px;padding:7px;border-left:3px solid ' + (event.impact >= 0 ? 'var(--green)' : 'var(--red)') + '"><strong>' + safeText(event.title, 90) + '</strong><div class="gray" style="font-size:11px">' + regionName(event.region) + ' — ' + safeText(event.description, 200) + '</div></div>';
       world.innerHTML = html;
     }
+    renderCompanyHub();
     var assembly = document.getElementById('world-assembly-content');
     if (assembly) {
       if (!state.openAssembly) {
@@ -675,7 +728,7 @@
       } else {
         var a = state.openAssembly;
         var canVote = a.playerWeight > 0;
-        assembly.innerHTML = '<div><strong>' + safeText(a.companyName, 80) + ' (' + safeText(a.ticker, 12) + ')</strong><span class="pill b" style="margin-left:6px">Tua quota ' + a.playerWeight + '%</span></div><div style="font-size:14px;margin-top:8px"><strong>' + safeText(a.title, 100) + '</strong></div><div class="gray" style="font-size:12px;margin:5px 0 9px">' + safeText(a.description, 240) + '</div><div style="font-size:11px;margin-bottom:8px">CdA favorevole: ' + a.boardSupport + '% · Blocchi rivali: ' + a.blocks.length + '</div>' + (canVote ? '<button class="btn btn-sm btn-blue" onclick="WorldEngine.vote(\'yes\')">Vota a favore</button> <button class="btn btn-sm" onclick="WorldEngine.vote(\'no\')">Vota contro</button>' : '<div class="gray" style="font-size:11px">Acquista azioni della societa per ottenere peso di voto.</div>');
+        assembly.innerHTML = '<div><strong>' + safeText(a.companyName, 80) + ' (' + safeText(a.ticker, 12) + ')</strong><span class="pill b" style="margin-left:6px">Tua quota ' + a.playerWeight + '%</span></div><div style="font-size:14px;margin-top:8px"><strong>' + safeText(a.title, 100) + '</strong></div><div class="gray" style="font-size:12px;margin:5px 0 9px">' + safeText(a.description, 240) + '</div><div style="font-size:11px;margin-bottom:8px">CdA favorevole: ' + a.boardSupport + '% · Blocchi societari: ' + (a.corporateBlocks || []).length + ' · Rivali: ' + a.blocks.length + '</div>' + (canVote ? '<button class="btn btn-sm btn-blue" onclick="WorldEngine.vote(\'yes\')">Vota a favore</button> <button class="btn btn-sm" onclick="WorldEngine.vote(\'no\')">Vota contro</button>' : '<div class="gray" style="font-size:11px">Acquista azioni della societa per ottenere peso di voto.</div>');
       }
     }
   }
@@ -701,6 +754,8 @@
     processWorldTurn: processWorldTurn,
     vote: resolveAssembly,
     render: render,
+    selectCompany: selectCompany,
+    getCompanyProfile: function (ticker) { return state && state.companies ? state.companies[ticker] : null; },
     getState: function () { return state; },
     reset: function () {
       try { if (global.localStorage) global.localStorage.removeItem(STORAGE_KEY); } catch (e) {}

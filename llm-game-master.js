@@ -1,7 +1,7 @@
 /*
  * llm-game-master.js
  * LLM Game Master per Wolf of Wall Street Broker Tycoon
- * Versione 3.1.0 - Usa Ollama Cloud via proxy Vercel
+ * Versione 4.0.0 - Usa Ollama Cloud via proxy Vercel
  * Genera contenuto dinamico: notizie, decisioni competitor, dialoghi, eventi.
  *
  * Restrizioni di compatibilita':
@@ -735,13 +735,16 @@
     var compact = JSON.stringify(context || {});
     if (compact.length > 18000) compact = compact.substring(0, 18000);
     return 'Simula una settimana coerente di un ecosistema finanziario mondiale persistente. ' +
-      'Le societa reagiscono ai fondamentali; i competitor perseguono obiettivi di medio periodo; le assemblee dipendono da quote, alleanze e governance. ' +
-      'Non inventare ticker. Mantieni memoria e continuita causale. Contesto: ' + compact + ' ' +
+      'Ogni societa possiede una storia, una missione e un obiettivo pluriennale. Gli amministratori sono persone autonome: agiscono secondo ruolo, etica, influenza, lealta e agenda. I soci reagiscono secondo quota, fiducia e obiettivo. ' +
+      'Fai avanzare o arretrare gli obiettivi in modo causale. Crea conflitti tra CdA e soci, alleanze, dimissioni, richieste attiviste o assemblee solo quando giustificati. ' +
+      'I competitor perseguono obiettivi di medio periodo. Non inventare ticker, amministratori o blocchi diversi da quelli ricevuti. Mantieni memoria e continuita. Contesto: ' + compact + ' ' +
       'Rispondi con JSON {briefing,macro,companies,competitors,assembly}. ' +
       'macro={region,title,description,growthDelta,inflationDelta,ratesDelta,sentimentImpact}; ' +
-      'companies=max 4 elementi {ticker,action,title,description,revenueGrowthDelta,marginDelta,debtDelta,governanceDelta,innovationDelta,priceImpactPct}; ' +
+      'companies=max 4 elementi {ticker,action,title,description,revenueGrowthDelta,marginDelta,debtDelta,governanceDelta,innovationDelta,priceImpactPct,boardDecision,shareholderMoves}. ' +
+      'boardDecision={directorRole,action,motive,supportDelta,objectiveProgress,influenceDelta}. ' +
+      'shareholderMoves=max 4 elementi {blockId,action,motive,confidenceDelta,stance}. Usa solo directorRole e blockId presenti nel contesto; ' +
       'competitors={nickname,goal,plan,target,stance,conviction}; ' +
-      'assembly=null oppure {ticker,type,title,description,priceImpactPct,growthImpact,debtImpact}.';
+      'assembly=null oppure {ticker,type,title,description,priceImpactPct,growthImpact,debtImpact}. Applica delta piccoli e realistici.';
   }
 
   function generateWorldTurn(context) {
@@ -825,7 +828,7 @@
     isAvailable: isAvailable,
     getStats: getStats,
     resetTurn: resetTurn,
-    version: '3.1.0'
+    version: '4.0.0'
   };
 
   var _root = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : (typeof self !== 'undefined' ? self : this));

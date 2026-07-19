@@ -228,7 +228,11 @@
 
   function buildContext(game, competitors) {
     var companies = [];
-    var list = game.companies || [];
+    var allCompanies = game.companies || [];
+    var list = [];
+    var rotationSize = Math.min(8, allCompanies.length);
+    var rotationStart = allCompanies.length ? (((game.week || 1) - 1) * rotationSize) % allCompanies.length : 0;
+    for (var ri = 0; ri < rotationSize; ri++) list.push(allCompanies[(rotationStart + ri) % allCompanies.length]);
     for (var i = 0; i < list.length; i++) {
       var profile = state.companies[list[i].ticker];
       companies.push({
@@ -632,6 +636,12 @@
   }
   function ensurePanels() {
     if (typeof document === 'undefined') return;
+    if (!document.getElementById('company-governance-style')) {
+      var governanceStyle = document.createElement('style');
+      governanceStyle.id = 'company-governance-style';
+      governanceStyle.textContent = '@media(max-width:760px){.company-governance-grid{grid-template-columns:1fr!important}}';
+      document.head.appendChild(governanceStyle);
+    }
     var dashboard = document.getElementById('view-dashboard');
     if (dashboard && !document.getElementById('world-pulse-card')) {
       var card = document.createElement('div');

@@ -173,7 +173,8 @@
       companies: companies,
       competitors: rivals,
       recentEvents: state.globalEvents.slice(0, 4),
-      recentAssemblies: state.assemblyLog.slice(0, 3)
+      recentAssemblies: state.assemblyLog.slice(0, 3),
+      brokerStory: global.BrokerStory && global.BrokerStory.getContext ? global.BrokerStory.getContext() : null
     };
   }
 

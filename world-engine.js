@@ -7,10 +7,11 @@
   'use strict';
 
   var STORAGE_KEY = 'wbt_world_state_v1';
-  var ENGINE_VERSION = '3.0.0';
+  var ENGINE_VERSION = '4.0.0';
   var installed = false;
   var processing = false;
   var state = null;
+  var selectedCompanyTicker = null;
 
   function clamp(v, min, max) { return Math.max(min, Math.min(max, Number(v) || 0)); }
   function round(v, digits) {
@@ -37,6 +38,104 @@
     return null;
   }
 
+  var DIRECTOR_FIRST_NAMES = ['Elena', 'Marcus', 'Leila', 'David', 'Sofia', 'Adrian', 'Marta', 'Victor', 'Nadia', 'Samuel', 'Iris', 'Thomas'];
+  var DIRECTOR_LAST_NAMES = ['Valli', 'Kane', 'Okafor', 'Weiss', 'Marin', 'Rossi', 'Chen', 'Novak', 'Moreau', 'Silva', 'Cole', 'Bauer'];
+  var CITY_NAMES = ['Northbridge', 'Port Azure', 'Grand Harbor', 'Nova City', 'Silver Bay', 'Eastgate', 'Iron Valley', 'San Aurelio'];
+  var SECTOR_LORE = {
+    tech: { origin: 'nata in un laboratorio universitario durante la corsa ai personal computer', mission: 'rendere la tecnologia accessibile senza rinunciare al controllo dei dati', objective: 'guidare la prossima piattaforma digitale globale' },
+    energy: { origin: 'fondata da ingegneri che trasformarono una centrale in perdita in un polo energetico', mission: 'garantire energia stabile durante la transizione industriale', objective: 'raddoppiare la capacita produttiva riducendo il rischio ambientale' },
+    finance: { origin: 'cresciuta da una piccola casa di credito per commercianti e famiglie', mission: 'finanziare crescita reale mantenendo la fiducia dei depositanti', objective: 'diventare il riferimento finanziario della propria regione' },
+    health: { origin: 'creata dopo una ricerca medica che nessun grande investitore voleva finanziare', mission: 'portare cure efficaci dal laboratorio ai pazienti', objective: 'ottenere una scoperta clinica capace di cambiare il settore' },
+    consumer: { origin: 'partita da un singolo negozio e costruita sul rapporto diretto con i clienti', mission: 'offrire prodotti affidabili a prezzi sostenibili', objective: 'espandersi in tre nuovi mercati senza perdere identita' },
+    industrial: { origin: 'nata dalla fusione di officine sopravvissute a una lunga recessione', mission: 'costruire infrastrutture che durino oltre un ciclo economico', objective: 'modernizzare gli impianti e conquistare grandi commesse internazionali' },
+    materials: { origin: 'fondata vicino a un distretto minerario dimenticato dagli investitori', mission: 'fornire materie prime strategiche con una filiera trasparente', objective: 'assicurarsi riserve per venti anni riducendo il debito' },
+    utilities: { origin: 'costruita per collegare comunita che il mercato considerava poco redditizie', mission: 'garantire servizi essenziali affidabili e universali', objective: 'rinnovare la rete mantenendo dividendi stabili' },
+    realestate: { origin: 'nata dalla ricostruzione di un quartiere industriale abbandonato', mission: 'trasformare capitale immobiliare in comunita vive', objective: 'sviluppare un portafoglio globale a reddito stabile' },
+    communications: { origin: 'fondata da tecnici che collegarono le prime reti regionali', mission: 'rendere ogni distanza economicamente irrilevante', objective: 'controllare la nuova generazione di infrastrutture di comunicazione' }
+  };
+
+  function directorName(seed) {
+    return DIRECTOR_FIRST_NAMES[seed % DIRECTOR_FIRST_NAMES.length] + ' ' + DIRECTOR_LAST_NAMES[(seed * 3 + 2) % DIRECTOR_LAST_NAMES.length];
+  }
+
+  function makeBoard(index) {
+    var roles = ['Presidente', 'Amministratore Delegato', 'Direttore Finanziario', 'Consigliere Indipendente'];
+    var agendas = ['stabilita e dividendi', 'crescita e acquisizioni', 'riduzione del debito', 'trasparenza e tutela dei soci'];
+    var board = [];
+    for (var i = 0; i < roles.length; i++) {
+      board.push({
+        id: 'dir_' + index + '_' + i,
+        name: directorName(index * 4 + i),
+        role: roles[i],
+        competence: 55 + ((index * 11 + i * 7) % 41),
+        ethics: 40 + ((index * 13 + i * 9) % 56),
+        influence: i === 0 ? 82 : (i === 1 ? 88 : 55 + ((index + i * 5) % 30)),
+        loyalty: pick(['societa', 'soci', 'management', 'personale']),
+        agenda: agendas[(index + i) % agendas.length],
+        status: 'attivo',
+        lastMove: 'Sostiene il piano industriale.'
+      });
+    }
+    return board;
+  }
+
+  function makeShareholders(index) {
+    var founder = 12 + (index % 12);
+    var institutional = 18 + (index % 9);
+    var activist = 5 + (index % 7);
+    var employees = 4 + (index % 5);
+    var retail = 100 - founder - institutional - activist - employees;
+    return [
+      { id: 'founders', name: 'Fondatori e famiglie', stake: founder, stance: 'strategica', objective: 'proteggere identita e controllo', confidence: 65 },
+      { id: 'institutional', name: 'Investitori istituzionali', stake: institutional, stance: 'prudente', objective: 'rendimento stabile e governance', confidence: 62 },
+      { id: 'activist', name: 'Fondo attivista', stake: activist, stance: 'aggressiva', objective: 'sbloccare valore rapidamente', confidence: 45 },
+      { id: 'employees', name: 'Dipendenti e management', stake: employees, stance: 'difensiva', objective: 'occupazione e investimenti', confidence: 70 },
+      { id: 'retail', name: 'Azionisti diffusi', stake: retail, stance: 'variabile', objective: 'prezzo e dividendi', confidence: 55 }
+    ];
+  }
+
+  function makeCompanyLore(c, index) {
+    var lore = SECTOR_LORE[c.sector] || SECTOR_LORE.industrial;
+    var founded = 1948 + ((index * 7) % 58);
+    var city = CITY_NAMES[index % CITY_NAMES.length];
+    return {
+      foundedYear: founded,
+      headquarters: city,
+      originStory: c.name + ' e stata ' + lore.origin + '. Dal ' + founded + ' la societa ha attraversato crisi, cambi di controllo e una generazione di nuovi dirigenti.',
+      mission: lore.mission,
+      objective: {
+        id: 'obj_' + c.ticker,
+        label: lore.objective,
+        target: 100,
+        progress: 18 + ((index * 9) % 55),
+        deadlineWeek: 26 + (index % 27),
+        status: 'in corso'
+      },
+      milestones: [
+        { year: founded, text: 'Fondazione a ' + city },
+        { year: founded + 12 + (index % 8), text: 'Prima espansione fuori dalla regione' },
+        { year: founded + 27 + (index % 14), text: 'Riorganizzazione societaria e ingresso di nuovi soci' }
+      ],
+      board: makeBoard(index),
+      shareholderBlocks: makeShareholders(index),
+      governanceEvents: []
+    };
+  }
+
+  function ensureCompanyGovernance(profile, company, index) {
+    var lore = makeCompanyLore(company, index);
+    if (!profile.foundedYear) profile.foundedYear = lore.foundedYear;
+    if (!profile.headquarters) profile.headquarters = lore.headquarters;
+    if (!profile.originStory) profile.originStory = lore.originStory;
+    if (!profile.mission) profile.mission = lore.mission;
+    if (!profile.objective) profile.objective = lore.objective;
+    if (!(profile.milestones instanceof Array)) profile.milestones = lore.milestones;
+    if (!(profile.board instanceof Array) || !profile.board.length) profile.board = lore.board;
+    if (!(profile.shareholderBlocks instanceof Array) || !profile.shareholderBlocks.length) profile.shareholderBlocks = lore.shareholderBlocks;
+    if (!(profile.governanceEvents instanceof Array)) profile.governanceEvents = [];
+    return profile;
+  }
+
   function defaultRegions() {
     return [
       { id: 'north_america', name: 'Nord America', growth: 2.4, inflation: 3.1, rates: 5.0, stability: 78, trend: 'espansione' },
@@ -47,7 +146,7 @@
   }
 
   function hydrateCompany(c, index) {
-    return {
+    var profile = {
       ticker: c.ticker,
       name: c.name,
       region: ['north_america', 'europe', 'asia', 'emerging'][index % 4],
@@ -64,6 +163,7 @@
       lastDecision: 'Piano industriale confermato.',
       boardSupport: Math.round(45 + Math.random() * 35)
     };
+    return ensureCompanyGovernance(profile, c, index);
   }
 
   function hydrateRival(c, index) {
@@ -111,6 +211,7 @@
     var list = game && game.companies ? game.companies : [];
     for (var i = 0; i < list.length; i++) {
       if (!state.companies[list[i].ticker]) state.companies[list[i].ticker] = hydrateCompany(list[i], i);
+      else ensureCompanyGovernance(state.companies[list[i].ticker], list[i], i);
     }
     for (var j = 0; j < competitors.length; j++) {
       if (!state.rivals[competitors[j].nickname]) state.rivals[competitors[j].nickname] = hydrateRival(competitors[j], j);

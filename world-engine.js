@@ -487,7 +487,7 @@
       total += shares;
       blocks.push({ nickname: c.nickname, shares: shares, strategy: c.strategy, relationship: c.relationship || 'neutral' });
     }
-    for (var k = 0; k < blocks.length; k++) blocks[k].weight = total > 0 ? round(blocks[k].shares / total * 55, 2) : 0;
+    for (var k = 0; k < blocks.length; k++) blocks[k].weight = total > 0 ? round(blocks[k].shares / total * 20, 2) : 0;
     return blocks;
   }
 
@@ -520,6 +520,8 @@
       debtImpact: clamp((proposed && proposed.debtImpact) || (type === 'expansion' || type === 'acquisition' ? 6 : -2), -15, 15),
       playerWeight: round(ownershipPct(game, company.ticker), 2),
       blocks: competitorVotingBlocks(company.ticker, competitors),
+      corporateBlocks: profile.shareholderBlocks.map(function (b) { return { id: b.id, name: b.name, stake: b.stake, stance: b.stance, confidence: b.confidence, objective: b.objective }; }),
+      corporateObjective: profile.objective ? profile.objective.label : '',
       boardSupport: profile.boardSupport,
       status: 'open'
     };
@@ -529,8 +531,15 @@
     var game = getGame();
     var assembly = state && state.openAssembly;
     if (!game || !assembly || assembly.status !== 'open') return null;
-    var yes = assembly.boardSupport * 0.35;
-    var no = (100 - assembly.boardSupport) * 0.1;
+    var yes = assembly.boardSupport / 100 * 20;
+    var no = (100 - assembly.boardSupport) / 100 * 20;
+    var corporate = assembly.corporateBlocks || [];
+    for (var ci = 0; ci < corporate.length; ci++) {
+      var owner = corporate[ci];
+      var ownerWeight = owner.stake * 0.55;
+      var ownerSupports = /favorevole|strategica|aggressiva/.test(owner.stance) || (owner.confidence >= 60 && assembly.type !== 'restructuring');
+      if (ownerSupports) yes += ownerWeight; else no += ownerWeight;
+    }
     for (var i = 0; i < assembly.blocks.length; i++) {
       var block = assembly.blocks[i];
       var memory = state.rivals[block.nickname];
@@ -552,6 +561,15 @@
       profile.debt = round(clamp(profile.debt + assembly.debtImpact, 0, 150), 1);
       profile.lastDecision = assembly.title + ' approvata';
       company.price = Math.max(1, company.price * (1 + assembly.priceImpactPct / 100));
+      if (profile.objective) profile.objective.progress = round(clamp(profile.objective.progress + 5, 0, 100), 1);
+      for (var sb = 0; sb < profile.shareholderBlocks.length; sb++) profile.shareholderBlocks[sb].confidence = Math.round(clamp(profile.shareholderBlocks[sb].confidence + 2, 0, 100));
+    } else if (profile) {
+      profile.boardSupport = Math.round(clamp(profile.boardSupport - 6, 0, 100));
+      for (var rb = 0; rb < profile.shareholderBlocks.length; rb++) profile.shareholderBlocks[rb].confidence = Math.round(clamp(profile.shareholderBlocks[rb].confidence - 3, 0, 100));
+    }
+    if (profile) {
+      profile.governanceEvents.unshift({ week: game.week, actor: 'Assemblea degli azionisti', role: 'Soci', action: assembly.title + (assembly.passed ? ' approvata' : ' respinta'), motive: 'Esito: ' + assembly.yes + '% favorevoli, ' + assembly.no + '% contrari', type: 'assembly' });
+      profile.governanceEvents = profile.governanceEvents.slice(0, 20);
     }
     state.assemblyLog.unshift(assembly);
     state.assemblyLog = state.assemblyLog.slice(0, 20);

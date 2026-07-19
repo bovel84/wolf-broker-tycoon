@@ -429,6 +429,7 @@ tr:hover{background:var(--bg3)}
 <script src="llm-game-master.js"></script>
 <script src="competitor-engine.js"></script>
 <script src="world-engine.js"></script>
+<script src="broker-story.js"></script>
 <script>
 
 // ======================== CONSTANTS ========================
@@ -1790,6 +1791,7 @@ if(typeof CompetitorEngine!=='undefined'&&!window._competitorEngine){
   }catch(e){console.warn('Competitor Engine init:',e)}
 }
 if(typeof WorldEngine!=='undefined'&&WorldEngine.install)WorldEngine.install();
+if(typeof BrokerStory!=='undefined'&&BrokerStory.install)BrokerStory.install();
 </script>
 </body>
 </html>

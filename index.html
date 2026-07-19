@@ -758,7 +758,7 @@ function advanceTurn(){
   
   // LLM Game Master + Competitor Engine
   if(typeof LLMGameMaster!=='undefined'&&LLMGameMaster.isAvailable&&LLMGameMaster.isAvailable()){
-    var gs={week:G.week,year:G.year||1987,marketSentiment:G.sentiment||50,level:G.level||1,netWorth:computeNetWorth(),reputation:G.rep||50,companies:G.companies.map(function(c){return{ticker:c.ticker,name:c.name,sector:c.sector,price:c.price,peRatio:c.pe||10}}),competitors:(window._competitorEngine&&window._competitorEngine.competitors)?window._competitorEngine.competitors.map(function(c){return{nickname:c.nickname,strategy:c.strategy,capital:c.capital,relationship:c.relationship||'neutral'}}):[]};
+    var gs={week:G.week,year:G.year||1987,marketSentiment:G.sentiment||50,level:G.level||1,netWorth:computeNetWorth(),reputation:G.rep||50,companies:G.companies.map(function(c){return{ticker:c.ticker,name:c.name,sector:c.sector,price:c.price,peRatio:c.pe||10}}),competitors:(window._competitorEngine&&window._competitorEngine.competitors)?window._competitorEngine.competitors.map(function(c){return{nickname:c.nickname,strategy:c.strategy,capital:c.capital,relationship:c.relationship||'neutral',goal:(window.WorldEngine&&WorldEngine.getState()&&WorldEngine.getState().rivals[c.nickname])?WorldEngine.getState().rivals[c.nickname].goal:'',worldPlan:c.worldPlan||'',conviction:c.conviction||50}}):[]};
     LLMGameMaster.generateCompetitorActions(gs.competitors,gs).then(function(actions){
       if(window._competitorEngine){
         var res=window._competitorEngine.processWeek(actions);

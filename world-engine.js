@@ -384,6 +384,9 @@
     if (!director) director = profile.board[1] || profile.board[0];
     director.lastMove = safeText(decision.action || decision.motive, 150);
     director.influence = Math.round(clamp(director.influence + clamp(decision.influenceDelta, -8, 8), 10, 100));
+    director.competence = Math.round(clamp(director.competence + clamp(decision.competenceDelta, -6, 6), 10, 100));
+    director.ethics = Math.round(clamp(director.ethics + clamp(decision.ethicsDelta, -8, 8), 0, 100));
+    if (/^(attivo|dimissionario|rimosso|sospeso)$/.test(decision.status || '')) director.status = decision.status;
     profile.boardSupport = Math.round(clamp(profile.boardSupport + clamp(decision.supportDelta, -12, 12), 0, 100));
     if (profile.objective) {
       profile.objective.progress = round(clamp(profile.objective.progress + clamp(decision.objectiveProgress, -12, 12), 0, 100), 1);

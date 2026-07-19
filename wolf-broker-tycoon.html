@@ -8381,7 +8381,7 @@ tr:hover{background:var(--bg3)}
 /*
  * llm-game-master.js
  * LLM Game Master per Wolf of Wall Street Broker Tycoon
- * Versione 3.1.0 - Usa Ollama Cloud via proxy Vercel
+ * Versione 4.0.0 - Usa Ollama Cloud via proxy Vercel
  * Genera contenuto dinamico: notizie, decisioni competitor, dialoghi, eventi.
  *
  * Restrizioni di compatibilita':
@@ -9115,13 +9115,16 @@ tr:hover{background:var(--bg3)}
     var compact = JSON.stringify(context || {});
     if (compact.length > 18000) compact = compact.substring(0, 18000);
     return 'Simula una settimana coerente di un ecosistema finanziario mondiale persistente. ' +
-      'Le societa reagiscono ai fondamentali; i competitor perseguono obiettivi di medio periodo; le assemblee dipendono da quote, alleanze e governance. ' +
-      'Non inventare ticker. Mantieni memoria e continuita causale. Contesto: ' + compact + ' ' +
+      'Ogni societa possiede una storia, una missione e un obiettivo pluriennale. Gli amministratori sono persone autonome: agiscono secondo ruolo, etica, influenza, lealta e agenda. I soci reagiscono secondo quota, fiducia e obiettivo. ' +
+      'Fai avanzare o arretrare gli obiettivi in modo causale. Crea conflitti tra CdA e soci, alleanze, dimissioni, richieste attiviste o assemblee solo quando giustificati. ' +
+      'I competitor perseguono obiettivi di medio periodo. Non inventare ticker, amministratori o blocchi diversi da quelli ricevuti. Mantieni memoria e continuita. Contesto: ' + compact + ' ' +
       'Rispondi con JSON {briefing,macro,companies,competitors,assembly}. ' +
       'macro={region,title,description,growthDelta,inflationDelta,ratesDelta,sentimentImpact}; ' +
-      'companies=max 4 elementi {ticker,action,title,description,revenueGrowthDelta,marginDelta,debtDelta,governanceDelta,innovationDelta,priceImpactPct}; ' +
+      'companies=max 4 elementi {ticker,action,title,description,revenueGrowthDelta,marginDelta,debtDelta,governanceDelta,innovationDelta,priceImpactPct,boardDecision,shareholderMoves}. ' +
+      'boardDecision={directorRole,action,motive,supportDelta,objectiveProgress,influenceDelta,competenceDelta,ethicsDelta,status}. status e attivo|dimissionario|rimosso|sospeso. ' +
+      'shareholderMoves=max 4 elementi {blockId,action,motive,confidenceDelta,stance}. Usa solo directorRole e blockId presenti nel contesto; ' +
       'competitors={nickname,goal,plan,target,stance,conviction}; ' +
-      'assembly=null oppure {ticker,type,title,description,priceImpactPct,growthImpact,debtImpact}.';
+      'assembly=null oppure {ticker,type,title,description,priceImpactPct,growthImpact,debtImpact}. Applica delta piccoli e realistici.';
   }
 
   function generateWorldTurn(context) {
@@ -9205,7 +9208,7 @@ tr:hover{background:var(--bg3)}
     isAvailable: isAvailable,
     getStats: getStats,
     resetTurn: resetTurn,
-    version: '3.1.0'
+    version: '4.0.0'
   };
 
   var _root = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : (typeof self !== 'undefined' ? self : this));
@@ -11271,10 +11274,11 @@ tr:hover{background:var(--bg3)}
   'use strict';
 
   var STORAGE_KEY = 'wbt_world_state_v1';
-  var ENGINE_VERSION = '3.0.0';
+  var ENGINE_VERSION = '4.0.0';
   var installed = false;
   var processing = false;
   var state = null;
+  var selectedCompanyTicker = null;
 
   function clamp(v, min, max) { return Math.max(min, Math.min(max, Number(v) || 0)); }
   function round(v, digits) {
@@ -11301,6 +11305,104 @@ tr:hover{background:var(--bg3)}
     return null;
   }
 
+  var DIRECTOR_FIRST_NAMES = ['Elena', 'Marcus', 'Leila', 'David', 'Sofia', 'Adrian', 'Marta', 'Victor', 'Nadia', 'Samuel', 'Iris', 'Thomas'];
+  var DIRECTOR_LAST_NAMES = ['Valli', 'Kane', 'Okafor', 'Weiss', 'Marin', 'Rossi', 'Chen', 'Novak', 'Moreau', 'Silva', 'Cole', 'Bauer'];
+  var CITY_NAMES = ['Northbridge', 'Port Azure', 'Grand Harbor', 'Nova City', 'Silver Bay', 'Eastgate', 'Iron Valley', 'San Aurelio'];
+  var SECTOR_LORE = {
+    tech: { origin: 'nata in un laboratorio universitario durante la corsa ai personal computer', mission: 'rendere la tecnologia accessibile senza rinunciare al controllo dei dati', objective: 'guidare la prossima piattaforma digitale globale' },
+    energy: { origin: 'fondata da ingegneri che trasformarono una centrale in perdita in un polo energetico', mission: 'garantire energia stabile durante la transizione industriale', objective: 'raddoppiare la capacita produttiva riducendo il rischio ambientale' },
+    finance: { origin: 'cresciuta da una piccola casa di credito per commercianti e famiglie', mission: 'finanziare crescita reale mantenendo la fiducia dei depositanti', objective: 'diventare il riferimento finanziario della propria regione' },
+    health: { origin: 'creata dopo una ricerca medica che nessun grande investitore voleva finanziare', mission: 'portare cure efficaci dal laboratorio ai pazienti', objective: 'ottenere una scoperta clinica capace di cambiare il settore' },
+    consumer: { origin: 'partita da un singolo negozio e costruita sul rapporto diretto con i clienti', mission: 'offrire prodotti affidabili a prezzi sostenibili', objective: 'espandersi in tre nuovi mercati senza perdere identita' },
+    industrial: { origin: 'nata dalla fusione di officine sopravvissute a una lunga recessione', mission: 'costruire infrastrutture che durino oltre un ciclo economico', objective: 'modernizzare gli impianti e conquistare grandi commesse internazionali' },
+    materials: { origin: 'fondata vicino a un distretto minerario dimenticato dagli investitori', mission: 'fornire materie prime strategiche con una filiera trasparente', objective: 'assicurarsi riserve per venti anni riducendo il debito' },
+    utilities: { origin: 'costruita per collegare comunita che il mercato considerava poco redditizie', mission: 'garantire servizi essenziali affidabili e universali', objective: 'rinnovare la rete mantenendo dividendi stabili' },
+    realestate: { origin: 'nata dalla ricostruzione di un quartiere industriale abbandonato', mission: 'trasformare capitale immobiliare in comunita vive', objective: 'sviluppare un portafoglio globale a reddito stabile' },
+    communications: { origin: 'fondata da tecnici che collegarono le prime reti regionali', mission: 'rendere ogni distanza economicamente irrilevante', objective: 'controllare la nuova generazione di infrastrutture di comunicazione' }
+  };
+
+  function directorName(seed) {
+    return DIRECTOR_FIRST_NAMES[seed % DIRECTOR_FIRST_NAMES.length] + ' ' + DIRECTOR_LAST_NAMES[(seed * 3 + 2) % DIRECTOR_LAST_NAMES.length];
+  }
+
+  function makeBoard(index) {
+    var roles = ['Presidente', 'Amministratore Delegato', 'Direttore Finanziario', 'Consigliere Indipendente'];
+    var agendas = ['stabilita e dividendi', 'crescita e acquisizioni', 'riduzione del debito', 'trasparenza e tutela dei soci'];
+    var board = [];
+    for (var i = 0; i < roles.length; i++) {
+      board.push({
+        id: 'dir_' + index + '_' + i,
+        name: directorName(index * 4 + i),
+        role: roles[i],
+        competence: 55 + ((index * 11 + i * 7) % 41),
+        ethics: 40 + ((index * 13 + i * 9) % 56),
+        influence: i === 0 ? 82 : (i === 1 ? 88 : 55 + ((index + i * 5) % 30)),
+        loyalty: pick(['societa', 'soci', 'management', 'personale']),
+        agenda: agendas[(index + i) % agendas.length],
+        status: 'attivo',
+        lastMove: 'Sostiene il piano industriale.'
+      });
+    }
+    return board;
+  }
+
+  function makeShareholders(index) {
+    var founder = 12 + (index % 12);
+    var institutional = 18 + (index % 9);
+    var activist = 5 + (index % 7);
+    var employees = 4 + (index % 5);
+    var retail = 100 - founder - institutional - activist - employees;
+    return [
+      { id: 'founders', name: 'Fondatori e famiglie', stake: founder, stance: 'strategica', objective: 'proteggere identita e controllo', confidence: 65 },
+      { id: 'institutional', name: 'Investitori istituzionali', stake: institutional, stance: 'prudente', objective: 'rendimento stabile e governance', confidence: 62 },
+      { id: 'activist', name: 'Fondo attivista', stake: activist, stance: 'aggressiva', objective: 'sbloccare valore rapidamente', confidence: 45 },
+      { id: 'employees', name: 'Dipendenti e management', stake: employees, stance: 'difensiva', objective: 'occupazione e investimenti', confidence: 70 },
+      { id: 'retail', name: 'Azionisti diffusi', stake: retail, stance: 'variabile', objective: 'prezzo e dividendi', confidence: 55 }
+    ];
+  }
+
+  function makeCompanyLore(c, index) {
+    var lore = SECTOR_LORE[c.sector] || SECTOR_LORE.industrial;
+    var founded = 1948 + ((index * 7) % 58);
+    var city = CITY_NAMES[index % CITY_NAMES.length];
+    return {
+      foundedYear: founded,
+      headquarters: city,
+      originStory: c.name + ' e stata ' + lore.origin + '. Dal ' + founded + ' la societa ha attraversato crisi, cambi di controllo e una generazione di nuovi dirigenti.',
+      mission: lore.mission,
+      objective: {
+        id: 'obj_' + c.ticker,
+        label: lore.objective,
+        target: 100,
+        progress: 18 + ((index * 9) % 55),
+        deadlineWeek: 26 + (index % 27),
+        status: 'in corso'
+      },
+      milestones: [
+        { year: founded, text: 'Fondazione a ' + city },
+        { year: founded + 12 + (index % 8), text: 'Prima espansione fuori dalla regione' },
+        { year: founded + 27 + (index % 14), text: 'Riorganizzazione societaria e ingresso di nuovi soci' }
+      ],
+      board: makeBoard(index),
+      shareholderBlocks: makeShareholders(index),
+      governanceEvents: []
+    };
+  }
+
+  function ensureCompanyGovernance(profile, company, index) {
+    var lore = makeCompanyLore(company, index);
+    if (!profile.foundedYear) profile.foundedYear = lore.foundedYear;
+    if (!profile.headquarters) profile.headquarters = lore.headquarters;
+    if (!profile.originStory) profile.originStory = lore.originStory;
+    if (!profile.mission) profile.mission = lore.mission;
+    if (!profile.objective) profile.objective = lore.objective;
+    if (!(profile.milestones instanceof Array)) profile.milestones = lore.milestones;
+    if (!(profile.board instanceof Array) || !profile.board.length) profile.board = lore.board;
+    if (!(profile.shareholderBlocks instanceof Array) || !profile.shareholderBlocks.length) profile.shareholderBlocks = lore.shareholderBlocks;
+    if (!(profile.governanceEvents instanceof Array)) profile.governanceEvents = [];
+    return profile;
+  }
+
   function defaultRegions() {
     return [
       { id: 'north_america', name: 'Nord America', growth: 2.4, inflation: 3.1, rates: 5.0, stability: 78, trend: 'espansione' },
@@ -11311,7 +11413,7 @@ tr:hover{background:var(--bg3)}
   }
 
   function hydrateCompany(c, index) {
-    return {
+    var profile = {
       ticker: c.ticker,
       name: c.name,
       region: ['north_america', 'europe', 'asia', 'emerging'][index % 4],
@@ -11328,6 +11430,7 @@ tr:hover{background:var(--bg3)}
       lastDecision: 'Piano industriale confermato.',
       boardSupport: Math.round(45 + Math.random() * 35)
     };
+    return ensureCompanyGovernance(profile, c, index);
   }
 
   function hydrateRival(c, index) {
@@ -11375,6 +11478,7 @@ tr:hover{background:var(--bg3)}
     var list = game && game.companies ? game.companies : [];
     for (var i = 0; i < list.length; i++) {
       if (!state.companies[list[i].ticker]) state.companies[list[i].ticker] = hydrateCompany(list[i], i);
+      else ensureCompanyGovernance(state.companies[list[i].ticker], list[i], i);
     }
     for (var j = 0; j < competitors.length; j++) {
       if (!state.rivals[competitors[j].nickname]) state.rivals[competitors[j].nickname] = hydrateRival(competitors[j], j);
@@ -11391,7 +11495,11 @@ tr:hover{background:var(--bg3)}
 
   function buildContext(game, competitors) {
     var companies = [];
-    var list = game.companies || [];
+    var allCompanies = game.companies || [];
+    var list = [];
+    var rotationSize = Math.min(8, allCompanies.length);
+    var rotationStart = allCompanies.length ? (((game.week || 1) - 1) * rotationSize) % allCompanies.length : 0;
+    for (var ri = 0; ri < rotationSize; ri++) list.push(allCompanies[(rotationStart + ri) % allCompanies.length]);
     for (var i = 0; i < list.length; i++) {
       var profile = state.companies[list[i].ticker];
       companies.push({
@@ -11407,6 +11515,13 @@ tr:hover{background:var(--bg3)}
         innovation: profile.innovation,
         strategy: profile.strategy,
         phase: profile.phase,
+        foundedYear: profile.foundedYear,
+        originStory: profile.originStory,
+        mission: profile.mission,
+        objective: profile.objective,
+        board: profile.board,
+        shareholderBlocks: profile.shareholderBlocks,
+        recentGovernance: profile.governanceEvents.slice(0, 3),
         lastDecision: profile.lastDecision
       });
     }
@@ -11437,7 +11552,8 @@ tr:hover{background:var(--bg3)}
       companies: companies,
       competitors: rivals,
       recentEvents: state.globalEvents.slice(0, 4),
-      recentAssemblies: state.assemblyLog.slice(0, 3)
+      recentAssemblies: state.assemblyLog.slice(0, 3),
+      brokerStory: global.BrokerStory && global.BrokerStory.getContext ? global.BrokerStory.getContext() : null
     };
   }
 
@@ -11480,7 +11596,9 @@ tr:hover{background:var(--bg3)}
         debtDelta: action === 'deleveraging' ? -5 : (action === 'expansion' ? 4 : 0),
         governanceDelta: direction * Math.round(1 + Math.random() * 4),
         innovationDelta: action === 'innovation' ? 8 : Math.round((Math.random() - 0.5) * 4),
-        priceImpactPct: direction * round(1 + Math.random() * 5, 1)
+        priceImpactPct: direction * round(1 + Math.random() * 5, 1),
+        boardDecision: { directorRole: 'Amministratore Delegato', action: 'Aggiorna il piano industriale', motive: 'Reagire al ciclo economico e avanzare verso l obiettivo societario.', supportDelta: direction * 3, objectiveProgress: direction * 4 },
+        shareholderMoves: [{ blockId: 'institutional', action: direction > 0 ? 'sostegno' : 'richiesta di prudenza', motive: 'Proteggere rendimento e governance.', confidenceDelta: direction * 4, stance: direction > 0 ? 'favorevole' : 'prudente' }]
       }],
       competitors: rivals,
       assembly: null
@@ -11524,6 +11642,61 @@ tr:hover{background:var(--bg3)}
     }
   }
 
+  function applyBoardDecision(profile, decision, game) {
+    if (!decision || typeof decision !== 'object') return;
+    var director = null;
+    for (var i = 0; i < profile.board.length; i++) {
+      if (profile.board[i].role === decision.directorRole || profile.board[i].name === decision.directorName) director = profile.board[i];
+    }
+    if (!director) director = profile.board[1] || profile.board[0];
+    director.lastMove = safeText(decision.action || decision.motive, 150);
+    director.influence = Math.round(clamp(director.influence + clamp(decision.influenceDelta, -8, 8), 10, 100));
+    director.competence = Math.round(clamp(director.competence + clamp(decision.competenceDelta, -6, 6), 10, 100));
+    director.ethics = Math.round(clamp(director.ethics + clamp(decision.ethicsDelta, -8, 8), 0, 100));
+    if (/^(attivo|dimissionario|rimosso|sospeso)$/.test(decision.status || '')) director.status = decision.status;
+    profile.boardSupport = Math.round(clamp(profile.boardSupport + clamp(decision.supportDelta, -12, 12), 0, 100));
+    if (profile.objective) {
+      profile.objective.progress = round(clamp(profile.objective.progress + clamp(decision.objectiveProgress, -12, 12), 0, 100), 1);
+      if (profile.objective.progress >= 100) profile.objective.status = 'raggiunto';
+      else if (profile.objective.progress < 20) profile.objective.status = 'a rischio';
+      else profile.objective.status = 'in corso';
+    }
+    profile.governanceEvents.unshift({
+      week: game.week,
+      actor: director.name,
+      role: director.role,
+      action: safeText(decision.action, 120),
+      motive: safeText(decision.motive, 180),
+      type: 'board'
+    });
+  }
+
+  function applyShareholderMoves(profile, moves, game) {
+    if (!(moves instanceof Array)) return;
+    for (var i = 0; i < moves.length && i < 4; i++) {
+      var move = moves[i] || {};
+      var block = null;
+      for (var j = 0; j < profile.shareholderBlocks.length; j++) {
+        if (profile.shareholderBlocks[j].id === move.blockId || profile.shareholderBlocks[j].name === move.blockName) block = profile.shareholderBlocks[j];
+      }
+      if (!block) continue;
+      block.confidence = Math.round(clamp(block.confidence + clamp(move.confidenceDelta, -15, 15), 0, 100));
+      if (move.stance) block.stance = safeText(move.stance, 30);
+      profile.governanceEvents.unshift({
+        week: game.week,
+        actor: block.name,
+        role: 'Socio ' + block.stake + '%',
+        action: safeText(move.action, 120),
+        motive: safeText(move.motive, 180),
+        type: 'shareholder'
+      });
+    }
+    var confidence = 0;
+    for (var k = 0; k < profile.shareholderBlocks.length; k++) confidence += profile.shareholderBlocks[k].confidence * profile.shareholderBlocks[k].stake / 100;
+    profile.shareholderConfidence = Math.round(clamp(confidence, 0, 100));
+    profile.governanceEvents = profile.governanceEvents.slice(0, 20);
+  }
+
   function applyCompanyActions(actions, game) {
     for (var i = 0; i < actions.length; i++) {
       var action = actions[i] || {};
@@ -11535,6 +11708,8 @@ tr:hover{background:var(--bg3)}
       profile.debt = round(clamp(profile.debt + clamp(action.debtDelta, -12, 12), 0, 150), 1);
       profile.governance = Math.round(clamp(profile.governance + clamp(action.governanceDelta, -12, 12), 0, 100));
       profile.innovation = Math.round(clamp(profile.innovation + clamp(action.innovationDelta, -12, 12), 0, 100));
+      applyBoardDecision(profile, action.boardDecision, game);
+      applyShareholderMoves(profile, action.shareholderMoves, game);
       profile.lastDecision = safeText(action.title || action.description, 150);
       profile.phase = profile.revenueGrowth > 10 ? 'crescita' : (profile.revenueGrowth < 0 ? 'crisi' : 'stabile');
       profile.history.unshift({ week: game.week, action: safeText(action.action, 40), title: safeText(action.title, 100) });
@@ -11586,7 +11761,7 @@ tr:hover{background:var(--bg3)}
       total += shares;
       blocks.push({ nickname: c.nickname, shares: shares, strategy: c.strategy, relationship: c.relationship || 'neutral' });
     }
-    for (var k = 0; k < blocks.length; k++) blocks[k].weight = total > 0 ? round(blocks[k].shares / total * 55, 2) : 0;
+    for (var k = 0; k < blocks.length; k++) blocks[k].weight = total > 0 ? round(blocks[k].shares / total * 20, 2) : 0;
     return blocks;
   }
 
@@ -11619,6 +11794,8 @@ tr:hover{background:var(--bg3)}
       debtImpact: clamp((proposed && proposed.debtImpact) || (type === 'expansion' || type === 'acquisition' ? 6 : -2), -15, 15),
       playerWeight: round(ownershipPct(game, company.ticker), 2),
       blocks: competitorVotingBlocks(company.ticker, competitors),
+      corporateBlocks: profile.shareholderBlocks.map(function (b) { return { id: b.id, name: b.name, stake: b.stake, stance: b.stance, confidence: b.confidence, objective: b.objective }; }),
+      corporateObjective: profile.objective ? profile.objective.label : '',
       boardSupport: profile.boardSupport,
       status: 'open'
     };
@@ -11628,8 +11805,15 @@ tr:hover{background:var(--bg3)}
     var game = getGame();
     var assembly = state && state.openAssembly;
     if (!game || !assembly || assembly.status !== 'open') return null;
-    var yes = assembly.boardSupport * 0.35;
-    var no = (100 - assembly.boardSupport) * 0.1;
+    var yes = assembly.boardSupport / 100 * 20;
+    var no = (100 - assembly.boardSupport) / 100 * 20;
+    var corporate = assembly.corporateBlocks || [];
+    for (var ci = 0; ci < corporate.length; ci++) {
+      var owner = corporate[ci];
+      var ownerWeight = owner.stake * 0.55;
+      var ownerSupports = /favorevole|strategica|aggressiva/.test(owner.stance) || (owner.confidence >= 60 && assembly.type !== 'restructuring');
+      if (ownerSupports) yes += ownerWeight; else no += ownerWeight;
+    }
     for (var i = 0; i < assembly.blocks.length; i++) {
       var block = assembly.blocks[i];
       var memory = state.rivals[block.nickname];
@@ -11651,6 +11835,15 @@ tr:hover{background:var(--bg3)}
       profile.debt = round(clamp(profile.debt + assembly.debtImpact, 0, 150), 1);
       profile.lastDecision = assembly.title + ' approvata';
       company.price = Math.max(1, company.price * (1 + assembly.priceImpactPct / 100));
+      if (profile.objective) profile.objective.progress = round(clamp(profile.objective.progress + 5, 0, 100), 1);
+      for (var sb = 0; sb < profile.shareholderBlocks.length; sb++) profile.shareholderBlocks[sb].confidence = Math.round(clamp(profile.shareholderBlocks[sb].confidence + 2, 0, 100));
+    } else if (profile) {
+      profile.boardSupport = Math.round(clamp(profile.boardSupport - 6, 0, 100));
+      for (var rb = 0; rb < profile.shareholderBlocks.length; rb++) profile.shareholderBlocks[rb].confidence = Math.round(clamp(profile.shareholderBlocks[rb].confidence - 3, 0, 100));
+    }
+    if (profile) {
+      profile.governanceEvents.unshift({ week: game.week, actor: 'Assemblea degli azionisti', role: 'Soci', action: assembly.title + (assembly.passed ? ' approvata' : ' respinta'), motive: 'Esito: ' + assembly.yes + '% favorevoli, ' + assembly.no + '% contrari', type: 'assembly' });
+      profile.governanceEvents = profile.governanceEvents.slice(0, 20);
     }
     state.assemblyLog.unshift(assembly);
     state.assemblyLog = state.assemblyLog.slice(0, 20);
@@ -11713,6 +11906,12 @@ tr:hover{background:var(--bg3)}
   }
   function ensurePanels() {
     if (typeof document === 'undefined') return;
+    if (!document.getElementById('company-governance-style')) {
+      var governanceStyle = document.createElement('style');
+      governanceStyle.id = 'company-governance-style';
+      governanceStyle.textContent = '@media(max-width:760px){.company-governance-grid{grid-template-columns:1fr!important}}';
+      document.head.appendChild(governanceStyle);
+    }
     var dashboard = document.getElementById('view-dashboard');
     if (dashboard && !document.getElementById('world-pulse-card')) {
       var card = document.createElement('div');
@@ -11720,6 +11919,14 @@ tr:hover{background:var(--bg3)}
       card.className = 'card';
       card.innerHTML = '<h3>🌍 World Intelligence</h3><div id="world-pulse-content"></div>';
       dashboard.appendChild(card);
+    }
+    var market = document.getElementById('view-market');
+    if (market && !document.getElementById('company-governance-card')) {
+      var gcard = document.createElement('div');
+      gcard.id = 'company-governance-card';
+      gcard.className = 'card';
+      gcard.innerHTML = '<h3>🏢 Societa, amministratori e soci</h3><div id="company-governance-content"></div>';
+      market.insertBefore(gcard, market.firstChild);
     }
     var assembly = document.getElementById('view-assembly');
     if (assembly && !document.getElementById('world-assembly-card')) {
@@ -11729,6 +11936,50 @@ tr:hover{background:var(--bg3)}
       acard.innerHTML = '<h3>🏛️ Assemblea Globale</h3><div id="world-assembly-content"></div>';
       assembly.insertBefore(acard, assembly.firstChild);
     }
+  }
+
+  function selectCompany(ticker) {
+    selectedCompanyTicker = ticker;
+    renderCompanyHub();
+  }
+
+  function renderCompanyHub() {
+    if (typeof document === 'undefined' || !state) return;
+    var el = document.getElementById('company-governance-content');
+    if (!el) return;
+    var game = getGame();
+    var companies = game && game.companies ? game.companies : [];
+    if (!selectedCompanyTicker && companies.length) selectedCompanyTicker = companies[0].ticker;
+    var profile = state.companies[selectedCompanyTicker];
+    if (!profile) {
+      el.innerHTML = '<div class="gray">Profilo societario non disponibile.</div>';
+      return;
+    }
+    var options = '';
+    for (var i = 0; i < companies.length; i++) {
+      options += '<option value="' + safeText(companies[i].ticker, 12) + '"' + (companies[i].ticker === selectedCompanyTicker ? ' selected' : '') + '>' + safeText(companies[i].name, 70) + ' (' + safeText(companies[i].ticker, 12) + ')</option>';
+    }
+    var objective = profile.objective || { label: 'Obiettivo non definito', progress: 0, status: 'in corso' };
+    var html = '<select onchange="WorldEngine.selectCompany(this.value)" style="width:100%;max-width:420px;background:var(--bg3);color:var(--text);border:1px solid var(--border);padding:8px;border-radius:6px;margin-bottom:10px">' + options + '</select>';
+    html += '<div style="display:grid;grid-template-columns:1.15fr .85fr;gap:10px" class="company-governance-grid">';
+    html += '<div><div style="font-size:16px;font-weight:700">' + safeText(profile.name, 80) + '</div><div class="gray" style="font-size:11px">Fondata nel ' + profile.foundedYear + ' · Sede: ' + safeText(profile.headquarters, 60) + '</div><p style="font-size:12px;line-height:1.55">' + safeText(profile.originStory, 420) + '</p><div style="font-size:11px"><strong>Missione:</strong> ' + safeText(profile.mission, 220) + '</div>';
+    html += '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px"><strong>Obiettivo:</strong><span>' + round(objective.progress, 1) + '% · ' + safeText(objective.status, 30) + '</span></div><div style="font-size:11px;color:var(--text2);margin:3px 0">' + safeText(objective.label, 220) + '</div><div style="height:7px;background:var(--bg4);border-radius:8px;overflow:hidden"><span style="display:block;height:100%;width:' + clamp(objective.progress, 0, 100) + '%;background:linear-gradient(90deg,var(--blue),var(--green))"></span></div></div></div>';
+    html += '<div><div style="font-size:11px;margin-bottom:6px"><strong>CdA</strong> · sostegno ' + profile.boardSupport + '%</div>';
+    for (var b = 0; b < profile.board.length; b++) {
+      var d = profile.board[b];
+      html += '<div style="padding:6px;background:var(--bg3);border-radius:5px;margin-bottom:5px"><div style="font-size:11px;font-weight:700">' + safeText(d.name, 60) + '</div><div class="gray" style="font-size:9px">' + safeText(d.role, 50) + ' · influenza ' + d.influence + ' · etica ' + d.ethics + '</div><div style="font-size:10px;margin-top:2px">' + safeText(d.lastMove, 120) + '</div></div>';
+    }
+    html += '</div></div>';
+    html += '<div style="margin-top:12px"><strong style="font-size:11px">Blocchi azionari</strong><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:5px;margin-top:6px">';
+    for (var s = 0; s < profile.shareholderBlocks.length; s++) {
+      var sh = profile.shareholderBlocks[s];
+      html += '<div style="background:var(--bg3);padding:7px;border-radius:5px"><div style="display:flex;justify-content:space-between;font-size:10px"><strong>' + safeText(sh.name, 70) + '</strong><span>' + sh.stake + '%</span></div><div class="gray" style="font-size:9px">' + safeText(sh.stance, 30) + ' · fiducia ' + sh.confidence + '</div><div style="font-size:9px;margin-top:3px">' + safeText(sh.objective, 100) + '</div></div>';
+    }
+    html += '</div></div>';
+    if (profile.governanceEvents.length) {
+      html += '<div style="margin-top:10px"><strong style="font-size:11px">Ultima dinamica societaria</strong><div style="font-size:10px;color:var(--text2);margin-top:4px">' + safeText(profile.governanceEvents[0].actor, 80) + ': ' + safeText(profile.governanceEvents[0].action, 180) + '</div></div>';
+    }
+    el.innerHTML = html;
   }
 
   function render() {
@@ -11748,6 +11999,7 @@ tr:hover{background:var(--bg3)}
       if (event) html += '<div style="margin-top:9px;padding:7px;border-left:3px solid ' + (event.impact >= 0 ? 'var(--green)' : 'var(--red)') + '"><strong>' + safeText(event.title, 90) + '</strong><div class="gray" style="font-size:11px">' + regionName(event.region) + ' — ' + safeText(event.description, 200) + '</div></div>';
       world.innerHTML = html;
     }
+    renderCompanyHub();
     var assembly = document.getElementById('world-assembly-content');
     if (assembly) {
       if (!state.openAssembly) {
@@ -11756,7 +12008,7 @@ tr:hover{background:var(--bg3)}
       } else {
         var a = state.openAssembly;
         var canVote = a.playerWeight > 0;
-        assembly.innerHTML = '<div><strong>' + safeText(a.companyName, 80) + ' (' + safeText(a.ticker, 12) + ')</strong><span class="pill b" style="margin-left:6px">Tua quota ' + a.playerWeight + '%</span></div><div style="font-size:14px;margin-top:8px"><strong>' + safeText(a.title, 100) + '</strong></div><div class="gray" style="font-size:12px;margin:5px 0 9px">' + safeText(a.description, 240) + '</div><div style="font-size:11px;margin-bottom:8px">CdA favorevole: ' + a.boardSupport + '% · Blocchi rivali: ' + a.blocks.length + '</div>' + (canVote ? '<button class="btn btn-sm btn-blue" onclick="WorldEngine.vote(\'yes\')">Vota a favore</button> <button class="btn btn-sm" onclick="WorldEngine.vote(\'no\')">Vota contro</button>' : '<div class="gray" style="font-size:11px">Acquista azioni della societa per ottenere peso di voto.</div>');
+        assembly.innerHTML = '<div><strong>' + safeText(a.companyName, 80) + ' (' + safeText(a.ticker, 12) + ')</strong><span class="pill b" style="margin-left:6px">Tua quota ' + a.playerWeight + '%</span></div><div style="font-size:14px;margin-top:8px"><strong>' + safeText(a.title, 100) + '</strong></div><div class="gray" style="font-size:12px;margin:5px 0 9px">' + safeText(a.description, 240) + '</div><div style="font-size:11px;margin-bottom:8px">CdA favorevole: ' + a.boardSupport + '% · Blocchi societari: ' + (a.corporateBlocks || []).length + ' · Rivali: ' + a.blocks.length + '</div>' + (canVote ? '<button class="btn btn-sm btn-blue" onclick="WorldEngine.vote(\'yes\')">Vota a favore</button> <button class="btn btn-sm" onclick="WorldEngine.vote(\'no\')">Vota contro</button>' : '<div class="gray" style="font-size:11px">Acquista azioni della societa per ottenere peso di voto.</div>');
       }
     }
   }
@@ -11782,6 +12034,8 @@ tr:hover{background:var(--bg3)}
     processWorldTurn: processWorldTurn,
     vote: resolveAssembly,
     render: render,
+    selectCompany: selectCompany,
+    getCompanyProfile: function (ticker) { return state && state.companies ? state.companies[ticker] : null; },
     getState: function () { return state; },
     reset: function () {
       try { if (global.localStorage) global.localStorage.removeItem(STORAGE_KEY); } catch (e) {}
@@ -11795,7 +12049,6 @@ tr:hover{background:var(--bg3)}
   if (typeof module !== 'undefined' && module.exports) module.exports = global.WorldEngine;
   if (typeof document !== 'undefined') global.setTimeout(install, 0);
 })(typeof window !== 'undefined' ? window : this);
-
 
 
 /*

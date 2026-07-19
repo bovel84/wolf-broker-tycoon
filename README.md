@@ -24,6 +24,9 @@ Gestionale di broker azionario completo e realistico con modalità carriera e as
 - **Prologo interattivo** — nome, origine, promessa e primo segreto del broker
 - **Carriera narrativa reattiva** — 8 capitoli originali sbloccati da trade, perdite, assemblee, patrimonio e indagini
 - **Scelte persistenti** — etica, nervi, lealtà, ambizione e relazioni cambiano storia e mondo
+- **Vita del broker** — salute, stress, credibilità, pressione legale, tenore di vita, leva e picco patrimoniale evolvono ogni settimana
+- **Caduta progressiva** — avvisi, crisi di solvibilità e margin call anticipano bancarotta, condanna, crollo fisico o reputazionale
+- **Game over narrativo** — causa precisa, statistiche finali, punteggio eredità, epilogo LLM e una sola seconda possibilità quando plausibile
 
 ## Tecnologia
 
@@ -57,6 +60,7 @@ Genera `wolf-broker-tycoon.html` single-file giocabile.
 | `world-engine.js` | Simulazione persistente di mondo, società, rivali e assemblee |
 | `corporate-lifecycle.js` | Fallimenti, ristrutturazioni, fusioni, acquisizioni, IPO e spin-off |
 | `broker-story.js` | Prologo, identità del broker, capitoli reattivi, relazioni e finali |
+| `player-life.js` | Condizione personale, spese, rischio, margin call, game over e riscatto |
 | `build_html.py` | Assemblatore finale single-file |
 ## Configurazione sicura LLM
 

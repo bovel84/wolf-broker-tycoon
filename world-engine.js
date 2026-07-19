@@ -281,7 +281,8 @@
       sentiment: game.sentiment || 50,
       player: {
         netWorth: typeof computeNetWorth === 'function' ? round(computeNetWorth(), 0) : round(game.cash || 0, 0),
-        reputation: game.rep || 50
+        reputation: game.rep || 50,
+        life: global.PlayerLife && global.PlayerLife.getContext ? global.PlayerLife.getContext() : null
       },
       regions: state.regions,
       companies: companies,

@@ -23,7 +23,7 @@
 
   var DEFAULT_SETTINGS = {
     endpoint: 'https://ollama-cors-proxy.vercel.app/api/chat',
-    apiKey: 'b9ac0518ccf1414d9f046cce331009ea.sTbNE0X5t2T_n8fTACWaS8U0',
+    apiKey: '',
     model: 'glm-5.2',
     enabled: true,
     timeoutMs: 30000,

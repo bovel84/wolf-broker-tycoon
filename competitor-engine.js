@@ -1507,19 +1507,36 @@
     }
 
     // --- TURNO SETTIMANALE ---
-    processWeek() {
+    processWeek(llmActions) {
       if (!this.initialized) return { events: [], trades: [] };
       this.currentWeek = (this.marketData && this.marketData.currentWeek) || (this.currentWeek + 1);
       if (this.marketData) this.marketData.currentWeek = this.currentWeek;
 
       const allTrades = [];
       const newEvents = [];
+      const compActionMap = {};
+      if (llmActions && llmActions instanceof Array) {
+        for (var la = 0; la < llmActions.length; la++) {
+          var laItem = llmActions[la];
+          if (laItem && laItem.nickname) {
+            compActionMap[laItem.nickname] = laItem;
+          }
+        }
+      }
 
-      // Ogni competitor esegue il suo turno
+      // Ogni competitor esegue il suo turno (LLM-guided o fallback algoritmico)
       for (const c of this.competitors) {
         if (!c.active) continue;
-        const trades = c.executeTurn();
-        allTrades.push({ competitor: c, trades });
+        var llmAct = compActionMap[c.nickname];
+        if (llmAct && llmAct.action && llmAct.action !== 'hold') {
+          var llmTrades = this._executeLLMAction(c, llmAct);
+          allTrades.push({ competitor: c, trades: llmTrades, reason: llmAct.reason || '', aggression: llmAct.aggression || 5, action: llmAct.action, target: llmAct.target, quantity: llmAct.quantity });
+        } else if (llmAct && llmAct.action === 'hold') {
+          allTrades.push({ competitor: c, trades: [], reason: llmAct.reason || 'Mantiene le posizioni attuali.', aggression: llmAct.aggression || 5, action: 'hold', target: null, quantity: 0 });
+        } else {
+          const trades = c.executeTurn();
+          allTrades.push({ competitor: c, trades: trades, reason: '', aggression: 5, action: 'algorithmic', target: null, quantity: 0 });
+        }
       }
 
       // Processa eventi competitor
@@ -1594,6 +1611,74 @@
         messages: messages,
         rankings: this.getRankings()
       };
+    }
+
+    // --- ESEGUI AZIONE LLM PER UN COMPETITOR ---
+    _executeLLMAction(c, llmAct) {
+      var trades = [];
+      var action = (llmAct.action || 'hold').toLowerCase();
+      var target = llmAct.target || null;
+      var baseQty = llmAct.quantity || 100;
+      var aggression = llmAct.aggression || 5;
+      var qty = Math.max(1, Math.floor(baseQty * (0.5 + aggression / 10)));
+      if (!target) return trades;
+      var stock = null;
+      if (c.marketData && c.marketData.stocks) {
+        for (var si = 0; si < c.marketData.stocks.length; si++) {
+          if (c.marketData.stocks[si].symbol === target || c.marketData.stocks[si].ticker === target) {
+            stock = c.marketData.stocks[si];
+            break;
+          }
+        }
+      }
+      if (!stock) return trades;
+      var price = stock.price || 10;
+      if (action === 'buy') {
+        var maxAffordable = Math.floor(c.capital * 0.3 / price);
+        var buyQty = Math.min(qty, maxAffordable);
+        if (buyQty > 0) {
+          var ok = c.buy(target, buyQty, price);
+          if (ok) trades.push({ action: 'BUY', symbol: target, shares: buyQty, price: price, reason: llmAct.reason || '' });
+        }
+      } else if (action === 'sell') {
+        var pos = c.getPosition(target);
+        if (pos) {
+          var sellQty = Math.min(qty, pos.shares);
+          if (sellQty > 0) {
+            var ok2 = c.sell(target, sellQty, price);
+            if (ok2) trades.push({ action: 'SELL', symbol: target, shares: sellQty, price: price, reason: llmAct.reason || '' });
+          }
+        }
+      } else if (action === 'short') {
+        var shortCost = qty * price;
+        if (c.capital > shortCost * 2) {
+          c.capital -= shortCost;
+          c.portfolio.push({ symbol: target, shares: -qty, avgPrice: price });
+          c.recordTrade('SELL', target, qty, price, qty * price * COMMISSION_RATE);
+          trades.push({ action: 'SHORT', symbol: target, shares: qty, price: price, reason: llmAct.reason || '' });
+        }
+      } else if (action === 'cover') {
+        var shortPos = null;
+        for (var pi = 0; pi < c.portfolio.length; pi++) {
+          if (c.portfolio[pi].symbol === target && c.portfolio[pi].shares < 0) {
+            shortPos = c.portfolio[pi];
+            break;
+          }
+        }
+        if (shortPos) {
+          var coverQty = Math.min(qty, Math.abs(shortPos.shares));
+          if (coverQty > 0) {
+            c.capital += coverQty * price;
+            shortPos.shares += coverQty;
+            if (shortPos.shares >= 0) {
+              c.portfolio = c.portfolio.filter(function(p) { return p !== shortPos; });
+            }
+            c.recordTrade('BUY', target, coverQty, price, coverQty * price * COMMISSION_RATE);
+            trades.push({ action: 'COVER', symbol: target, shares: coverQty, price: price, reason: llmAct.reason || '' });
+          }
+        }
+      }
+      return trades;
     }
 
     getContext() {

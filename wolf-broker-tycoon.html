@@ -236,7 +236,8 @@ tr:hover{background:var(--bg3)}
       <div class="card"><h3>Possiedi Più Rilevanti</h3><div id="dash-top-holdings"></div></div>
     </div>
     <div>
-      <div class="card"><h3>Ultime Notizie</h3><div class="news-feed" id="dash-news" style="max-height:380px"></div></div>
+      <div class="card"><h3>Ultime Notizie</h3><div class="news-feed" id="dash-news" style="max-height:300px"></div></div>
+      <div class="card"><h3>🦈 Competitor Activity</h3><div id="dash-competitor-feed" style="max-height:280px;overflow-y:auto"></div></div>
     </div>
   </div>
 </div>
@@ -10688,19 +10689,36 @@ tr:hover{background:var(--bg3)}
     }
 
     // --- TURNO SETTIMANALE ---
-    processWeek() {
+    processWeek(llmActions) {
       if (!this.initialized) return { events: [], trades: [] };
       this.currentWeek = (this.marketData && this.marketData.currentWeek) || (this.currentWeek + 1);
       if (this.marketData) this.marketData.currentWeek = this.currentWeek;
 
       const allTrades = [];
       const newEvents = [];
+      const compActionMap = {};
+      if (llmActions && llmActions instanceof Array) {
+        for (var la = 0; la < llmActions.length; la++) {
+          var laItem = llmActions[la];
+          if (laItem && laItem.nickname) {
+            compActionMap[laItem.nickname] = laItem;
+          }
+        }
+      }
 
-      // Ogni competitor esegue il suo turno
+      // Ogni competitor esegue il suo turno (LLM-guided o fallback algoritmico)
       for (const c of this.competitors) {
         if (!c.active) continue;
-        const trades = c.executeTurn();
-        allTrades.push({ competitor: c, trades });
+        var llmAct = compActionMap[c.nickname];
+        if (llmAct && llmAct.action && llmAct.action !== 'hold') {
+          var llmTrades = this._executeLLMAction(c, llmAct);
+          allTrades.push({ competitor: c, trades: llmTrades, reason: llmAct.reason || '', aggression: llmAct.aggression || 5, action: llmAct.action, target: llmAct.target, quantity: llmAct.quantity });
+        } else if (llmAct && llmAct.action === 'hold') {
+          allTrades.push({ competitor: c, trades: [], reason: llmAct.reason || 'Mantiene le posizioni attuali.', aggression: llmAct.aggression || 5, action: 'hold', target: null, quantity: 0 });
+        } else {
+          const trades = c.executeTurn();
+          allTrades.push({ competitor: c, trades: trades, reason: '', aggression: 5, action: 'algorithmic', target: null, quantity: 0 });
+        }
       }
 
       // Processa eventi competitor
@@ -10775,6 +10793,74 @@ tr:hover{background:var(--bg3)}
         messages: messages,
         rankings: this.getRankings()
       };
+    }
+
+    // --- ESEGUI AZIONE LLM PER UN COMPETITOR ---
+    _executeLLMAction(c, llmAct) {
+      var trades = [];
+      var action = (llmAct.action || 'hold').toLowerCase();
+      var target = llmAct.target || null;
+      var baseQty = llmAct.quantity || 100;
+      var aggression = llmAct.aggression || 5;
+      var qty = Math.max(1, Math.floor(baseQty * (0.5 + aggression / 10)));
+      if (!target) return trades;
+      var stock = null;
+      if (c.marketData && c.marketData.stocks) {
+        for (var si = 0; si < c.marketData.stocks.length; si++) {
+          if (c.marketData.stocks[si].symbol === target || c.marketData.stocks[si].ticker === target) {
+            stock = c.marketData.stocks[si];
+            break;
+          }
+        }
+      }
+      if (!stock) return trades;
+      var price = stock.price || 10;
+      if (action === 'buy') {
+        var maxAffordable = Math.floor(c.capital * 0.3 / price);
+        var buyQty = Math.min(qty, maxAffordable);
+        if (buyQty > 0) {
+          var ok = c.buy(target, buyQty, price);
+          if (ok) trades.push({ action: 'BUY', symbol: target, shares: buyQty, price: price, reason: llmAct.reason || '' });
+        }
+      } else if (action === 'sell') {
+        var pos = c.getPosition(target);
+        if (pos) {
+          var sellQty = Math.min(qty, pos.shares);
+          if (sellQty > 0) {
+            var ok2 = c.sell(target, sellQty, price);
+            if (ok2) trades.push({ action: 'SELL', symbol: target, shares: sellQty, price: price, reason: llmAct.reason || '' });
+          }
+        }
+      } else if (action === 'short') {
+        var shortCost = qty * price;
+        if (c.capital > shortCost * 2) {
+          c.capital -= shortCost;
+          c.portfolio.push({ symbol: target, shares: -qty, avgPrice: price });
+          c.recordTrade('SELL', target, qty, price, qty * price * COMMISSION_RATE);
+          trades.push({ action: 'SHORT', symbol: target, shares: qty, price: price, reason: llmAct.reason || '' });
+        }
+      } else if (action === 'cover') {
+        var shortPos = null;
+        for (var pi = 0; pi < c.portfolio.length; pi++) {
+          if (c.portfolio[pi].symbol === target && c.portfolio[pi].shares < 0) {
+            shortPos = c.portfolio[pi];
+            break;
+          }
+        }
+        if (shortPos) {
+          var coverQty = Math.min(qty, Math.abs(shortPos.shares));
+          if (coverQty > 0) {
+            c.capital += coverQty * price;
+            shortPos.shares += coverQty;
+            if (shortPos.shares >= 0) {
+              c.portfolio = c.portfolio.filter(function(p) { return p !== shortPos; });
+            }
+            c.recordTrade('BUY', target, coverQty, price, coverQty * price * COMMISSION_RATE);
+            trades.push({ action: 'COVER', symbol: target, shares: coverQty, price: price, reason: llmAct.reason || '' });
+          }
+        }
+      }
+      return trades;
     }
 
     getContext() {
@@ -11471,10 +11557,53 @@ function advanceTurn(){
   // Auto-save
   saveAuto();
   
+  // LLM Game Master + Competitor Engine
+  if(typeof LLMGameMaster!=='undefined'&&LLMGameMaster.isAvailable&&LLMGameMaster.isAvailable()){
+    var gs={week:G.week,year:G.year||1987,marketSentiment:G.sentiment||50,level:G.level||1,netWorth:computeNetWorth(),reputation:G.rep||50,companies:G.companies.map(function(c){return{ticker:c.ticker,name:c.name,sector:c.sector,price:c.price,peRatio:c.pe||10}}),competitors:(window._competitorEngine&&window._competitorEngine.competitors)?window._competitorEngine.competitors.map(function(c){return{nickname:c.nickname,strategy:c.strategy,capital:c.capital,relationship:c.relationship||'neutral'}}):[]};
+    LLMGameMaster.generateCompetitorActions(gs.competitors,gs).then(function(actions){
+      if(window._competitorEngine){
+        var res=window._competitorEngine.processWeek(actions);
+        renderCompetitorActivity(res);
+      }
+    }).catch(function(){
+      if(window._competitorEngine){var res=window._competitorEngine.processWeek();renderCompetitorActivity(res);}
+    });
+  }else if(window._competitorEngine){
+    var res2=window._competitorEngine.processWeek();
+    renderCompetitorActivity(res2);
+  }
+  
   // Render
   renderAll();
   events.forEach(ev=>showEventToast(ev));
   updateTicker();
+}
+
+function renderCompetitorActivity(res){
+  var el=document.getElementById('dash-competitor-feed');
+  if(!el||!res||!res.trades)return;
+  el.innerHTML='';
+  var trades=res.trades||[];
+  if(trades.length===0){el.innerHTML='<div style="color:var(--text2);font-size:12px;padding:8px">Nessuna attivita\' dei competitor questa settimana.</div>';return;}
+  var colors={buy:'#00d68f',sell:'#ff5371',short:'#ff5371',cover:'#00d68f',hold:'#8a96b0',algorithmic:'#8a96b0'};
+  var labels={buy:'COMPRA',sell:'VENDI',short:'SHORT',cover:'COVER',hold:'HOLD',algorithmic:'AUTO'};
+  trades.forEach(function(t){
+    var comp=t.competitor||{};
+    var nick=comp.nickname||'Bot';
+    var act=(t.action||'algorithmic').toLowerCase();
+    var reason=t.reason||'';
+    var aggr=t.aggression||5;
+    var qty=t.quantity||0;
+    var target=t.target||'';
+    var color=colors[act]||'#8a96b0';
+    var label=labels[act]||act.toUpperCase();
+    var div=document.createElement('div');
+    div.style.cssText='padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px';
+    var aggrBar='';
+    for(var b=0;b<10;b++){aggrBar+='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:'+(b<aggr?'var(--red)':'var(--bg4)')+';margin-right:2px"></span>';}
+    div.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-weight:600;color:var(--text)">'+nick+'</span><span style="background:'+color+'22;color:'+color+';padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">'+label+'</span>'+(target?'<span style="color:var(--text2)">'+target+(qty>0?' x'+qty:'')+'</span>':'')+'</div>'+(reason?'<div style="color:var(--text2);font-size:11px;font-style:italic;margin-bottom:4px">\"'+reason+'\"</div>':'')+'<div>'+aggrBar+' <span style="color:var(--text2);font-size:10px;margin-left:4px">Aggr. '+aggr+'/10</span></div>';
+    el.appendChild(div);
+  });
 }
 
 function generateEvent(){
@@ -12464,8 +12593,9 @@ function toggleMobileMoreMenu(){var m=document.getElementById('mobileMoreMenu');
 try{var hasSave=false;for(var i=1;i<=5;i++){if(localStorage.getItem('sbt_save_'+i)){hasSave=true;break}}if(localStorage.getItem('sbt_autosave'))hasSave=true;if(hasSave)document.getElementById('wolfLoadBtn').disabled=false}catch(e){}
 if(typeof LLMNewsEngine!=='undefined'&&LLMNewsEngine.configure){LLMNewsEngine.configure({endpoint:'https://ollama-cors-proxy.vercel.app/api/chat',model:'glm-5.2',apiKey:'b9ac0518ccf1414d9f046cce331009ea.sTbNE0X5t2T_n8fTACWaS8U0',enabled:true})}
 if(typeof LLMGameMaster!=='undefined'&&LLMGameMaster.configure){LLMGameMaster.configure({endpoint:'https://ollama-cors-proxy.vercel.app/api/chat',model:'glm-5.2',apiKey:'b9ac0518ccf1414d9f046cce331009ea.sTbNE0X5t2T_n8fTACWaS8U0',enabled:true})}
-var _origAdvance=(typeof advanceWeek==='function')?advanceWeek:function(){};
-if(typeof advanceWeek!=='undefined'){window.advanceWeek=function(){_origAdvance();if(window._competitorEngine){try{window._competitorEngine.processWeek()}catch(e){}}if(typeof LLMNewsEngine!=='undefined'&&LLMNewsEngine.processNewsTurn){var gs={week:(typeof week!=='undefined')?week:1,cash:(typeof cash!=='undefined')?cash:10000,level:(typeof level!=='undefined')?level:1,portfolio:(typeof portfolio!=='undefined')?portfolio:{},companies:(typeof companies!=='undefined')?companies:[]};LLMNewsEngine.processNewsTurn(gs).then(function(r){if(r&&r.length>0&&typeof addNews==='function'){r.forEach(function(n){addNews(n.title,n.impact,n.content)})}}).catch(function(){})}}}
+if(typeof CompetitorEngine!=='undefined'){try{window._competitorEngine=new CompetitorEngine();var _md={stocks:(typeof G!=='undefined'&&G&&G.companies)?G.companies.map(function(c){return{symbol:c.ticker,price:c.price,sector:c.sector,volume:c.vol||0,avgVolume:1000000,change:c.change||0}}):[],currentWeek:(typeof G!=='undefined'&&G)?G.week:1};window._competitorEngine.init(_md)}catch(e){}}
+var _origAdvance=(typeof advanceTurn==='function')?advanceTurn:function(){};
+if(typeof advanceTurn!=='undefined'){window.advanceTurn=function(){_origAdvance();if(window._competitorEngine){try{window._competitorEngine.setMarketData({stocks:(typeof G!=='undefined'&&G&&G.companies)?G.companies.map(function(c){return{symbol:c.ticker,price:c.price,sector:c.sector,volume:c.vol||0,avgVolume:1000000,change:c.change||0}}):[],currentWeek:G?G.week:1});window._competitorEngine.setPlayerData((typeof positions!=='undefined')?Object.keys(positions).map(function(k){return{symbol:k,shares:positions[k].shares}}):[],(typeof cash!=='undefined')?cash:10000,(typeof G!=='undefined'&&G)?G.rep||50:50,(typeof G!=='undefined'&&G)?G.xp||0:0)}catch(e){}}if(typeof LLMNewsEngine!=='undefined'&&LLMNewsEngine.processNewsTurn){var gs={week:(typeof G!=='undefined'&&G)?G.week:1,cash:(typeof cash!=='undefined')?cash:10000,level:(typeof G!=='undefined'&&G)?G.level||1:1,portfolio:(typeof positions!=='undefined')?positions:{},companies:(typeof G!=='undefined'&&G&&G.companies)?G.companies:[]};LLMNewsEngine.processNewsTurn(gs).then(function(r){if(r&&r.length>0&&typeof addNews==='function'){r.forEach(function(n){addNews(n.title,n.impact,n.content)})}}).catch(function(){})}}
 
 </script>
 </body>

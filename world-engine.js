@@ -195,6 +195,7 @@
       rivals: rivals,
       globalEvents: [],
       assemblyLog: [],
+      corporateEvents: [],
       openAssembly: null,
       lastBriefing: 'Il mondo finanziario entra in una nuova fase.',
       lastTurn: null
@@ -208,6 +209,7 @@
       if (raw) loaded = JSON.parse(raw);
     } catch (e) { loaded = null; }
     state = loaded && loaded.companies && loaded.rivals ? loaded : createState(game, competitors);
+    if (!(state.corporateEvents instanceof Array)) state.corporateEvents = [];
     var list = game && game.companies ? game.companies : [];
     for (var i = 0; i < list.length; i++) {
       if (!state.companies[list[i].ticker]) state.companies[list[i].ticker] = hydrateCompany(list[i], i);
@@ -286,6 +288,7 @@
       competitors: rivals,
       recentEvents: state.globalEvents.slice(0, 4),
       recentAssemblies: state.assemblyLog.slice(0, 3),
+      recentCorporateEvents: state.corporateEvents.slice(0, 5),
       brokerStory: global.BrokerStory && global.BrokerStory.getContext ? global.BrokerStory.getContext() : null
     };
   }
@@ -334,6 +337,7 @@
         shareholderMoves: [{ blockId: 'institutional', action: direction > 0 ? 'sostegno' : 'richiesta di prudenza', motive: 'Proteggere rendimento e governance.', confidenceDelta: direction * 4, stance: direction > 0 ? 'favorevole' : 'prudente' }]
       }],
       competitors: rivals,
+      corporateEvents: [],
       assembly: null
     };
   }
@@ -344,6 +348,8 @@
     if (!result.macro || typeof result.macro !== 'object') result.macro = fallback.macro;
     if (!(result.companies instanceof Array)) result.companies = fallback.companies;
     if (!(result.competitors instanceof Array)) result.competitors = fallback.competitors;
+    if (!(result.corporateEvents instanceof Array)) result.corporateEvents = [];
+    result.corporateEvents = result.corporateEvents.slice(0, 2);
     result.companies = result.companies.slice(0, 4);
     result.competitors = result.competitors.slice(0, context.competitors.length);
     return result;
@@ -610,6 +616,7 @@
       applyMacro(turn.macro || fallback.macro, game);
       applyCompanyActions(turn.companies || [], game);
       applyRivalPlans(turn.competitors || [], competitors, game);
+      if (global.CorporateLifecycle && global.CorporateLifecycle.processTurn) global.CorporateLifecycle.processTurn(turn.corporateEvents || [], game, context);
       maybeOpenAssembly(game, competitors, turn.assembly);
       saveState();
       render();
@@ -620,6 +627,7 @@
       applyMacro(turn.macro, game);
       applyCompanyActions(turn.companies, game);
       applyRivalPlans(turn.competitors, competitors, game);
+      if (global.CorporateLifecycle && global.CorporateLifecycle.processTurn) global.CorporateLifecycle.processTurn([], game, context);
       maybeOpenAssembly(game, competitors, null);
       saveState();
       render();
@@ -762,6 +770,40 @@
     }
   }
 
+  function registerCompany(company, seed) {
+    if (!company || !company.ticker || !state) return null;
+    var game = getGame();
+    var index = game && game.companies ? game.companies.length - 1 : Object.keys(state.companies).length;
+    var profile = hydrateCompany(company, Math.max(0, index));
+    seed = seed || {};
+    if (seed.originStory) profile.originStory = safeText(seed.originStory, 500);
+    if (seed.mission) profile.mission = safeText(seed.mission, 250);
+    if (seed.objectiveLabel) profile.objective.label = safeText(seed.objectiveLabel, 220);
+    if (seed.headquarters) profile.headquarters = safeText(seed.headquarters, 80);
+    if (seed.foundedYear) profile.foundedYear = seed.foundedYear;
+    if (seed.parentTickers instanceof Array) {
+      profile.parentTickers = seed.parentTickers.slice(0, 3);
+      profile.milestones.unshift({ year: (game && game.year) || 1987, text: 'Nascita da ' + seed.parentTickers.join(' e ') });
+    }
+    profile.status = 'active';
+    profile.distressWeeks = 0;
+    profile.lifecycleHistory = [{ week: game ? game.week : 1, status: 'active', reason: safeText(seed.reason || 'Ingresso sul mercato', 180) }];
+    state.companies[company.ticker] = profile;
+    saveState();
+    return profile;
+  }
+
+  function setCompanyStatus(ticker, status, reason) {
+    if (!state || !state.companies[ticker]) return null;
+    var profile = state.companies[ticker];
+    profile.status = safeText(status, 30);
+    if (!(profile.lifecycleHistory instanceof Array)) profile.lifecycleHistory = [];
+    profile.lifecycleHistory.unshift({ week: (getGame() && getGame().week) || 1, status: profile.status, reason: safeText(reason, 220) });
+    profile.lifecycleHistory = profile.lifecycleHistory.slice(0, 20);
+    saveState();
+    return profile;
+  }
+
   global.WorldEngine = {
     install: install,
     processWorldTurn: processWorldTurn,
@@ -769,6 +811,8 @@
     render: render,
     selectCompany: selectCompany,
     getCompanyProfile: function (ticker) { return state && state.companies ? state.companies[ticker] : null; },
+    registerCompany: registerCompany,
+    setCompanyStatus: setCompanyStatus,
     getState: function () { return state; },
     reset: function () {
       try { if (global.localStorage) global.localStorage.removeItem(STORAGE_KEY); } catch (e) {}

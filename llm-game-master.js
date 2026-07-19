@@ -1,7 +1,7 @@
 /*
  * llm-game-master.js
  * LLM Game Master per Wolf of Wall Street Broker Tycoon
- * Versione 2.0.0 - Usa Ollama Cloud via proxy Vercel
+ * Versione 3.0.0 - Usa Ollama Cloud via proxy Vercel
  * Genera contenuto dinamico: notizie, decisioni competitor, dialoghi, eventi.
  *
  * Restrizioni di compatibilita':
@@ -19,7 +19,7 @@
 
   var DEFAULT_SETTINGS = {
     endpoint: 'https://ollama-cors-proxy.vercel.app/api/chat',
-    apiKey: 'b9ac0518ccf1414d9f046cce331009ea.sTbNE0X5t2T_n8fTACWaS8U0',
+    apiKey: '',
     model: 'glm-5.2',
     enabled: true,
     temperature: 0.8,
@@ -731,6 +731,33 @@
     }).catch(function () { return fb; });
   }
 
+  function buildWorldPrompt(context) {
+    var compact = JSON.stringify(context || {});
+    if (compact.length > 18000) compact = compact.substring(0, 18000);
+    return 'Simula UNA settimana coerente di un ecosistema finanziario mondiale persistente. ' +
+      'Le societa devono reagire ai fondamentali, i competitor devono perseguire obiettivi di medio periodo e le assemblee devono dipendere da quote, alleanze e governance. ' +
+      'Non inventare ticker diversi da quelli ricevuti. Evita eventi scollegati dalla memoria. Contesto: ' + compact + ' ' +
+      'Rispondi con JSON: {briefing,macro,companies,competitors,assembly}. ' +
+      'macro={region,title,description,growthDelta,inflationDelta,ratesDelta,sentimentImpact}. ' +
+      'companies=array max 4 di {ticker,action,title,description,revenueGrowthDelta,marginDelta,debtDelta,governanceDelta,innovationDelta,priceImpactPct}. ' +
+      'competitors=array con {nickname,goal,plan,target,stance,conviction}; mantieni identita e strategia di ciascuno. ' +
+      'assembly=null oppure {ticker,type,title,description,priceImpactPct,growthImpact,debtImpact}. ' +
+      'Limiti: delta macro tra -2 e 2, impatto prezzo tra -12 e 12, conviction 1-100. Testi in italiano.';
+  }
+
+  function generateWorldTurn(context) {
+    var ctx = context || {};
+    var key = 'world_' + (ctx.week || 1) + '_' + (ctx.year || 1987);
+    var fallback = { briefing: '', macro: null, companies: [], competitors: [], assembly: null };
+    var messages = [
+      { role: 'system', content: SYSTEM_PROMPT + ' Mantieni continuita causale e memoria tra i turni.' },
+      { role: 'user', content: buildWorldPrompt(ctx) }
+    ];
+    return safeCall(key, messages, fallback).then(function (result) {
+      return result && typeof result === 'object' ? result : fallback;
+    }).catch(function () { return fallback; });
+  }
+
   function processTurn(gameState) {
     var gs = gameState || {};
     resetTurn();
@@ -794,11 +821,12 @@
     generateDialogue: generateDialogue,
     generateEvent: generateEvent,
     generateMarketCommentary: generateMarketCommentary,
+    generateWorldTurn: generateWorldTurn,
     processTurn: processTurn,
     isAvailable: isAvailable,
     getStats: getStats,
     resetTurn: resetTurn,
-    version: '2.0.0'
+    version: '3.0.0'
   };
 
   var _root = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : (typeof self !== 'undefined' ? self : this));

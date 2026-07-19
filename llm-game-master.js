@@ -1,7 +1,7 @@
 /*
  * llm-game-master.js
  * LLM Game Master per Wolf of Wall Street Broker Tycoon
- * Versione 4.0.0 - Usa Ollama Cloud via proxy Vercel
+ * Versione 5.0.0 - Usa Ollama Cloud via proxy Vercel
  * Genera contenuto dinamico: notizie, decisioni competitor, dialoghi, eventi.
  *
  * Restrizioni di compatibilita':
@@ -737,20 +737,29 @@
     return 'Simula una settimana coerente di un ecosistema finanziario mondiale persistente. ' +
       'Ogni societa possiede una storia, una missione e un obiettivo pluriennale. Gli amministratori sono persone autonome: agiscono secondo ruolo, etica, influenza, lealta e agenda. I soci reagiscono secondo quota, fiducia e obiettivo. ' +
       'Fai avanzare o arretrare gli obiettivi in modo causale. Crea conflitti tra CdA e soci, alleanze, dimissioni, richieste attiviste o assemblee solo quando giustificati. ' +
-      'I competitor perseguono obiettivi di medio periodo. Non inventare ticker, amministratori o blocchi diversi da quelli ricevuti. Mantieni memoria e continuita. Contesto: ' + compact + ' ' +
-      'Rispondi con JSON {briefing,macro,companies,competitors,assembly}. ' +
+      'I competitor perseguono obiettivi di medio periodo. Mantieni memoria e continuita. ' +
+      'Puoi proporre al massimo due operazioni straordinarie, ma solo quando fondamentali, crisi, strategia e fatti recenti le rendono credibili. Un fallimento richiede dissesto o crisi prolungata; fusioni e acquisizioni richiedono una logica industriale; IPO e spin-off devono colmare un bisogno reale del mercato. ' +
+      'Usa esclusivamente ticker quotati ricevuti per target, acquirenti e societa madri; nuovi ticker sono ammessi solo per merger, ipo e spinoff. Ogni fatto deve propagarsi a prezzi, settore, azionisti, competitor e indici attraverso gli effetti applicati dal motore. Contesto: ' + compact + ' ' +
+      'Rispondi con JSON {briefing,macro,companies,competitors,corporateEvents,assembly}. ' +
       'macro={region,title,description,growthDelta,inflationDelta,ratesDelta,sentimentImpact}; ' +
       'companies=max 4 elementi {ticker,action,title,description,revenueGrowthDelta,marginDelta,debtDelta,governanceDelta,innovationDelta,priceImpactPct,boardDecision,shareholderMoves}. ' +
       'boardDecision={directorRole,action,motive,supportDelta,objectiveProgress,influenceDelta,competenceDelta,ethicsDelta,status}. status e attivo|dimissionario|rimosso|sospeso. ' +
       'shareholderMoves=max 4 elementi {blockId,action,motive,confidenceDelta,stance}. Usa solo directorRole e blockId presenti nel contesto; ' +
       'competitors={nickname,goal,plan,target,stance,conviction}; ' +
+      'corporateEvents=max 2 elementi, scegli tra: ' +
+      '{type:"bankruptcy",target,recoveryPct,reason}; ' +
+      '{type:"restructuring",target,capitalInjection,dilutionPct,reason}; ' +
+      '{type:"acquisition",acquirer,target,premiumPct,method,synergyPct,debtImpact,reason} con method cash|stock; ' +
+      '{type:"merger",companyA,companyB,newName,newTicker,sector,newPrice,retainedValuePct,mission,objective,reason}; ' +
+      '{type:"ipo",name,ticker,sector,price,cap,volatility,dividend,originStory,mission,objective,headquarters,reason}; ' +
+      '{type:"spinoff",parent,newName,newTicker,sector,capSharePct,newPrice,mission,objective,reason}; ' +
       'assembly=null oppure {ticker,type,title,description,priceImpactPct,growthImpact,debtImpact}. Applica delta piccoli e realistici.';
   }
 
   function generateWorldTurn(context) {
     var ctx = context || {};
     var key = 'world_' + (ctx.week || 1) + '_' + (ctx.year || 1987);
-    var fallback = { briefing: '', macro: null, companies: [], competitors: [], assembly: null };
+    var fallback = { briefing: '', macro: null, companies: [], competitors: [], corporateEvents: [], assembly: null };
     var messages = [
       { role: 'system', content: SYSTEM_PROMPT + ' Mantieni continuita causale tra i turni.' },
       { role: 'user', content: buildWorldPrompt(ctx) }

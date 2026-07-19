@@ -448,6 +448,7 @@
     return id;
   }
   function ensurePanels() {
+    if (typeof document === 'undefined') return;
     var dashboard = document.getElementById('view-dashboard');
     if (dashboard && !document.getElementById('world-pulse-card')) {
       var card = document.createElement('div');

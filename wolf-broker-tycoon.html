@@ -438,6 +438,7 @@ tr:hover{background:var(--bg3)}
 
 
 
+
 <script>
 /* ============================================================
  * market-engine.js — Company & Market Engine
@@ -9214,7 +9215,6 @@ tr:hover{background:var(--bg3)}
   var _root = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : (typeof self !== 'undefined' ? self : this));
   if (typeof module !== 'undefined' && module.exports) { module.exports = _root.LLMGameMaster; }
 })(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));
-
 /**
  * Competitor Engine — Wolf of Wall Street Broker Tycoon
  * Modulo AI per 10 competitor con strategie, OPA, eventi, sfide e dialoghi
@@ -12050,7 +12050,6 @@ tr:hover{background:var(--bg3)}
   if (typeof document !== 'undefined') global.setTimeout(install, 0);
 })(typeof window !== 'undefined' ? window : this);
 
-
 /*
  * broker-story.js
  * Origin story and reactive career narrative for Wolf Broker Tycoon.
@@ -12627,6 +12626,7 @@ tr:hover{background:var(--bg3)}
   if (typeof module !== 'undefined' && module.exports) module.exports = global.BrokerStory;
   if (typeof document !== 'undefined') global.setTimeout(install, 0);
 })(typeof window !== 'undefined' ? window : this);
+
 
 
 // ======================== CONSTANTS ========================
@@ -13988,6 +13988,7 @@ if(typeof CompetitorEngine!=='undefined'&&!window._competitorEngine){
   }catch(e){console.warn('Competitor Engine init:',e)}
 }
 if(typeof WorldEngine!=='undefined'&&WorldEngine.install)WorldEngine.install();
+if(typeof BrokerStory!=='undefined'&&BrokerStory.install)BrokerStory.install();
 
 
 function wolfStartGame(){document.getElementById('wolfTitleScreen').classList.add('hide');setTimeout(function(){document.getElementById('wolfTitleScreen').style.display='none'},600);if(typeof newGame==='function')newGame()}

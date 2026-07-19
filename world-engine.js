@@ -701,9 +701,15 @@
       options += '<option value="' + safeText(companies[i].ticker, 12) + '"' + (companies[i].ticker === selectedCompanyTicker ? ' selected' : '') + '>' + safeText(companies[i].name, 70) + ' (' + safeText(companies[i].ticker, 12) + ')</option>';
     }
     var objective = profile.objective || { label: 'Obiettivo non definito', progress: 0, status: 'in corso' };
+    var lifecycleStatus = profile.status || 'active';
+    var health = profile.financialHealth;
+    if ((health === undefined || health === null) && global.CorporateLifecycle && global.CorporateLifecycle.financialHealth) health = global.CorporateLifecycle.financialHealth(selectedCompanyTicker);
+    if (health === undefined || health === null) health = 50;
+    var statusLabels = { active: 'ATTIVA', distressed: 'IN CRISI', restructuring: 'RISTRUTTURAZIONE', bankrupt: 'FALLITA', acquired: 'ACQUISITA', merged: 'FUSA', spunoff: 'SPIN-OFF' };
+    var statusClass = lifecycleStatus === 'active' ? 'g' : ((lifecycleStatus === 'distressed' || lifecycleStatus === 'restructuring') ? 'y' : 'r');
     var html = '<select onchange="WorldEngine.selectCompany(this.value)" style="width:100%;max-width:420px;background:var(--bg3);color:var(--text);border:1px solid var(--border);padding:8px;border-radius:6px;margin-bottom:10px">' + options + '</select>';
     html += '<div style="display:grid;grid-template-columns:1.15fr .85fr;gap:10px" class="company-governance-grid">';
-    html += '<div><div style="font-size:16px;font-weight:700">' + safeText(profile.name, 80) + '</div><div class="gray" style="font-size:11px">Fondata nel ' + profile.foundedYear + ' · Sede: ' + safeText(profile.headquarters, 60) + '</div><p style="font-size:12px;line-height:1.55">' + safeText(profile.originStory, 420) + '</p><div style="font-size:11px"><strong>Missione:</strong> ' + safeText(profile.mission, 220) + '</div>';
+    html += '<div><div style="font-size:16px;font-weight:700">' + safeText(profile.name, 80) + ' <span class="pill ' + statusClass + '">' + safeText(statusLabels[lifecycleStatus] || lifecycleStatus.toUpperCase(), 30) + '</span></div><div class="gray" style="font-size:11px">Fondata nel ' + profile.foundedYear + ' · Sede: ' + safeText(profile.headquarters, 60) + ' · Salute finanziaria ' + Math.round(health) + '/100</div><p style="font-size:12px;line-height:1.55">' + safeText(profile.originStory, 420) + '</p><div style="font-size:11px"><strong>Missione:</strong> ' + safeText(profile.mission, 220) + '</div>';
     html += '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px"><strong>Obiettivo:</strong><span>' + round(objective.progress, 1) + '% · ' + safeText(objective.status, 30) + '</span></div><div style="font-size:11px;color:var(--text2);margin:3px 0">' + safeText(objective.label, 220) + '</div><div style="height:7px;background:var(--bg4);border-radius:8px;overflow:hidden"><span style="display:block;height:100%;width:' + clamp(objective.progress, 0, 100) + '%;background:linear-gradient(90deg,var(--blue),var(--green))"></span></div></div></div>';
     html += '<div><div style="font-size:11px;margin-bottom:6px"><strong>CdA</strong> · sostegno ' + profile.boardSupport + '%</div>';
     for (var b = 0; b < profile.board.length; b++) {
@@ -719,6 +725,9 @@
     html += '</div></div>';
     if (profile.governanceEvents.length) {
       html += '<div style="margin-top:10px"><strong style="font-size:11px">Ultima dinamica societaria</strong><div style="font-size:10px;color:var(--text2);margin-top:4px">' + safeText(profile.governanceEvents[0].actor, 80) + ': ' + safeText(profile.governanceEvents[0].action, 180) + '</div></div>';
+    }
+    if (profile.lifecycleHistory && profile.lifecycleHistory.length) {
+      html += '<div style="margin-top:10px"><strong style="font-size:11px">Ultimo fatto societario</strong><div style="font-size:10px;color:var(--text2);margin-top:4px">Settimana ' + profile.lifecycleHistory[0].week + ' · ' + safeText(profile.lifecycleHistory[0].reason, 180) + '</div></div>';
     }
     el.innerHTML = html;
   }

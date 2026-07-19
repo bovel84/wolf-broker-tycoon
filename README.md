@@ -7,7 +7,10 @@ Gestionale di broker azionario completo e realistico con modalità carriera e as
 - **8 titoli** con prezzo, capitalizzazione, volatilità, dividendi
 - **10 livelli carriera** da Apprendista a Magnate
 - **10 competitor AI** con personalità e strategie diverse
-- **LLM Game Master** — notizie dinamiche, dialoghi narrativi, eventi mondiali
+- **LLM Game Master 3.0** — un solo turno AI coerente coordina mondo, aziende, rivali ed eventi
+- **World Engine persistente** — macroregioni, fondamentali, governance e strategie aziendali evolvono nel tempo
+- **Competitor con memoria** — obiettivi, convinzione, piani, alleanze e rivalità influenzano le operazioni
+- **Assemblee globali** — CdA, blocchi rivali e quota del giocatore determinano votazioni ed effetti reali
 - **LLM News Engine** — notizie di mercato generate da AI (Ollama Cloud)
 - **Assemblee societarie** con votazioni
 - **Short selling** e margin trading
@@ -44,4 +47,16 @@ Genera `wolf-broker-tycoon.html` single-file giocabile.
 | `llm-news-engine.js` | Notizie AI via Ollama Cloud |
 | `llm-game-master.js` | Game Master AI, eventi, competitor |
 | `competitor-engine.js` | 10 broker AI con OPA e sfide |
+| `world-engine.js` | Simulazione persistente di mondo, società, rivali e assemblee |
 | `build_html.py` | Assemblatore finale single-file |
+## Configurazione sicura LLM
+
+Le chiavi API non sono incluse nel codice. Inserisci endpoint, modello e chiave dalla schermata **Impostazioni LLM**; i dati restano nel browser tramite localStorage. In produzione è consigliato un proxy server-side che non esponga credenziali al client.
+
+## Flusso settimanale
+
+1. Il motore di mercato aggiorna prezzi ed eventi.
+2. L'LLM riceve un contesto compatto con macroregioni, fondamentali, memoria dei rivali e storico recente.
+3. Il World Engine valida e limita ogni delta prima di applicarlo.
+4. Le decisioni diventano notizie, variazioni fondamentali, piani dei competitor e proposte assembleari.
+5. Se l'LLM non è disponibile, il fallback locale mantiene il gioco pienamente funzionante.

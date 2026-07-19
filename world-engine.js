@@ -244,6 +244,13 @@
         innovation: profile.innovation,
         strategy: profile.strategy,
         phase: profile.phase,
+        foundedYear: profile.foundedYear,
+        originStory: profile.originStory,
+        mission: profile.mission,
+        objective: profile.objective,
+        board: profile.board,
+        shareholderBlocks: profile.shareholderBlocks,
+        recentGovernance: profile.governanceEvents.slice(0, 3),
         lastDecision: profile.lastDecision
       });
     }
@@ -318,7 +325,9 @@
         debtDelta: action === 'deleveraging' ? -5 : (action === 'expansion' ? 4 : 0),
         governanceDelta: direction * Math.round(1 + Math.random() * 4),
         innovationDelta: action === 'innovation' ? 8 : Math.round((Math.random() - 0.5) * 4),
-        priceImpactPct: direction * round(1 + Math.random() * 5, 1)
+        priceImpactPct: direction * round(1 + Math.random() * 5, 1),
+        boardDecision: { directorRole: 'Amministratore Delegato', action: 'Aggiorna il piano industriale', motive: 'Reagire al ciclo economico e avanzare verso l obiettivo societario.', supportDelta: direction * 3, objectiveProgress: direction * 4 },
+        shareholderMoves: [{ blockId: 'institutional', action: direction > 0 ? 'sostegno' : 'richiesta di prudenza', motive: 'Proteggere rendimento e governance.', confidenceDelta: direction * 4, stance: direction > 0 ? 'favorevole' : 'prudente' }]
       }],
       competitors: rivals,
       assembly: null
@@ -362,6 +371,58 @@
     }
   }
 
+  function applyBoardDecision(profile, decision, game) {
+    if (!decision || typeof decision !== 'object') return;
+    var director = null;
+    for (var i = 0; i < profile.board.length; i++) {
+      if (profile.board[i].role === decision.directorRole || profile.board[i].name === decision.directorName) director = profile.board[i];
+    }
+    if (!director) director = profile.board[1] || profile.board[0];
+    director.lastMove = safeText(decision.action || decision.motive, 150);
+    director.influence = Math.round(clamp(director.influence + clamp(decision.influenceDelta, -8, 8), 10, 100));
+    profile.boardSupport = Math.round(clamp(profile.boardSupport + clamp(decision.supportDelta, -12, 12), 0, 100));
+    if (profile.objective) {
+      profile.objective.progress = round(clamp(profile.objective.progress + clamp(decision.objectiveProgress, -12, 12), 0, 100), 1);
+      if (profile.objective.progress >= 100) profile.objective.status = 'raggiunto';
+      else if (profile.objective.progress < 20) profile.objective.status = 'a rischio';
+      else profile.objective.status = 'in corso';
+    }
+    profile.governanceEvents.unshift({
+      week: game.week,
+      actor: director.name,
+      role: director.role,
+      action: safeText(decision.action, 120),
+      motive: safeText(decision.motive, 180),
+      type: 'board'
+    });
+  }
+
+  function applyShareholderMoves(profile, moves, game) {
+    if (!(moves instanceof Array)) return;
+    for (var i = 0; i < moves.length && i < 4; i++) {
+      var move = moves[i] || {};
+      var block = null;
+      for (var j = 0; j < profile.shareholderBlocks.length; j++) {
+        if (profile.shareholderBlocks[j].id === move.blockId || profile.shareholderBlocks[j].name === move.blockName) block = profile.shareholderBlocks[j];
+      }
+      if (!block) continue;
+      block.confidence = Math.round(clamp(block.confidence + clamp(move.confidenceDelta, -15, 15), 0, 100));
+      if (move.stance) block.stance = safeText(move.stance, 30);
+      profile.governanceEvents.unshift({
+        week: game.week,
+        actor: block.name,
+        role: 'Socio ' + block.stake + '%',
+        action: safeText(move.action, 120),
+        motive: safeText(move.motive, 180),
+        type: 'shareholder'
+      });
+    }
+    var confidence = 0;
+    for (var k = 0; k < profile.shareholderBlocks.length; k++) confidence += profile.shareholderBlocks[k].confidence * profile.shareholderBlocks[k].stake / 100;
+    profile.shareholderConfidence = Math.round(clamp(confidence, 0, 100));
+    profile.governanceEvents = profile.governanceEvents.slice(0, 20);
+  }
+
   function applyCompanyActions(actions, game) {
     for (var i = 0; i < actions.length; i++) {
       var action = actions[i] || {};
@@ -373,6 +434,8 @@
       profile.debt = round(clamp(profile.debt + clamp(action.debtDelta, -12, 12), 0, 150), 1);
       profile.governance = Math.round(clamp(profile.governance + clamp(action.governanceDelta, -12, 12), 0, 100));
       profile.innovation = Math.round(clamp(profile.innovation + clamp(action.innovationDelta, -12, 12), 0, 100));
+      applyBoardDecision(profile, action.boardDecision, game);
+      applyShareholderMoves(profile, action.shareholderMoves, game);
       profile.lastDecision = safeText(action.title || action.description, 150);
       profile.phase = profile.revenueGrowth > 10 ? 'crescita' : (profile.revenueGrowth < 0 ? 'crisi' : 'stabile');
       profile.history.unshift({ week: game.week, action: safeText(action.action, 40), title: safeText(action.title, 100) });

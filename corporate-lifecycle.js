@@ -193,7 +193,10 @@
     var target = company(game, event.target);
     var p = target ? profile(target.ticker) : null;
     if (!target || !p || target.listed === false) return null;
+    var health = financialHealth(p);
+    if (health > 25 && (p.distressWeeks || 0) < 2 && p.status !== 'distressed' && p.status !== 'restructuring') return null;
     var oldPrice = target.price;
+    var oldCap = target.cap;
     var recovery = clamp(event.recoveryPct, 0, 20);
     var settlement = Math.max(0.05, oldPrice * recovery / 100);
     target.prevPrice = oldPrice;
@@ -210,8 +213,9 @@
     p.boardSupport = 0;
     p.governanceEvents.unshift({ week: game.week, actor: 'Tribunale commerciale', role: 'Procedura concorsuale', action: 'Apre la liquidazione', motive: safe(event.reason || 'Insolvenza non risolta', 180), type: 'bankruptcy' });
     markStatus(target.ticker, 'bankrupt', event.reason || 'Insolvenza e apertura della liquidazione');
+    settleCashPosition(game, target.ticker, settlement, 'Liquidazione fallimentare');
     settleShorts(game, target.ticker, settlement);
-    sectorImpact(game, target.sector, -2.5 - Math.min(3, target.cap / 100000), [target.ticker]);
+    sectorImpact(game, target.sector, -2.5 - Math.min(3, oldCap / 100000), [target.ticker]);
     var evt = {
       type: 'bankruptcy',
       title: target.name + ' dichiara fallimento',

@@ -431,6 +431,7 @@ tr:hover{background:var(--bg3)}
 <script src="world-engine.js"></script>
 <script src="corporate-lifecycle.js"></script>
 <script src="broker-story.js"></script>
+<script src="player-life.js"></script>
 <script>
 
 // ======================== CONSTANTS ========================
@@ -679,6 +680,7 @@ function computeIndices(){
 
 function advanceTurn(){
   if(!G)return;
+  if(typeof PlayerLife!=='undefined'&&PlayerLife.canAct&&!PlayerLife.canAct()){PlayerLife.showGameOver();return}
   // Save prev prices
   G.companies.forEach(c=>{c.prevPrice=c.price;c.change=0});
   
@@ -1009,6 +1011,7 @@ function resolveAssembly(ticker){
 
 // ======================== TRADING ========================
 function openTradeModal(ticker){
+  if(typeof PlayerLife!=='undefined'&&PlayerLife.canAct&&!PlayerLife.canAct()){PlayerLife.showGameOver();return}
   var c=getCompany(ticker);if(!c)return;
   if(c.listed===false||c.tradingHalted){toast('warning','Titolo non negoziabile: societa ritirata o contrattazioni sospese');return}
   var owned=G.positions[ticker]?G.positions[ticker].shares:0;
@@ -1804,6 +1807,7 @@ if(typeof CompetitorEngine!=='undefined'&&!window._competitorEngine){
 if(typeof WorldEngine!=='undefined'&&WorldEngine.install)WorldEngine.install();
 if(typeof CorporateLifecycle!=='undefined'&&CorporateLifecycle.install)CorporateLifecycle.install();
 if(typeof BrokerStory!=='undefined'&&BrokerStory.install)BrokerStory.install();
+if(typeof PlayerLife!=='undefined'&&PlayerLife.install)PlayerLife.install();
 </script>
 </body>
 </html>

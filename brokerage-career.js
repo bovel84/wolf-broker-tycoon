@@ -662,7 +662,7 @@
     if (!document.getElementById('brokerage-career-style')) {
       var style = document.createElement('style');
       style.id = 'brokerage-career-style';
-      style.textContent = '.brokerage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:9px}.brokerage-firm{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px}.brokerage-rank{display:grid;grid-template-columns:32px 1fr 75px;gap:7px;padding:6px;border-bottom:1px solid var(--border);font-size:11px}.brokerage-rank.player{background:rgba(212,175,55,.12);color:#f4d889}.career-progress{height:7px;background:var(--bg4);border-radius:8px;overflow:hidden}.career-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--green))}#brokerage-job-modal{position:fixed;inset:0;z-index:11000;background:rgba(2,4,8,.96);display:none;align-items:center;justify-content:center;padding:16px}.brokerage-job-shell{width:min(1050px,100%);max-height:94vh;overflow:auto;background:var(--bg2);border:1px solid rgba(212,175,55,.5);border-radius:14px;padding:clamp(18px,4vw,36px)}@media(max-width:640px){.brokerage-grid{grid-template-columns:1fr}.brokerage-job-shell{height:100%;max-height:100vh;border-radius:0}}';
+      style.textContent = '.brokerage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:9px}.brokerage-firm{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px}.brokerage-rank{display:grid;grid-template-columns:32px 1fr 75px;gap:7px;padding:6px;border-bottom:1px solid var(--border);font-size:11px}.brokerage-rank.player{background:rgba(212,175,55,.12);color:#f4d889}.career-progress{height:7px;background:var(--bg4);border-radius:8px;overflow:hidden}.career-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--green))}.desk-scene{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.desk-card{background:linear-gradient(180deg,rgba(59,130,246,.10),rgba(10,16,28,.88));border:1px solid var(--border);border-radius:10px;padding:10px}.desk-card .tiny{font-size:10px;color:var(--text2)}.desk-card .name{font-weight:800;margin:4px 0}.desk-card .meta{font-size:11px;line-height:1.5}.desk-room{padding:12px;border-radius:12px;background:linear-gradient(135deg,rgba(59,130,246,.10),rgba(168,85,247,.08));border:1px solid rgba(59,130,246,.22)}.desk-room h3{margin-bottom:6px}.desk-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}#brokerage-job-modal{position:fixed;inset:0;z-index:11000;background:rgba(2,4,8,.96);display:none;align-items:center;justify-content:center;padding:16px}.brokerage-job-shell{width:min(1050px,100%);max-height:94vh;overflow:auto;background:var(--bg2);border:1px solid rgba(212,175,55,.5);border-radius:14px;padding:clamp(18px,4vw,36px)}@media(max-width:640px){.brokerage-grid,.desk-scene{grid-template-columns:1fr}.brokerage-job-shell{height:100%;max-height:100vh;border-radius:0}}';
       document.head.appendChild(style);
     }
     if (!document.getElementById('view-brokerage')) {
@@ -670,7 +670,7 @@
       if (main) {
         var view = document.createElement('div');
         view.className = 'view'; view.id = 'view-brokerage';
-        view.innerHTML = '<div class="card"><h2>Società di Brokeraggio</h2><div id="brokerage-career-content"></div></div><div class="card"><h3>Competizione interna</h3><div id="brokerage-ranking"></div></div><div class="card"><h3>Offerte, politica e operazioni</h3><div id="brokerage-actions"></div></div>';
+        view.innerHTML = '<div class="card"><h2>Società di Brokeraggio</h2><div id="brokerage-career-content"></div></div><div class="card"><h3>Dentro il desk</h3><div id="brokerage-desk-scene"></div></div><div class="card"><h3>Competizione interna</h3><div id="brokerage-ranking"></div></div><div class="card"><h3>Offerte, politica e operazioni</h3><div id="brokerage-actions"></div></div>';
         main.appendChild(view);
       }
     }
@@ -754,6 +754,33 @@
     return html;
   }
 
+  function renderDeskScene(s, f) {
+    if (s.status === 'unemployed') return '<div class="gray" style="font-size:11px">Non sei ancora entrato in un desk. Prima devi essere assunto.</div>';
+    var html = '';
+    var speakerName = s.status === 'owner' && s.ownFirm ? s.ownFirm.name : (f ? f.name : 'Desk');
+    var speakerId = 'firm:' + speakerName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    var mood = s.employerMood || 'neutrale';
+    var agenda = s.employerAgenda || (s.status === 'owner' ? 'Proteggi la liquidità e fai crescere il marchio.' : 'Colpisci i target senza perdere la fiducia del management.');
+    html += '<div class="desk-room"><div class="tiny">LUOGO VIVO</div><h3>' + safe(speakerName, 80) + '</h3><div class="meta" style="font-size:12px;line-height:1.6">Entri nel desk e senti il rumore delle chiamate, i monitor che lampeggiano e il peso della settimana. Qui i colleghi ricordano chi sale, chi crolla e chi tradisce.</div><div class="desk-badges"><span class="pill b">Mood ' + safe(mood, 18) + '</span><span class="pill y">Agenda: ' + safe(agenda, 80) + '</span><button class="btn btn-sm btn-blue" onclick="openCharacterModal(\'' + speakerId + '\')">Parla con la società</button></div></div>';
+    html += '<div class="desk-scene" style="margin-top:10px">';
+    if (s.status === 'employed' && f) {
+      html += '<div class="desk-card"><div class="tiny">MANAGEMENT</div><div class="name">Direzione ' + safe(f.name, 70) + '</div><div class="meta">Stile: ' + safe(f.style, 40) + '<br>Cultura: ' + safe(f.culture, 160) + '<br>Etica ' + Math.round(f.ethics) + ' · Risk limit ' + round(f.riskLimit, 1) + '</div></div>';
+      html += '<div class="desk-card"><div class="tiny">LA TUA SCRIVANIA</div><div class="name">' + safe(s.contract.role, 40) + '</div><div class="meta">Fiducia management: ' + Math.round(s.employerTrust) + '/100<br>Score ciclo: ' + round(s.cycle.score, 1) + '<br>Rank interno: #' + (s.cycle.rank || '-') + '</div></div>';
+      for (var i = 0; i < s.colleagues.length; i++) {
+        var c = s.colleagues[i];
+        html += '<div class="desk-card"><div class="tiny">COLLEGA</div><div class="name">' + safe(c.name, 60) + '</div><div class="meta">Skill ' + Math.round(c.skill) + ' · Ambizione ' + Math.round(c.ambition) + '<br>Relazione ' + Math.round(c.relationship) + '/100 · Score ' + round(c.score, 1) + '<br>' + safe(c.lastMove || 'Ti osserva.', 160) + '</div></div>';
+      }
+    } else if (s.status === 'owner' && s.ownFirm) {
+      html += '<div class="desk-card"><div class="tiny">MANAGEMENT</div><div class="name">Tu e il board del fondatore</div><div class="meta">Reputazione ' + Math.round(s.ownFirm.reputation) + ' · Compliance ' + Math.round(s.ownFirm.compliance) + '<br>Clienti ' + s.ownFirm.clients + ' · Staff ' + s.ownFirm.staff.length + '</div></div>';
+      for (var j = 0; j < s.ownFirm.staff.length; j++) {
+        var emp = s.ownFirm.staff[j];
+        html += '<div class="desk-card"><div class="tiny">BROKER ASSUNTO</div><div class="name">' + safe(emp.name, 60) + '</div><div class="meta">Skill ' + Math.round(emp.skill) + ' · Etica ' + Math.round(emp.ethics) + '<br>Ultimo ricavo: ' + money(emp.lastRevenue || 0) + '<br>Stipendio: ' + money(emp.salary) + '/sett.</div></div>';
+      }
+    }
+    html += '</div>';
+    return html;
+  }
+
   function render() {
     if (typeof document === 'undefined') return;
     ensureUI();
@@ -765,6 +792,8 @@
       else if (s.status === 'owner') content.innerHTML = renderOwner(s);
       else content.innerHTML = '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><strong style="font-size:17px">' + f.name + '</strong><div class="gray" style="font-size:10px">' + s.contract.role + ' · ' + money(s.contract.salary) + '/sett. · commissione ' + Math.round(s.contract.commission * 100) + '%</div></div><span class="pill b">Fiducia ' + Math.round(s.employerTrust) + '</span></div><div style="margin-top:11px"><div style="display:flex;justify-content:space-between;font-size:10px"><span>Valutazione ciclo</span><span>' + round(s.cycle.score, 1) + '/100 · rank #' + (s.cycle.rank || '-') + '</span></div><div class="career-progress"><span style="width:' + clamp(s.cycle.score, 0, 100) + '%"></span></div><div class="gray" style="font-size:10px;margin-top:5px">Ricavi ' + money(s.cycle.revenue) + '/' + money(s.cycle.targetRevenue) + ' · Operazioni ' + s.cycle.trades + '/' + s.cycle.targetTrades + ' · Revisione tra ' + Math.max(0, s.contract.reviewEvery - s.cycle.weeks) + ' settimane</div></div>';
     }
+    var desk = document.getElementById('brokerage-desk-scene');
+    if (desk) desk.innerHTML = renderDeskScene(s, f);
     renderRanking(s); renderActions(s);
     var status = document.getElementById('brokerage-status-content');
     if (status) status.innerHTML = s.status === 'unemployed' ? '<div><strong>Disoccupato</strong><span class="pill y" style="margin-left:6px">' + s.weeksUnemployed + ' settimane</span><div class="gray" style="font-size:10px;margin-top:4px">Trova un datore per accedere al mercato professionale.</div></div>' : (s.status === 'owner' ? '<div><strong>' + safe(s.ownFirm.name, 70) + '</strong><span class="pill y" style="margin-left:6px">PROPRIETARIO</span><div class="gray" style="font-size:10px;margin-top:4px">Cassa ' + money(s.ownFirm.cash) + ' · ' + s.ownFirm.clients + ' clienti · ' + s.ownFirm.staff.length + ' broker</div></div>' : '<div><strong>' + f.name + '</strong><span class="pill b" style="margin-left:6px">' + safe(s.contract.role, 40) + '</span><div class="gray" style="font-size:10px;margin-top:4px">Rank #' + (s.cycle.rank || '-') + ' · score ' + round(s.cycle.score, 1) + ' · reputazione carriera ' + Math.round(s.careerReputation) + '</div></div>');

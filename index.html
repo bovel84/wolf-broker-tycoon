@@ -949,11 +949,18 @@ function openAssemblyModal(ticker){
   var pct=getOwnershipPct(ticker);
   var total=companySharesOutstanding(c);
   var body=document.getElementById('assembly-modal-body');
+  var ceoName=(c.ceoName||((c.name||'Societa').split(' ')[0]+' CEO'));
+  var ceoId='ceo:'+ceoName.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  var firmId='firm:'+(c.name||'societa').toLowerCase().replace(/[^a-z0-9]/g,'_');
+  var climate=(c.sentiment||50)>65?'fiducioso':((c.sentiment||50)<35?'nervoso':'teso ma composto');
   var html='<div style="margin-bottom:14px">';
-  html+='<div style="display:flex;justify-content:space-between;margin-bottom:8px"><div><strong>'+c.name+'</strong> ('+ticker+')</div><div class="pill b">Possiedi '+pct.toFixed(1)+'%</div></div>';
+  html+='<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px"><div><strong>'+c.name+'</strong> ('+ticker+')</div><div><span class="pill b">Possiedi '+pct.toFixed(1)+'%</span> <span class="pill y">Clima '+climate+'</span></div></div>';
   html+='<div class="gray" style="font-size:12px">Settimana '+assembly.week+' • Le tue azioni: '+getSharesOwned(ticker).toLocaleString()+' di '+total.toLocaleString()+'</div>';
+  html+='<div style="margin-top:8px;padding:10px;border-radius:10px;background:linear-gradient(135deg,rgba(59,130,246,.10),rgba(168,85,247,.08));border:1px solid var(--border)"><div style="font-size:11px;letter-spacing:1px;color:var(--text2)">SALA ASSEMBLEA</div><div style="font-size:12px;line-height:1.6;margin-top:4px">Entrando nella sala senti il brusio degli azionisti, il team legale che sussurra, il board che difende la linea e il CEO '+ceoName+' che osserva la platea. Ogni delibera qui lascia memoria.</div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" onclick="openCharacterModal(\''+ceoId+'\')">Apri CEO</button><button class="btn btn-sm" onclick="openCharacterModal(\''+firmId+'\')">Apri società</button></div></div>';
   html+='</div>';
   
+  html+='<div class="brokerage-grid" style="margin-bottom:12px"><div class="brokerage-firm"><div class="gray" style="font-size:10px">Board</div><strong>'+ceoName+'</strong><div class="gray" style="font-size:10px">Guidano la narrativa della seduta</div></div><div class="brokerage-firm"><div class="gray" style="font-size:10px">Azionisti retail</div><strong>'+Math.max(5,Math.round((100-pct)/4))+'</strong><div class="gray" style="font-size:10px">voci sparse e nervose</div></div><div class="brokerage-firm"><div class="gray" style="font-size:10px">Peso del tuo voto</div><strong>'+pct.toFixed(1)+'%</strong><div class="gray" style="font-size:10px">il tavolo ti ascolta</div></div></div>';
+
   assembly.proposals.forEach((prop,idx)=>{
     html+='<div class="proposal-item">';
     html+='<div class="prop-title">'+prop.title+'</div>';
@@ -1646,11 +1653,15 @@ function renderAssembly(){
     var c=getCompany(a.ticker);
     var pct=getOwnershipPct(a.ticker);
     var allResolved=true;
+    var ceoName=(c.ceoName||((c.name||'Societa').split(' ')[0]+' CEO'));
+    var climate=(c.sentiment||50)>65?'euforico':((c.sentiment||50)<35?'teso':'attento');
+    var boardId='ceo:'+ceoName.toLowerCase().replace(/[^a-z0-9]/g,'_');
     for(var i=0;i<a.proposals.length;i++){ if(!a.proposals[i].playerVoted){ allResolved=false; break; } }
     html+='<div class="assembly-card"><div class="company-info"><div><strong>'+c.name+'</strong> ('+a.ticker+')</div><div><span class="pill b">'+pct.toFixed(1)+'%</span> <span class="pill y">Sett.'+a.week+'</span></div></div>';
-    html+='<div class="gray" style="font-size:12px;margin-bottom:8px">'+a.proposals.length+' proposte in votazione</div>';
+    html+='<div class="gray" style="font-size:12px;margin-bottom:8px">'+a.proposals.length+' proposte in votazione · board guidato da '+ceoName+'</div>';
+    html+='<div style="padding:8px;border-radius:8px;background:rgba(59,130,246,.08);margin-bottom:8px;font-size:11px">Entri nella sala assemblea: piccoli azionisti, legali, CFO e management osservano ogni mano alzata. Clima: <strong>'+climate+'</strong>.</div>';
     a.proposals.forEach(p=>{html+='<div class="prop-desc" style="font-size:11px;color:var(--text2)">• '+(p.title||p.name)+'</div>'});
-    html+='<div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-sm btn-blue" onclick="openAssemblyModal(\''+a.ticker+'\')">Apri Assemblea</button>'+(allResolved?'<button class="btn btn-sm btn-green" onclick="executeAssemblyResolve(\''+a.ticker+'\')">Chiudi Votazione</button>':'')+'</div></div>';
+    html+='<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm btn-blue" onclick="openAssemblyModal(\''+a.ticker+'\')">Apri Assemblea</button><button class="btn btn-sm" onclick="openCharacterModal(\''+boardId+'\')">Apri CEO</button>'+(allResolved?'<button class="btn btn-sm btn-green" onclick="executeAssemblyResolve(\''+a.ticker+'\')">Chiudi Votazione</button>':'')+'</div></div>';
   });
   el.innerHTML=html;
 }
@@ -1696,7 +1707,7 @@ function renderNarrative(){
       var c=chars[keys[k]];
       if(!c.active) continue;
       html+='<div style="display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid var(--border)" onclick="openCharacterModal(\''+c.id+'\')" class="pos-row" style="cursor:pointer">';
-      html+='<div style="font-size:24px">'+(c.namespace==='player'?'🧑':c.namespace==='client'?'🤝':c.namespace==='agent'?'🕵️':c.namespace==='competitor'?'🦈':c.namespace==='ceo'?'👔':'🎭')+'</div>';
+      html+='<div style="font-size:24px">'+(c.namespace==='player'?'🧑':c.namespace==='client'?'🤝':c.namespace==='agent'?'🕵️':c.namespace==='competitor'?'🦈':c.namespace==='ceo'?'👔':c.namespace==='firm'?'🏦':'🎭')+'</div>';
       html+='<div style="flex:1"><div style="font-weight:700">'+c.name+'</div><div class="gray" style="font-size:11px">'+c.role+' · '+c.currentMood+'</div></div>';
       html+='<div style="text-align:right;font-size:11px">'+(c.trust?c.trust+'%':'')+'</div>';
       html+='</div>';

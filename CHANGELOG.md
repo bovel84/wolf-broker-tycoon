@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.7.0] — 2025-06-26
+
+### Aggiunto
+- **Interfaccia grafica del desk** nella vista `Società`:
+  - il giocatore entra in un luogo vivo
+  - management visibile
+  - scrivania del broker
+  - colleghi mostrati come presenza attiva con skill, ambizione, relazione e ultima mossa
+- **Sala assemblea viva**:
+  - clima della seduta
+  - board / CEO evidenziati
+  - presenza di azionisti e peso del tuo voto
+  - accesso rapido al CEO dal pannello assemblea
+- **Diario migliorato**: anche le istituzioni (`firm`) hanno icona e presenza più chiara nella UI.
+
+### Cambiato
+- La vista `Società` non è più solo un pannello numerico: ora comunica spazio, gerarchia e tensione sociale.
+- Le assemblee sono rese come luoghi con persone, board e atmosfera, non solo come votazioni astratte.
+
 ## [1.6.0] — 2025-06-26
 
 ### Aggiunto

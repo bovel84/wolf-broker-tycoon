@@ -7,6 +7,7 @@ Gestionale di broker azionario completo e realistico con modalità carriera, ass
 - **LLM Narrative Engine** — genera in tempo reale personaggi, memorie, relazioni, eventi e notizie narrative; ogni turno produce una storia coerente con lo stato del giocatore
 - **Dialoghi dinamici** — i personaggi del Diario possono parlare con voce contestuale, basata su umore, relazioni e memorie
 - **Agenti vivi** — ogni agente ha personalità, obiettivi, briefing di mercato, umore e consigli generati dal LLM
+- **Istituzioni vive** — anche la società che ti assume (o quella che fondi) può parlarti, ricordare, giudicarti e spingerti in una direzione narrativa
 - **Notizie guidate dalla storia** — `LLMNewsEngine` usa il Narrative Engine per generare titoli che non sono numeri isolati ma episodi di una trama finanziaria
 - **Mercato dinamico** — oltre 100 società realistiche generate da `MarketEngine`, con prezzi, volatilità, dividendi e trend macro.
 - **10 livelli carriera** — da Novizio a Leggenda di Wall Street, con sblocco progressivo di strumenti (limit, short, margin, penny, opzioni, dark pool).

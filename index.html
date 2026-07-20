@@ -1760,6 +1760,12 @@ function openCharacterModal(characterId){
     }
   }
 
+  if(c.namespace==='firm'&&G.brokerCareer){
+    var bc=G.brokerCareer;
+    var lastMsg=(bc.messages&&bc.messages.length)?bc.messages[0]:null;
+    html+='<div class="card" style="padding:10px;margin-bottom:12px"><h3>Voce istituzionale</h3><div style="font-size:12px;line-height:1.5"><strong>Mood:</strong> '+(bc.employerMood||'neutrale')+'<br><strong>Agenda:</strong> '+(bc.employerAgenda||'Nessuna')+'<br><strong>Fiducia:</strong> '+Math.round(bc.employerTrust||0)+'/100'+(lastMsg&&lastMsg.asksMeeting?' <span class="pill y">Vuole parlarti</span>':'')+'</div>'+(lastMsg?'<div class="news-item impact-neutral" style="margin-top:8px"><span class="news-time">Sett.'+(lastMsg.week||0)+'</span><div class="news-title">'+lastMsg.title+'</div><div class="news-desc">'+lastMsg.text+'</div></div>':'')+'</div>';
+  }
+
   html+='<div class="card" style="padding:10px;margin-bottom:12px"><h3>Voce del personaggio</h3><div id="character-live-dialogue" style="font-size:13px;line-height:1.6">Sto pensando...</div><div style="margin-top:8px"><button class="btn btn-blue btn-sm" onclick="refreshCharacterDialogue(\''+characterId+'\')">Rigenera risposta</button></div></div>';
 
   var memHtml='';

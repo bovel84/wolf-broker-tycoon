@@ -70,7 +70,10 @@
       misconduct: { insider: 0, falsified: 0, blackmail: 0, evidence: 0 },
       ownFirm: null,
       marketLeague: createLeague(),
-      history: []
+      history: [],
+      messages: [],
+      employerMood: 'neutrale',
+      employerAgenda: ''
     };
   }
 
@@ -91,6 +94,7 @@
     if (!(s.offers instanceof Array)) s.offers = [];
     if (!(s.incidents instanceof Array)) s.incidents = [];
     if (!(s.history instanceof Array)) s.history = [];
+    if (!(s.messages instanceof Array)) s.messages = [];
     if (!(s.marketLeague instanceof Array)) s.marketLeague = createLeague();
     if (!s.misconduct) s.misconduct = d.misconduct;
     if (!s.cycle) s.cycle = createCycle(firm(s.employerId));
@@ -111,6 +115,34 @@
     if (!(g.news instanceof Array)) g.news = [];
     g.news.unshift({ week: g.week, title: safe(title, 110), desc: safe(text, 280), type: type || 'neutral', scope: 'career' });
     g.news = g.news.slice(0, 120);
+  }
+
+  function pushEmployerMessage(title, text, mood, asksMeeting) {
+    var s = ensureState();
+    var g = getGame();
+    if (!s || !g) return;
+    s.messages.unshift({
+      week: g.week,
+      title: safe(title, 110),
+      text: safe(text, 420),
+      mood: safe(mood || 'neutrale', 30),
+      asksMeeting: !!asksMeeting
+    });
+    s.messages = s.messages.slice(0, 20);
+    s.employerMood = safe(mood || 'neutrale', 30);
+  }
+
+  function fallbackEmployerMessage(kind) {
+    var s = ensureState();
+    var ctx = getContext();
+    if (!s || !ctx) return;
+    var firmName = ctx.employer || (ctx.ownFirm ? ctx.ownFirm.name : 'La società');
+    if (kind === 'join') pushEmployerMessage('Benvenuto nel desk', firmName + ' ti osserva: risultati, disciplina e sangue freddo conteranno più delle promesse.', 'vigile', false);
+    else if (kind === 'review_good') pushEmployerMessage('La direzione approva', 'Il desk riconosce il tuo ciclo positivo. Ora però si aspetta continuità, non un colpo isolato.', 'fiducioso', false);
+    else if (kind === 'review_bad') pushEmployerMessage('Richiamo informale', 'I numeri non bastano. La direzione pretende un recupero immediato e guarda ogni tua mossa.', 'freddo', true);
+    else if (kind === 'promotion') pushEmployerMessage('Nuova responsabilità', 'La promozione porta visibilità, pressione e meno margine per sbagliare.', 'ambizioso', true);
+    else if (kind === 'audit') pushEmployerMessage('Compliance in allerta', 'Le anomalie emerse hanno acceso il desk legale. Da ora sei sotto osservazione.', 'teso', true);
+    else if (kind === 'owner') pushEmployerMessage('La tua società respira', 'Il marchio che hai creato sta assorbendo ogni tua decisione: reputazione, clienti e rischio hanno memoria.', 'vigile', false);
   }
 
   function adjustLife(delta, reason) {
@@ -188,6 +220,7 @@
     addIncident('employment', 'Assunto da ' + f.name, contract.role + ', stipendio ' + money(contract.salary) + ' a settimana e bonus sui ricavi del ' + Math.round(contract.commission * 100) + '%.');
     addNews(f.name + ' assume un nuovo broker', safe((brokerStory() && brokerStory().name) || 'Il nuovo broker', 50) + ' entra nel desk come ' + contract.role + '.', 'positive');
     notify('success', 'Contratto firmato con ' + f.name);
+    fallbackEmployerMessage('join');
     hideJobModal();
     render();
     try { if (typeof saveAuto === 'function') saveAuto(); } catch (e) {}
@@ -327,6 +360,7 @@
       s.employerTrust = clamp(s.employerTrust + (score >= 95 ? 12 : 6), 0, 100);
       s.careerReputation = clamp(s.careerReputation + (s.cycle.rank <= 2 ? 7 : 3), 0, 100);
       addIncident('review', 'Obiettivo raggiunto', 'Valutazione ' + score + '/100, posizione ' + s.cycle.rank + ' su ' + rows.length + '.');
+      fallbackEmployerMessage('review_good');
       if (s.goodCycles >= 2 && s.roleLevel < 4) promote(s, f);
       maybeGenerateOffers(s, f);
     } else {
@@ -334,6 +368,7 @@
       s.employerTrust = clamp(s.employerTrust - 14, 0, 100);
       s.careerReputation = clamp(s.careerReputation - 5, 0, 100);
       addIncident('review', 'Obiettivo mancato', 'Valutazione ' + score + '/100. La direzione pretende risultati nel prossimo ciclo.');
+      fallbackEmployerMessage('review_bad');
       adjustLife({ stress: 10, credibility: -4 }, 'Valutazione negativa del datore di lavoro');
       if (s.missedCycles >= 2 || s.employerTrust <= 8) firePlayer(s, f, 'Due valutazioni insufficienti');
     }
@@ -352,6 +387,7 @@
     s.employerTrust = clamp(s.employerTrust + 10, 0, 100);
     addIncident('promotion', 'Promozione a ' + s.contract.role, 'Nuovo stipendio: ' + money(s.contract.salary) + ' a settimana.');
     addNews(f.name + ' promuove ' + ((brokerStory() && brokerStory().name) || 'il broker'), 'La crescita interna aumenta influenza, stipendio e aspettative.', 'positive');
+    fallbackEmployerMessage('promotion');
     notify('success', 'PROMOZIONE: ' + s.contract.role);
   }
 
@@ -424,6 +460,7 @@
     s.history.unshift({ week: g.week, action: 'Fondazione', firm: name, role: 'Fondatore' });
     addIncident('founder', 'Nasce ' + name, 'Capitale iniziale ' + money(cost) + (exitCost ? ' e preavviso ' + money(exitCost) : '') + '. Ora ogni stipendio, costo, cliente e multa ricade su di te.');
     addNews('Apre ' + name, 'Un nuovo intermediario entra nel mercato con quattro clienti e mezzo milione di masse.', 'positive');
+    fallbackEmployerMessage('owner');
     notify('success', 'Hai fondato ' + name);
     render();
     return true;
@@ -543,6 +580,7 @@
     s.careerReputation = clamp(s.careerReputation - 12, 0, 100);
     adjustLife({ legalPressure: 18, credibility: -14, stress: 14 }, 'Audit per operazioni irregolari');
     addIncident('audit', 'Audit e multa', 'Le anomalie producono una sanzione di ' + money(fine) + '. Parte delle prove entra nel fascicolo.');
+    fallbackEmployerMessage('audit');
     addNews('Controlli sul desk di ' + ((brokerStory() && brokerStory().name) || 'un broker'), 'Revisori e autorità contestano ordini, date e ricavi. Multa: ' + money(fine) + '.', 'negative');
     if (s.status === 'employed' && s.employerTrust <= 10) firePlayer(s, firm(s.employerId), 'Violazione delle regole interne');
   }
@@ -609,6 +647,11 @@
       currentRank: s.cycle ? s.cycle.rank : 0,
       offers: s.offers,
       misconduct: s.misconduct,
+      employerMood: s.employerMood || 'neutrale',
+      employerAgenda: s.employerAgenda || '',
+      messages: s.messages ? s.messages.slice(0, 5) : [],
+      recentIncidents: s.incidents ? s.incidents.slice(0, 5) : [],
+      employerProfile: f ? { id: f.id, name: f.name, style: f.style, culture: f.culture, ethics: f.ethics, targetRevenue: f.targetRevenue, targetTrades: f.targetTrades, riskLimit: f.riskLimit } : null,
       pendingDilemma: s.pendingDilemma ? { type: s.pendingDilemma.type, rivalName: s.pendingDilemma.rivalName } : null,
       ownFirm: s.ownFirm ? { name: s.ownFirm.name, cash: round(s.ownFirm.cash, 0), clients: s.ownFirm.clients, clientAssets: round(s.ownFirm.clientAssets, 0), reputation: s.ownFirm.reputation, compliance: s.ownFirm.compliance, staff: s.ownFirm.staff.length, weeklyRevenue: round(s.ownFirm.weeklyRevenue, 0), weeklyCosts: round(s.ownFirm.weeklyCosts, 0) } : null
     };
@@ -680,6 +723,12 @@
   function renderActions(s) {
     var el = document.getElementById('brokerage-actions'); if (!el) return;
     var html = '';
+    if (s.messages && s.messages.length) {
+      var msg = s.messages[0];
+      var speakerName = s.status === 'owner' && s.ownFirm ? s.ownFirm.name : (firm(s.employerId) ? firm(s.employerId).name : 'Direzione');
+      var speakerId = 'firm:' + speakerName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      html += '<div style="padding:10px;border-left:3px solid var(--blue);background:rgba(59,130,246,.08);margin-bottom:10px"><strong>Voce della società</strong><div class="gray" style="font-size:11px;margin:5px 0"><strong>' + safe(msg.title, 90) + '</strong> · mood ' + safe(msg.mood, 20) + '</div><div style="font-size:11px;line-height:1.5">' + safe(msg.text, 420) + '</div><div style="margin-top:6px"><button class="btn btn-sm btn-blue" onclick="openCharacterModal(\'' + speakerId + '\')">Apri nel Diario</button>' + (msg.asksMeeting ? ' <span class="pill y">Vuole parlarti</span>' : '') + '</div></div>';
+    }
     if (s.pendingDilemma) {
       var d = s.pendingDilemma;
       html += '<div style="padding:10px;border-left:3px solid var(--red);background:rgba(255,83,113,.08);margin-bottom:10px"><strong>Ricatto di ' + safe(d.rivalName, 70) + '</strong><div class="gray" style="font-size:11px;margin:5px 0">' + safe(d.flavor || d.text, 350) + '</div><button class="btn btn-sm" onclick="BrokerageCareer.resolveDilemma(\'pay\')">Paga ' + money(d.amount) + '</button> <button class="btn btn-sm btn-red" onclick="BrokerageCareer.resolveDilemma(\'refuse\')">Rifiuta</button> <button class="btn btn-sm btn-blue" onclick="BrokerageCareer.resolveDilemma(\'expose\')">Denuncia tutto</button></div>';

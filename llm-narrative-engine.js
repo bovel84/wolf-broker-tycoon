@@ -27,11 +27,12 @@
     temperature: 0.85,
     maxTokens: 2500,
     timeoutMs: 30000,
-    maxCallsPerTurn: 6,
+    maxCallsPerTurn: 7,
     newsPerTurn: 3,
     characterNotesPerTurn: 2,
     eventsPerTurn: 2,
-    agentBriefingsPerTurn: 2
+    agentBriefingsPerTurn: 2,
+    firmMessagesPerTurn: 1
   };
 
   var STORAGE_KEY = 'sbt_llm_narrative_settings';
@@ -226,6 +227,29 @@
         traits: generateTraits(),
         backstory: 'Assunto per ' + (ag.skill || 'trading') + '.'
       }));
+    }
+
+    // Employer / player firm as living institution
+    var careerCtx = null;
+    try {
+      if (global.BrokerageCareer && global.BrokerageCareer.getContext) careerCtx = global.BrokerageCareer.getContext();
+    } catch (e) {}
+    if (careerCtx) {
+      if (careerCtx.status === 'employed' && careerCtx.employer) {
+        chars.push(getOrCreateCharacter('firm', gameState, {
+          name: careerCtx.employer,
+          role: 'Societa datrice di lavoro',
+          traits: ['istituzionale', 'esigente'],
+          backstory: (careerCtx.employerProfile && careerCtx.employerProfile.culture) ? careerCtx.employerProfile.culture : 'La società osserva ogni tua settimana e ricorda risultati, rischi e debolezze.'
+        }));
+      } else if (careerCtx.status === 'owner' && careerCtx.ownFirm && careerCtx.ownFirm.name) {
+        chars.push(getOrCreateCharacter('firm', gameState, {
+          name: careerCtx.ownFirm.name,
+          role: 'Societa del giocatore',
+          traits: ['ambiziosa', 'fragile'],
+          backstory: 'Una società giovane che vive di reputazione, clienti, liquidità e memoria delle tue scelte.'
+        }));
+      }
     }
 
     // Top competitors as characters
@@ -469,6 +493,39 @@
       '[{"agentName":"Nome","marketView":"...","advice":"...","personalGoal":"...","mood":"fiducioso|teso|aggressivo|prudente|ambizioso","trustDelta":-3,"wantsMeeting":true}]';
   }
 
+  function buildFirmPrompt(gameState) {
+    var career = null;
+    try {
+      if (global.BrokerageCareer && global.BrokerageCareer.getContext) career = global.BrokerageCareer.getContext();
+    } catch (e) {}
+    if (!career || (career.status !== 'employed' && career.status !== 'owner')) return null;
+
+    var firmName = career.status === 'owner' && career.ownFirm ? career.ownFirm.name : career.employer;
+    if (!firmName) return null;
+
+    var recent = [];
+    var incidents = career.recentIncidents || [];
+    var messages = career.messages || [];
+    for (var i = 0; i < incidents.length; i++) recent.push('- Incidente: ' + incidents[i].title + ' :: ' + incidents[i].text);
+    for (var j = 0; j < messages.length; j++) recent.push('- Messaggio precedente: ' + messages[j].title + ' :: ' + messages[j].text);
+
+    return 'Sei la voce istituzionale e psicologica di una società di brokeraggio in un mondo vivo. ' +
+      'Parli come il desk, la direzione o la società stessa. Hai memoria di risultati, rischi, reputazione, audit e ambizione.\n\n' +
+      'CONTESTO:\n' +
+      '- Società: ' + firmName + '\n' +
+      '- Stato: ' + career.status + '\n' +
+      '- Ruolo del giocatore: ' + career.role + '\n' +
+      '- Fiducia verso il giocatore: ' + career.employerTrust + '/100\n' +
+      '- Reputazione carriera: ' + career.careerReputation + '/100\n' +
+      '- Score ciclo: ' + career.currentScore + ' · rank: ' + career.currentRank + '\n' +
+      '- Profilo società: ' + JSON.stringify(career.employerProfile || career.ownFirm || {}) + '\n' +
+      '- Eventi recenti:\n' + (recent.length ? recent.join('\n') : '- nessuno') + '\n\n' +
+      'ISTRUZIONI:\n' +
+      'Genera un solo messaggio breve ma vivo della società al giocatore. Deve sembrare un mondo con memoria: la società ricorda, giudica e desidera qualcosa.\n' +
+      'Rispondi SOLO con un oggetto JSON valido del formato:\n' +
+      '{"firmName":"' + firmName + '","title":"...","message":"...","mood":"fiducioso|freddo|vigile|ambizioso|teso","agenda":"...","relationshipDelta":2,"asksMeeting":true}';
+  }
+
   // ============================================================
   // LLM CALL
   // ============================================================
@@ -632,6 +689,49 @@
     }
   }
 
+  function applyFirmMessage(gameState, message) {
+    if (!message || !message.firmName || !message.message) return;
+    var career = null;
+    try {
+      if (global.BrokerageCareer && global.BrokerageCareer.getContext) career = global.BrokerageCareer.getContext();
+    } catch (e) {}
+    var actorId = 'firm:' + message.firmName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    var firmChar = getOrCreateCharacter('firm', gameState, {
+      name: message.firmName,
+      role: career && career.status === 'owner' ? 'Societa del giocatore' : 'Societa datrice di lavoro',
+      traits: ['istituzionale', 'vigile'],
+      backstory: 'Una istituzione finanziaria con memoria, cultura e aspettative.'
+    });
+    firmChar.currentMood = message.mood || firmChar.currentMood || 'neutrale';
+    firmChar.currentGoal = message.agenda || firmChar.currentGoal || '';
+    if (typeof message.relationshipDelta === 'number') {
+      setRelationship(gameState, actorId, 'player:broker', message.relationshipDelta, message.message);
+    }
+    addMemory(gameState, {
+      type: 'firm',
+      text: message.firmName + ': ' + message.message,
+      actors: [actorId],
+      impact: message.relationshipDelta > 0 ? 'positive' : (message.relationshipDelta < 0 ? 'negative' : 'neutral'),
+      importance: 7
+    });
+
+    try {
+      if (global.G && global.G.brokerCareer) {
+        if (!(global.G.brokerCareer.messages instanceof Array)) global.G.brokerCareer.messages = [];
+        global.G.brokerCareer.messages.unshift({
+          week: global.G.week || (gameState.player ? gameState.player.week : 1),
+          title: message.title || 'Messaggio della direzione',
+          text: message.message,
+          mood: message.mood || 'neutrale',
+          asksMeeting: !!message.asksMeeting
+        });
+        global.G.brokerCareer.messages = global.G.brokerCareer.messages.slice(0, 20);
+        global.G.brokerCareer.employerMood = message.mood || global.G.brokerCareer.employerMood || 'neutrale';
+        global.G.brokerCareer.employerAgenda = message.agenda || global.G.brokerCareer.employerAgenda || '';
+      }
+    } catch (e2) {}
+  }
+
   // ============================================================
   // PUBLIC API
   // ============================================================
@@ -659,13 +759,15 @@
       return Promise.resolve({ news: [], notes: [], events: [] });
     }
 
-    // Parallel LLM calls (up to 4)
+    // Parallel LLM calls (up to 5)
     var agentPrompt = buildAgentPrompt(gameState);
+    var firmPrompt = buildFirmPrompt(gameState);
     var promises = [
       callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildNewsPrompt(gameState)),
       callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildCharacterPrompt(gameState)),
       callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildEventsPrompt(gameState)),
-      agentPrompt ? callLLM('Sei un senior broker e desk head. Rispondi solo con JSON.', agentPrompt) : Promise.resolve(null)
+      agentPrompt ? callLLM('Sei un senior broker e desk head. Rispondi solo con JSON.', agentPrompt) : Promise.resolve(null),
+      firmPrompt ? callLLM('Sei la voce di una società di brokeraggio viva e con memoria. Rispondi solo con JSON.', firmPrompt) : Promise.resolve(null)
     ];
 
     return Promise.all(promises).then(function (results) {
@@ -673,6 +775,7 @@
       var notesRaw = parseJsonArray(results[1]) || [];
       var eventsRaw = parseJsonArray(results[2]) || [];
       var agentRaw = parseJsonArray(results[3]) || [];
+      var firmRaw = parseJsonObject(results[4]) || null;
 
       var news = [];
       for (var n = 0; n < newsRaw.length; n++) {
@@ -691,11 +794,12 @@
       applyCharacterNotes(gameState, notesRaw);
       applyEvents(gameState, eventsRaw);
       applyAgentBriefings(gameState, agentRaw);
+      applyFirmMessage(gameState, firmRaw);
 
       // Add state-based memories even with LLM, to ground narrative
       addStateBasedMemories(gameState);
 
-      return { news: news, notes: notesRaw, events: eventsRaw, agentBriefings: agentRaw };
+      return { news: news, notes: notesRaw, events: eventsRaw, agentBriefings: agentRaw, firmMessage: firmRaw };
     }).catch(function () {
       addStateBasedMemories(gameState);
       return { news: [], notes: [], events: [] };

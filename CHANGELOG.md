@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.6.0] — 2025-06-26
+
+### Aggiunto
+- **La società che ti assume ora è un personaggio vivo**:
+  - compare nel registro narrativo come `firm:*`
+  - ha mood, agenda, memoria e relazione col giocatore
+  - può inviarti messaggi contestuali generati dal LLM
+- **Voce della società** nella schermata `Società`:
+  - ultimo messaggio del desk/direzione
+  - stato emotivo istituzionale
+  - richiesta implicita di colloquio (`asksMeeting`)
+  - accesso diretto al personaggio nel Diario
+- **Persistenza memoria societaria** nel sistema carriera (`messages`, `employerMood`, `employerAgenda`).
+- **Prompt LLM dedicato alla società**: il datore di lavoro ricorda risultati, audit, fiducia, reputazione e incidenti recenti.
+
+### Cambiato
+- Il mondo narrativo non contiene più solo NPC individuali: anche le istituzioni hanno voce, memoria e intenzione.
+- Il Diario ora può mostrare anche personaggi di namespace `firm`.
+
 ## [1.5.0] — 2025-06-26
 
 ### Aggiunto

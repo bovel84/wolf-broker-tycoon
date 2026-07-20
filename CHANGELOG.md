@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.0] — 2025-06-26
+
+### Aggiunto
+- **LLM Narrative Engine** (`llm-narrative-engine.js`): genera in tempo reale personaggi, memorie, relazioni, eventi narrativi e notizie coerenti con la storia del giocatore.
+- **Character Registry**: ogni cliente, agente, CEO, competitor e NPC fissato diventa un personaggio con tratti, mood, obiettivi e memoria.
+- **Memory Bank**: fatti ed eventi vissuti persistono nel salvataggio e influenzano i prompt futuri.
+- **Relationship Web**: relazioni tra personaggi e verso il giocatore, con delta e storico.
+- **Integrazione con LLMNewsEngine**: le notizie sono ora episodi narrativi generati dal Narrative Engine; fallback statico se LLM disabilitato.
+- **Test narrative** (`test/narrative.test.js`): verificano creazione stato, personaggi, memorie, relazioni e fallback.
+
+### Cambiato
+- `llm-news-engine.js` delega al Narrative Engine quando disponibile per notizie coerenti con la storia.
+- `build.js` include `llm-narrative-engine.js` nel bundle.
+- `scripts/lint-es5.js` include `llm-narrative-engine.js` tra i sorgenti controllati.
+
 ## [1.1.0] — 2025-06-26
 
 ### Aggiunto

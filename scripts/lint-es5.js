@@ -22,6 +22,7 @@ var TARGETS = [
   'story-engine.js',
   'llm-news-engine.js',
   'llm-game-master.js',
+  'llm-narrative-engine.js',
   // 'competitor-engine.js',
   'world-engine.js',
   'corporate-lifecycle.js',

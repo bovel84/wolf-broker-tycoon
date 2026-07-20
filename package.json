@@ -1,12 +1,12 @@
 {
   "name": "wolf-broker-tycoon",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Gestionale di broker azionario completo e realistico con modalità carriera e assemblee societarie.",
   "main": "broker-story.js",
   "scripts": {
     "build": "node build.js",
     "lint": "node scripts/lint-es5.js",
-    "test": "npm run lint && node test/integration.test.js && node test/gameplay.test.js && node test/balance.test.js && node test/ui.test.js && node test/html-build.test.js",
+    "test": "npm run lint && node test/integration.test.js && node test/gameplay.test.js && node test/balance.test.js && node test/narrative.test.js && node test/ui.test.js && node test/html-build.test.js",
     "ci": "npm run lint && npm run build && npm test"
   },
   "repository": {

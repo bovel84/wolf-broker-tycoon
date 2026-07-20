@@ -305,6 +305,8 @@
     this.state = null;
     this.listeners = [];
     this._saveCallbacks = [];
+    this._narrativeEngine = null;
+    this._competitorEngine = null;
   }
 
   /* --- Event system --- */
@@ -318,6 +320,10 @@
         this.listeners[i].cb(data);
       }
     }
+  };
+
+  GameEngine.prototype.setNarrativeEngine = function (engine) {
+    this._narrativeEngine = engine;
   };
 
   GameEngine.prototype.notify = function (type, title, message) {

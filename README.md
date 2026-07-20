@@ -4,6 +4,8 @@ Gestionale di broker azionario completo e realistico con modalità carriera, ass
 
 ## Caratteristiche principali
 
+- **LLM Narrative Engine** — genera in tempo reale personaggi, memorie, relazioni, eventi e notizie narrative; ogni turno produce una storia coerente con lo stato del giocatore
+- **Notizie guidate dalla storia** — `LLMNewsEngine` usa il Narrative Engine per generare titoli che non sono numeri isolati ma episodi di una trama finanziaria
 - **Mercato dinamico** — oltre 100 società realistiche generate da `MarketEngine`, con prezzi, volatilità, dividendi e trend macro.
 - **10 livelli carriera** — da Novizio a Leggenda di Wall Street, con sblocco progressivo di strumenti (limit, short, margin, penny, opzioni, dark pool).
 - **Competitor AI** — rivali autonomi che operano, formano alleanze e reagiscono alla posizione del giocatore.
@@ -51,6 +53,7 @@ Il vecchio `build_html.py` è deprecato; la build usa solo Node.js.
 | `story-engine.js` | Capitoli, NPC, missioni, sistema morale |
 | `llm-news-engine.js` | Notizie AI via Ollama Cloud |
 | `llm-game-master.js` | Game Master AI, eventi, competitor |
+| `llm-narrative-engine.js` | Narrativa LLM: personaggi, memorie, relazioni, eventi, notizie |
 | `competitor-engine.js` | Broker AI con strategie e memoria |
 | `world-engine.js` | Simulazione persistente di mondo, società e rivali |
 | `corporate-lifecycle.js` | Fallimenti, ristrutturazioni, M&A, IPO, spin-off |

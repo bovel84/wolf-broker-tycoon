@@ -666,36 +666,56 @@
     var market = gameState.market || {};
     var companies = market.companies || [];
 
-    return generateNews(gameState).then(function (news) {
-      // Applica impatti sui prezzi
-      applyNewsImpact(news, companies);
-
-      // Aggiorna sentiment
-      var sentimentDelta = 0;
-      news.forEach(function (n) {
-        if (n.impact === 'positive') sentimentDelta += 1.5;
-        else if (n.impact === 'negative') sentimentDelta -= 1.5;
-      });
-      if (market.sentiment !== undefined) {
-        market.sentiment = Math.max(0, Math.min(100, market.sentiment + sentimentDelta));
-      }
-
-      // Aggiungi al newsLog
-      if (market.newsLog) {
-        var week = (gameState.player && gameState.player.week) || 1;
-        var events = news.map(function (n) {
-          return {
-            ticker: n.company || n.sector || 'MARKET',
-            news: n.title + ' -- ' + n.content.substring(0, 80) + '...',
-            impact: n.priceChangePct / 100,
-            source: n.source || 'llm'
-          };
+    // Preferisci LLM Narrative Engine per notizie coerenti con la storia
+    if (typeof LLMNarrativeEngine !== 'undefined' && LLMNarrativeEngine.processTurn) {
+      return LLMNarrativeEngine.processTurn(gameState).then(function () {
+        var news = (market.generatedNews && market.generatedNews.length)
+          ? market.generatedNews.slice(-config.newsPerTurn)
+          : _getFallbackNews(gameState);
+        return finalizeNews(gameState, news, 'narrative');
+      }).catch(function () {
+        return generateNews(gameState).then(function (news) {
+          return finalizeNews(gameState, news, 'llm');
         });
-        market.newsLog.push({ week: week, events: events, timestamp: Date.now() });
-      }
+      });
+    }
 
-      return news;
+    return generateNews(gameState).then(function (news) {
+      return finalizeNews(gameState, news, 'llm');
     });
+  }
+
+  function finalizeNews(gameState, news, source) {
+    var market = gameState.market || {};
+    var companies = market.companies || [];
+    for (var i = 0; i < news.length; i++) news[i].source = source;
+
+    applyNewsImpact(news, companies);
+
+    var sentimentDelta = 0;
+    for (var j = 0; j < news.length; j++) {
+      if (news[j].impact === 'positive') sentimentDelta += 1.5;
+      else if (news[j].impact === 'negative') sentimentDelta -= 1.5;
+    }
+    if (market.sentiment !== undefined) {
+      market.sentiment = Math.max(0, Math.min(100, market.sentiment + sentimentDelta));
+    }
+
+    if (market.newsLog) {
+      var week = (gameState.player && gameState.player.week) || 1;
+      var events = [];
+      for (var k = 0; k < news.length; k++) {
+        events.push({
+          ticker: news[k].company || news[k].sector || 'MARKET',
+          news: news[k].title + ' -- ' + news[k].content.substring(0, 80) + '...',
+          impact: news[k].priceChangePct / 100,
+          source: news[k].source || source
+        });
+      }
+      market.newsLog.push({ week: week, events: events, timestamp: Date.now() });
+    }
+
+    return news;
   }
 
   // ============================================================

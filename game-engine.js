@@ -975,7 +975,15 @@
       loyalty: 70,
       isActive: true,
       totalEarned: 0,
-      totalMistakes: 0
+      totalMistakes: 0,
+      personality: rngPick(['freddo', 'ambizioso', 'leale', 'cinico', 'nervoso', 'visionario']),
+      ambition: rngInt(30, 90),
+      ethics: rngInt(20, 90),
+      marketView: 'Nessuna opinione ancora.',
+      personalGoal: 'Dimostrare il proprio valore.',
+      lastBriefing: '',
+      wantsMeeting: false,
+      secrets: []
     };
     this.state.agents.push(agent);
     p.stats.agentsHired++;

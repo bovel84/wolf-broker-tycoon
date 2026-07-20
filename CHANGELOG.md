@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.5.0] — 2025-06-26
+
+### Aggiunto
+- **Agenti vivi e LLM-driven**:
+  - personalità, ambizione, etica, visione di mercato, obiettivo personale
+  - briefing narrativi generati dal LLM ogni turno
+  - richieste implicite di incontro (`wantsMeeting`)
+  - memorie di gameplay legate a crescita, tradimenti, successi ed errori
+- **Character Modal esteso per agenti**: mostra briefing, visione di mercato, consiglio, obiettivo personale, personalità e livello di lealtà.
+- **Dialogue engine on-demand**: i personaggi nel Diario possono generare una risposta contestuale in tempo reale senza dipendere da frasi statiche.
+- **Memorie competitor persistite** con roster riversato nello stato di gioco.
+- **Memorie societarie** per delibere assembleari approvate.
+
+### Cambiato
+- `llm-narrative-engine.js` usa fino a 6 chiamate per turno per sostenere anche briefing e dialoghi.
+- Gli agenti non sono più solo workforce numerica: diventano un canale narrativo e cognitivo sul mercato.
+
 ## [1.4.0] — 2025-06-26
 
 ### Aggiunto

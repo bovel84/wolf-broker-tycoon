@@ -103,6 +103,7 @@
     legacy.transactions = [];
     legacy.news = [];
     legacy.companies = [];
+    legacy.agents = s.agents || [];
     legacy.pendingAssemblies = market.assembliesThisWeek || [];
     legacy.activeSectorBoosts = {};
     legacy.netWorthHistory = [{ week: 0, value: 10000 }];

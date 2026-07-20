@@ -1750,6 +1750,16 @@ function openCharacterModal(characterId){
   html+='<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px"><div><strong>'+c.name+'</strong><div class="gray" style="font-size:12px">'+c.role+' · '+c.namespace+'</div></div><div><span class="pill b">Mood: '+(c.currentMood||'neutrale')+'</span> <span class="pill y">Relazione: '+rel+'</span></div></div>';
   html+='<div style="margin-bottom:12px"><div class="gray" style="font-size:11px;margin-bottom:4px">Tratti</div><div>'+(c.traits||[]).map(function(t){return '<span class="pill p" style="margin-right:4px">'+t+'</span>';}).join('')+'</div></div>';
   if(c.backstory) html+='<div class="card" style="padding:10px;margin-bottom:12px"><h3>Backstory</h3><div style="font-size:12px;line-height:1.5">'+c.backstory+'</div></div>';
+
+  if(c.namespace==='agent'&&G.agents){
+    for(var ag=0;ag<G.agents.length;ag++){
+      if(('agent:'+G.agents[ag].name.toLowerCase().replace(/[^a-z0-9]/g,'_'))===characterId){
+        html+='<div class="card" style="padding:10px;margin-bottom:12px"><h3>Briefing agente</h3><div style="font-size:12px;line-height:1.5"><strong>Visione di mercato:</strong> '+(G.agents[ag].marketView||'Nessuna')+'<br><strong>Consiglio:</strong> '+(G.agents[ag].lastBriefing||'Nessuno')+'<br><strong>Obiettivo personale:</strong> '+(G.agents[ag].personalGoal||'Nessuno')+'<br><strong>Personalita:</strong> '+(G.agents[ag].personality||'n/d')+' · <strong>Lealta:</strong> '+Math.round(G.agents[ag].loyalty||0)+'/100'+(G.agents[ag].wantsMeeting?' <span class="pill y">Vuole parlarti</span>':'')+'</div></div>';
+        break;
+      }
+    }
+  }
+
   html+='<div class="card" style="padding:10px;margin-bottom:12px"><h3>Voce del personaggio</h3><div id="character-live-dialogue" style="font-size:13px;line-height:1.6">Sto pensando...</div><div style="margin-top:8px"><button class="btn btn-blue btn-sm" onclick="refreshCharacterDialogue(\''+characterId+'\')">Rigenera risposta</button></div></div>';
 
   var memHtml='';

@@ -27,10 +27,11 @@
     temperature: 0.85,
     maxTokens: 2500,
     timeoutMs: 30000,
-    maxCallsPerTurn: 3,
+    maxCallsPerTurn: 6,
     newsPerTurn: 3,
     characterNotesPerTurn: 2,
-    eventsPerTurn: 2
+    eventsPerTurn: 2,
+    agentBriefingsPerTurn: 2
   };
 
   var STORAGE_KEY = 'sbt_llm_narrative_settings';
@@ -436,6 +437,38 @@
       '[{"type":"encounter|company|personal|rival","actor":"Nome personaggio","target":"player o nome","title":"titolo evento","summary":"2-3 frasi","consequence":"suggerimento gameplay","impact":"positive|negative|neutral"}]';
   }
 
+  function buildAgentPrompt(gameState) {
+    var p = gameState.player;
+    var agents = gameState.agents || [];
+    var selected = [];
+    for (var i = 0; i < agents.length && selected.length < config.agentBriefingsPerTurn; i++) {
+      if (agents[i].isActive) selected.push(agents[i]);
+    }
+    if (!selected.length) return null;
+
+    var list = [];
+    for (var a = 0; a < selected.length; a++) {
+      list.push('- ' + selected[a].name + ' | skill: ' + selected[a].skill + ' | personality: ' + (selected[a].personality || 'n/d') + ' | loyalty: ' + Math.round(selected[a].loyalty) + ' | efficiency: ' + selected[a].efficiency.toFixed(2) + ' | last goal: ' + (selected[a].personalGoal || 'nessuno'));
+    }
+
+    var companies = (gameState.market && gameState.market.companies) ? gameState.market.companies.slice(0, 10) : [];
+    var movers = [];
+    for (var c = 0; c < companies.length; c++) {
+      movers.push('- ' + companies[c].ticker + ' ' + companies[c].name + ' prezzo ' + companies[c].price.toFixed(2) + ' sentimento ' + (companies[c].sentiment || 50));
+    }
+
+    return 'Sei il desk head narrativo di una società di brokeraggio. ' +
+      'Devi scrivere briefing brevi ma vivi per gli agenti del giocatore. Ogni agente ha personalità, ambizione, morale e conoscenza di mercato.\n\n' +
+      'CONTESTO GIOCATORE:\n' +
+      '- Settimana ' + p.week + ', patrimonio ' + money(p.netWorth) + ', etica ' + p.ethics + '/100, reputazione Wall Street ' + (p.reputation ? p.reputation.wallStreet : 50) + '/100\n\n' +
+      'AGENTI ATTIVI:\n' + list.join('\n') + '\n\n' +
+      'MERCATO OSSERVATO:\n' + movers.join('\n') + '\n\n' +
+      'ISTRUZIONI:\n' +
+      'Per ogni agente genera un briefing unico con: visione di mercato, consiglio al broker, obiettivo personale, umore, e se vuole parlare col giocatore.\n' +
+      'Rispondi SOLO con un array JSON valido del formato:\n' +
+      '[{"agentName":"Nome","marketView":"...","advice":"...","personalGoal":"...","mood":"fiducioso|teso|aggressivo|prudente|ambizioso","trustDelta":-3,"wantsMeeting":true}]';
+  }
+
   // ============================================================
   // LLM CALL
   // ============================================================
@@ -569,6 +602,36 @@
     };
   }
 
+  function applyAgentBriefings(gameState, briefings) {
+    if (!briefings || !briefings.length) return;
+    var agents = gameState.agents || [];
+    for (var i = 0; i < briefings.length; i++) {
+      var b = briefings[i];
+      if (!b.agentName) continue;
+      for (var j = 0; j < agents.length; j++) {
+        if (agents[j].name === b.agentName) {
+          agents[j].marketView = b.marketView || agents[j].marketView || '';
+          agents[j].lastBriefing = b.advice || agents[j].lastBriefing || '';
+          agents[j].personalGoal = b.personalGoal || agents[j].personalGoal || '';
+          agents[j].wantsMeeting = !!b.wantsMeeting;
+          if (b.mood) agents[j].currentMood = b.mood;
+          if (typeof b.trustDelta === 'number') {
+            agents[j].loyalty = clamp(agents[j].loyalty + b.trustDelta, 0, 100);
+            setRelationship(gameState, 'agent:' + agents[j].name.toLowerCase().replace(/[^a-z0-9]/g, '_'), 'player:broker', b.trustDelta, b.advice || 'briefing');
+          }
+          addMemory(gameState, {
+            type: 'agent',
+            text: agents[j].name + ' dice: ' + (b.advice || b.marketView || 'ha un presentimento sul mercato.'),
+            actors: ['agent:' + agents[j].name.toLowerCase().replace(/[^a-z0-9]/g, '_')],
+            impact: b.trustDelta > 0 ? 'positive' : (b.trustDelta < 0 ? 'negative' : 'neutral'),
+            importance: 6
+          });
+          break;
+        }
+      }
+    }
+  }
+
   // ============================================================
   // PUBLIC API
   // ============================================================
@@ -596,17 +659,20 @@
       return Promise.resolve({ news: [], notes: [], events: [] });
     }
 
-    // Parallel LLM calls (up to 3)
+    // Parallel LLM calls (up to 4)
+    var agentPrompt = buildAgentPrompt(gameState);
     var promises = [
       callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildNewsPrompt(gameState)),
       callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildCharacterPrompt(gameState)),
-      callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildEventsPrompt(gameState))
+      callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildEventsPrompt(gameState)),
+      agentPrompt ? callLLM('Sei un senior broker e desk head. Rispondi solo con JSON.', agentPrompt) : Promise.resolve(null)
     ];
 
     return Promise.all(promises).then(function (results) {
       var newsRaw = parseJsonArray(results[0]) || [];
       var notesRaw = parseJsonArray(results[1]) || [];
       var eventsRaw = parseJsonArray(results[2]) || [];
+      var agentRaw = parseJsonArray(results[3]) || [];
 
       var news = [];
       for (var n = 0; n < newsRaw.length; n++) {
@@ -624,11 +690,12 @@
 
       applyCharacterNotes(gameState, notesRaw);
       applyEvents(gameState, eventsRaw);
+      applyAgentBriefings(gameState, agentRaw);
 
       // Add state-based memories even with LLM, to ground narrative
       addStateBasedMemories(gameState);
 
-      return { news: news, notes: notesRaw, events: eventsRaw };
+      return { news: news, notes: notesRaw, events: eventsRaw, agentBriefings: agentRaw };
     }).catch(function () {
       addStateBasedMemories(gameState);
       return { news: [], notes: [], events: [] };

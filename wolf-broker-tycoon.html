@@ -4342,7 +4342,15 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       loyalty: 70,
       isActive: true,
       totalEarned: 0,
-      totalMistakes: 0
+      totalMistakes: 0,
+      personality: rngPick(['freddo', 'ambizioso', 'leale', 'cinico', 'nervoso', 'visionario']),
+      ambition: rngInt(30, 90),
+      ethics: rngInt(20, 90),
+      marketView: 'Nessuna opinione ancora.',
+      personalGoal: 'Dimostrare il proprio valore.',
+      lastBriefing: '',
+      wantsMeeting: false,
+      secrets: []
     };
     this.state.agents.push(agent);
     p.stats.agentsHired++;
@@ -6238,6 +6246,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     legacy.transactions = [];
     legacy.news = [];
     legacy.companies = [];
+    legacy.agents = s.agents || [];
     legacy.pendingAssemblies = market.assembliesThisWeek || [];
     legacy.activeSectorBoosts = {};
     legacy.netWorthHistory = [{
@@ -13274,10 +13283,11 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     temperature: 0.85,
     maxTokens: 2500,
     timeoutMs: 30000,
-    maxCallsPerTurn: 3,
+    maxCallsPerTurn: 6,
     newsPerTurn: 3,
     characterNotesPerTurn: 2,
-    eventsPerTurn: 2
+    eventsPerTurn: 2,
+    agentBriefingsPerTurn: 2
   };
   var STORAGE_KEY = 'sbt_llm_narrative_settings';
 
@@ -13663,6 +13673,25 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }
     return 'Sei il Game Master narrativo di Wolf of Wall Street Broker Tycoon. ' + 'Genera eventi di trama che coinvolgono il giocatore, i suoi personaggi e le societa\'.\n\n' + 'CONTESTO:\n' + '- Giocatore: ' + playerName + ', livello ' + p.level + ', patrimonio ' + money(p.netWorth) + ', etica ' + p.ethics + '/100\n' + '- Settimana: ' + p.week + '\n' + '- Portafoglio:\n' + (portfolio.length ? portfolio.join('\n') : '- Nessuna posizione') + '\n\n' + 'ISTRUZIONI:\n' + 'Genera esattamente ' + config.eventsPerTurn + ' eventi narrativi brevi. Ogni evento deve coinvolgere un personaggio o una societa\', e suggerire una conseguenza sul gioco.\n' + 'Rispondi SOLO con un array JSON valido del formato:\n' + '[{"type":"encounter|company|personal|rival","actor":"Nome personaggio","target":"player o nome","title":"titolo evento","summary":"2-3 frasi","consequence":"suggerimento gameplay","impact":"positive|negative|neutral"}]';
   }
+  function buildAgentPrompt(gameState) {
+    var p = gameState.player;
+    var agents = gameState.agents || [];
+    var selected = [];
+    for (var i = 0; i < agents.length && selected.length < config.agentBriefingsPerTurn; i++) {
+      if (agents[i].isActive) selected.push(agents[i]);
+    }
+    if (!selected.length) return null;
+    var list = [];
+    for (var a = 0; a < selected.length; a++) {
+      list.push('- ' + selected[a].name + ' | skill: ' + selected[a].skill + ' | personality: ' + (selected[a].personality || 'n/d') + ' | loyalty: ' + Math.round(selected[a].loyalty) + ' | efficiency: ' + selected[a].efficiency.toFixed(2) + ' | last goal: ' + (selected[a].personalGoal || 'nessuno'));
+    }
+    var companies = gameState.market && gameState.market.companies ? gameState.market.companies.slice(0, 10) : [];
+    var movers = [];
+    for (var c = 0; c < companies.length; c++) {
+      movers.push('- ' + companies[c].ticker + ' ' + companies[c].name + ' prezzo ' + companies[c].price.toFixed(2) + ' sentimento ' + (companies[c].sentiment || 50));
+    }
+    return 'Sei il desk head narrativo di una società di brokeraggio. ' + 'Devi scrivere briefing brevi ma vivi per gli agenti del giocatore. Ogni agente ha personalità, ambizione, morale e conoscenza di mercato.\n\n' + 'CONTESTO GIOCATORE:\n' + '- Settimana ' + p.week + ', patrimonio ' + money(p.netWorth) + ', etica ' + p.ethics + '/100, reputazione Wall Street ' + (p.reputation ? p.reputation.wallStreet : 50) + '/100\n\n' + 'AGENTI ATTIVI:\n' + list.join('\n') + '\n\n' + 'MERCATO OSSERVATO:\n' + movers.join('\n') + '\n\n' + 'ISTRUZIONI:\n' + 'Per ogni agente genera un briefing unico con: visione di mercato, consiglio al broker, obiettivo personale, umore, e se vuole parlare col giocatore.\n' + 'Rispondi SOLO con un array JSON valido del formato:\n' + '[{"agentName":"Nome","marketView":"...","advice":"...","personalGoal":"...","mood":"fiducioso|teso|aggressivo|prudente|ambizioso","trustDelta":-3,"wantsMeeting":true}]';
+  }
 
   // ============================================================
   // LLM CALL
@@ -13825,6 +13854,35 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       priceChangePct: Number(raw.priceChangePct || raw.priceChange || raw.cambioPrezzoPct || 0)
     };
   }
+  function applyAgentBriefings(gameState, briefings) {
+    if (!briefings || !briefings.length) return;
+    var agents = gameState.agents || [];
+    for (var i = 0; i < briefings.length; i++) {
+      var b = briefings[i];
+      if (!b.agentName) continue;
+      for (var j = 0; j < agents.length; j++) {
+        if (agents[j].name === b.agentName) {
+          agents[j].marketView = b.marketView || agents[j].marketView || '';
+          agents[j].lastBriefing = b.advice || agents[j].lastBriefing || '';
+          agents[j].personalGoal = b.personalGoal || agents[j].personalGoal || '';
+          agents[j].wantsMeeting = !!b.wantsMeeting;
+          if (b.mood) agents[j].currentMood = b.mood;
+          if (typeof b.trustDelta === 'number') {
+            agents[j].loyalty = clamp(agents[j].loyalty + b.trustDelta, 0, 100);
+            setRelationship(gameState, 'agent:' + agents[j].name.toLowerCase().replace(/[^a-z0-9]/g, '_'), 'player:broker', b.trustDelta, b.advice || 'briefing');
+          }
+          addMemory(gameState, {
+            type: 'agent',
+            text: agents[j].name + ' dice: ' + (b.advice || b.marketView || 'ha un presentimento sul mercato.'),
+            actors: ['agent:' + agents[j].name.toLowerCase().replace(/[^a-z0-9]/g, '_')],
+            impact: b.trustDelta > 0 ? 'positive' : b.trustDelta < 0 ? 'negative' : 'neutral',
+            importance: 6
+          });
+          break;
+        }
+      }
+    }
+  }
 
   // ============================================================
   // PUBLIC API
@@ -13856,12 +13914,14 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       });
     }
 
-    // Parallel LLM calls (up to 3)
-    var promises = [callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildNewsPrompt(gameState)), callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildCharacterPrompt(gameState)), callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildEventsPrompt(gameState))];
+    // Parallel LLM calls (up to 4)
+    var agentPrompt = buildAgentPrompt(gameState);
+    var promises = [callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildNewsPrompt(gameState)), callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildCharacterPrompt(gameState)), callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildEventsPrompt(gameState)), agentPrompt ? callLLM('Sei un senior broker e desk head. Rispondi solo con JSON.', agentPrompt) : Promise.resolve(null)];
     return Promise.all(promises).then(function (results) {
       var newsRaw = parseJsonArray(results[0]) || [];
       var notesRaw = parseJsonArray(results[1]) || [];
       var eventsRaw = parseJsonArray(results[2]) || [];
+      var agentRaw = parseJsonArray(results[3]) || [];
       var news = [];
       for (var n = 0; n < newsRaw.length; n++) {
         var norm = normalizeNews(newsRaw[n]);
@@ -13877,13 +13937,15 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       if (gameState.market.generatedNews.length > 50) gameState.market.generatedNews.shift();
       applyCharacterNotes(gameState, notesRaw);
       applyEvents(gameState, eventsRaw);
+      applyAgentBriefings(gameState, agentRaw);
 
       // Add state-based memories even with LLM, to ground narrative
       addStateBasedMemories(gameState);
       return {
         news: news,
         notes: notesRaw,
-        events: eventsRaw
+        events: eventsRaw,
+        agentBriefings: agentRaw
       };
     }).catch(function () {
       addStateBasedMemories(gameState);
@@ -24314,6 +24376,14 @@ function openCharacterModal(characterId) {
     return '<span class="pill p" style="margin-right:4px">' + t + '</span>';
   }).join('') + '</div></div>';
   if (c.backstory) html += '<div class="card" style="padding:10px;margin-bottom:12px"><h3>Backstory</h3><div style="font-size:12px;line-height:1.5">' + c.backstory + '</div></div>';
+  if (c.namespace === 'agent' && G.agents) {
+    for (var ag = 0; ag < G.agents.length; ag++) {
+      if ('agent:' + G.agents[ag].name.toLowerCase().replace(/[^a-z0-9]/g, '_') === characterId) {
+        html += '<div class="card" style="padding:10px;margin-bottom:12px"><h3>Briefing agente</h3><div style="font-size:12px;line-height:1.5"><strong>Visione di mercato:</strong> ' + (G.agents[ag].marketView || 'Nessuna') + '<br><strong>Consiglio:</strong> ' + (G.agents[ag].lastBriefing || 'Nessuno') + '<br><strong>Obiettivo personale:</strong> ' + (G.agents[ag].personalGoal || 'Nessuno') + '<br><strong>Personalita:</strong> ' + (G.agents[ag].personality || 'n/d') + ' · <strong>Lealta:</strong> ' + Math.round(G.agents[ag].loyalty || 0) + '/100' + (G.agents[ag].wantsMeeting ? ' <span class="pill y">Vuole parlarti</span>' : '') + '</div></div>';
+        break;
+      }
+    }
+  }
   html += '<div class="card" style="padding:10px;margin-bottom:12px"><h3>Voce del personaggio</h3><div id="character-live-dialogue" style="font-size:13px;line-height:1.6">Sto pensando...</div><div style="margin-top:8px"><button class="btn btn-blue btn-sm" onclick="refreshCharacterDialogue(\'' + characterId + '\')">Rigenera risposta</button></div></div>';
   var memHtml = '';
   var mems = (c.memory || []).slice(0, 5);

@@ -18,10 +18,10 @@
   // ============================================================
 
   var DEFAULT_SETTINGS = {
-    endpoint: 'https://ollama-cors-proxy.vercel.app/api/chat',
+    endpoint: '',
     apiKey: '',
     model: 'glm-5.2',
-    enabled: true,
+    enabled: false,
     temperature: 0.8,
     maxTokens: 2000,
     timeout: 30000,
@@ -739,6 +739,7 @@
       'Fai avanzare o arretrare gli obiettivi in modo causale. Crea conflitti tra CdA e soci, alleanze, dimissioni, richieste attiviste o assemblee solo quando giustificati. ' +
       'I competitor perseguono obiettivi di medio periodo. Mantieni memoria e continuita. ' +
       'Il giocatore e una persona nel mondo: considera stress, salute, credibilita, pressione legale, leva, scelte narrative e rischio di rovina ricevuti nel contesto. Non dichiarare arbitrariamente il game over: produci fatti coerenti che il motore personale valutera. ' +
+      'Considera anche impiego, contratto, obiettivi, classifica interna, offerte, datore, societa propria, costi, ricavi, prove di illeciti e ricatti. I colleghi e le societa concorrenti perseguono il proprio interesse; non regalare promozioni o clienti. ' +
       'Puoi proporre al massimo due operazioni straordinarie, ma solo quando fondamentali, crisi, strategia e fatti recenti le rendono credibili. Un fallimento richiede dissesto o crisi prolungata; fusioni e acquisizioni richiedono una logica industriale; IPO e spin-off devono colmare un bisogno reale del mercato. ' +
       'Usa esclusivamente ticker quotati ricevuti per target, acquirenti e societa madri; nuovi ticker sono ammessi solo per merger, ipo e spinoff. Ogni fatto deve propagarsi a prezzi, settore, azionisti, competitor e indici attraverso gli effetti applicati dal motore. Contesto: ' + compact + ' ' +
       'Rispondi con JSON {briefing,macro,companies,competitors,corporateEvents,assembly}. ' +

@@ -380,7 +380,7 @@
         }
       },
       portfolio: {
-        positions: new Map(),
+        positions: {},
         history: [],
         realizedPnL: 0,
         unrealizedPnL: 0
@@ -643,9 +643,9 @@
       first_short: function () { return stats.shortProfits !== undefined && stats.totalTrades > 0; },
       big_short: function () {
         var pos = self.state.portfolio.positions;
-        var it = pos.entries();
-        for (var e = it.next(); !e.done; e = it.next()) {
-          var v = e.value[1];
+        var keys = Object.keys(pos);
+        for (var i = 0; i < keys.length; i++) {
+          var v = pos[keys[i]];
           if (v.type === 'short' && v.realizedProfit > 100000) return true;
         }
         return false;
@@ -653,9 +653,9 @@
       short_master: function () { return stats.totalTrades >= 100 && stats.shortProfits > 0; },
       penny_first: function () {
         var pos = self.state.portfolio.positions;
-        var it = pos.entries();
-        for (var e = it.next(); !e.done; e = it.next()) {
-          if (e.value[1].isPenny) return true;
+        var keys = Object.keys(pos);
+        for (var i = 0; i < keys.length; i++) {
+          if (pos[keys[i]].isPenny) return true;
         }
         return false;
       },
@@ -1158,7 +1158,7 @@
         p.netWorth = 10000;
         p.level = 1;
         p.xp = 0;
-        this.state.portfolio.positions = new Map();
+        this.state.portfolio.positions = {};
         this.state.portfolio.realizedPnL = 0;
         this.notify('danger', 'Bancarotta!', 'Hai perso tutto. Riparti da €10.000.');
         this.emit('bankrupt', {});
@@ -1226,7 +1226,10 @@
   GameEngine.prototype._serializeState = function () {
     var s = this.state;
     var positionsObj = {};
-    s.portfolio.positions.forEach(function (v, k) { positionsObj[k] = v; });
+    var posKeys = Object.keys(s.portfolio.positions);
+    for (var pki = 0; pki < posKeys.length; pki++) {
+      positionsObj[posKeys[pki]] = s.portfolio.positions[posKeys[pki]];
+    }
     return {
       player: s.player,
       portfolio: {
@@ -1254,11 +1257,11 @@
     if (!data || !data.player) return null;
     var s = data;
     if (!s.portfolio) s.portfolio = { positions: {}, history: [], realizedPnL: 0, unrealizedPnL: 0 };
-    var posMap = new Map();
+    var posMap = {};
     if (s.portfolio.positions) {
       var keys = Object.keys(s.portfolio.positions);
       for (var i = 0; i < keys.length; i++) {
-        posMap.set(keys[i], s.portfolio.positions[keys[i]]);
+        posMap[keys[i]] = s.portfolio.positions[keys[i]];
       }
     }
     s.portfolio.positions = posMap;
@@ -1430,14 +1433,14 @@
 
     if (!options.short) {
       p.cash -= cost;
-      var pos = this.state.portfolio.positions.get(company.id);
+      var pos = this.state.portfolio.positions[company.id];
       if (pos) {
         var newAvg = (pos.avgPrice * pos.shares + price * shares) / (pos.shares + shares);
         pos.avgPrice = newAvg;
         pos.shares += shares;
         pos.totalCost += cost;
       } else {
-        this.state.portfolio.positions.set(company.id, {
+        this.state.portfolio.positions[company.id] = {
           companyId: company.id,
           ticker: company.ticker,
           name: company.name,
@@ -1448,17 +1451,17 @@
           type: 'long',
           isPenny: company.isPenny,
           openedWeek: p.week
-        });
+        };
       }
     } else {
       // Short selling
       p.cash -= commission + slippage;
-      var shortPos = this.state.portfolio.positions.get(company.id + '_short');
+      var shortPos = this.state.portfolio.positions[company.id + '_short'];
       if (shortPos) {
         shortPos.shares += shares;
         shortPos.avgPrice = (shortPos.avgPrice * shortPos.shares + price * shares) / (shortPos.shares + shares);
       } else {
-        this.state.portfolio.positions.set(company.id + '_short', {
+        this.state.portfolio.positions[company.id + '_short'] = {
           companyId: company.id,
           ticker: company.ticker,
           name: company.name,
@@ -1469,7 +1472,7 @@
           type: 'short',
           isPenny: company.isPenny,
           openedWeek: p.week
-        });
+        };
       }
     }
 
@@ -1490,8 +1493,8 @@
     var p = this.state.player;
     var diffCfg = this.state.settings.difficultyConfig;
     var price = company.price;
-    var pos = this.state.portfolio.positions.get(company.id);
-    var shortPos = this.state.portfolio.positions.get(company.id + '_short');
+    var pos = this.state.portfolio.positions[company.id];
+    var shortPos = this.state.portfolio.positions[company.id + '_short'];
 
     if (pos && pos.shares >= shares) {
       // Long sell
@@ -1506,7 +1509,7 @@
       pos.shares -= shares;
       pos.totalCost -= costBasis;
       if (pos.shares <= 0) {
-        this.state.portfolio.positions.delete(company.id);
+        delete this.state.portfolio.positions[company.id];
       }
 
       if (profit > 0) p.stats.totalProfit += profit;
@@ -1532,7 +1535,7 @@
       p.cash += shortProfit;
       shortPos.shares -= shares;
       if (shortPos.shares <= 0) {
-        this.state.portfolio.positions.delete(company.id + '_short');
+        delete this.state.portfolio.positions[company.id + '_short'];
       }
 
       if (shortProfit > 0) {
@@ -1581,7 +1584,7 @@
     var company = this.getCompany(ticker);
     if (!company) return { success: false, error: 'Azienda non trovata' };
     var p = this.state.player;
-    var pos = this.state.portfolio.positions.get(company.id);
+    var pos = this.state.portfolio.positions[company.id];
     if (!pos || pos.shares < 100) return { success: false, error: 'Devi avere almeno 100 azioni' };
 
     // Pump phase: price rises
@@ -1594,7 +1597,7 @@
     var proceeds = company.price * pos.shares;
     var profit = proceeds - pos.totalCost;
     p.cash += proceeds;
-    this.state.portfolio.positions.delete(company.id);
+    delete this.state.portfolio.positions[company.id];
     p.stats.totalProfit += profit;
     p.stats.pumpDumpsExecuted++;
 
@@ -1657,7 +1660,7 @@
     company.price *= (1 + rngGauss(0.03, 0.02));
     company.price = roundCents(company.price);
 
-    var pos = this.state.portfolio.positions.get(company.id);
+    var pos = this.state.portfolio.positions[company.id];
     if (pos) {
       var sellResult = this.sell(ticker, shares, {});
       p.stats.frontRunningExecuted++;
@@ -1695,7 +1698,7 @@
     for (var i = 0; i < companies.length; i++) {
       var c = companies[i];
       if (c.assemblyScheduled) continue;
-      var pos = this.state.portfolio.positions.get(c.id);
+      var pos = this.state.portfolio.positions[c.id];
       if (!pos) continue;
       var ownership = pos.shares / c.sharesOutstanding;
       if (ownership > 0.01 && rng() < 0.05) {
@@ -1710,7 +1713,7 @@
   GameEngine.prototype.voteAssembly = function (ticker, vote) {
     var company = this.getCompany(ticker);
     if (!company || !company.assemblyScheduled) return { success: false, error: 'Nessuna assemblea attiva' };
-    var pos = this.state.portfolio.positions.get(company.id);
+    var pos = this.state.portfolio.positions[company.id];
     if (!pos) return { success: false, error: 'Non possiedi azioni' };
     var votes = pos.shares;
     if (vote === 'for') company.assemblyVotes.for += votes;
@@ -1859,16 +1862,18 @@
     if (p.week % 13 !== 0) return; // Quarterly
     var positions = this.state.portfolio.positions;
     var self = this;
-    positions.forEach(function (pos, key) {
-      if (pos.type === 'short') return;
+    var keys = Object.keys(positions);
+    for (var i = 0; i < keys.length; i++) {
+      var pos = positions[keys[i]];
+      if (pos.type === 'short') continue;
       var company = self.getCompany(pos.companyId);
-      if (!company || company.dividendYield <= 0) return;
+      if (!company || company.dividendYield <= 0) continue;
       var dividend = pos.shares * company.price * company.dividendYield / 4;
       p.cash += dividend;
       if (dividend > 0.01) {
         self.notify('dividend', 'Dividendo', company.ticker + ': +' + formatMoney(dividend));
       }
-    });
+    }
   };
 
   GameEngine.prototype._processQuarterlyReports = function () {
@@ -1944,9 +1949,11 @@
     var self = this;
     var totalUnrealized = 0;
     var positions = this.state.portfolio.positions;
-    positions.forEach(function (pos, key) {
+    var keys = Object.keys(positions);
+    for (var i = 0; i < keys.length; i++) {
+      var pos = positions[keys[i]];
       var company = self.getCompany(pos.companyId);
-      if (!company) return;
+      if (!company) continue;
       pos.currentPrice = company.price;
       if (pos.type === 'short') {
         pos.unrealizedPnL = (pos.avgPrice - company.price) * pos.shares;
@@ -1954,7 +1961,7 @@
         pos.unrealizedPnL = (company.price - pos.avgPrice) * pos.shares;
       }
       totalUnrealized += pos.unrealizedPnL;
-    });
+    }
     this.state.portfolio.unrealizedPnL = totalUnrealized;
 
     // Update net worth
@@ -2035,9 +2042,10 @@
     if (marketReturn < -0.05) {
       var positions = this.state.portfolio.positions;
       var hasLoss = false;
-      positions.forEach(function (pos) {
-        if (pos.unrealizedPnL < 0) hasLoss = true;
-      });
+      var keys = Object.keys(positions);
+      for (var i = 0; i < keys.length; i++) {
+        if (positions[keys[i]].unrealizedPnL < 0) hasLoss = true;
+      }
       if (!hasLoss) {
         p.stats.crashSurvived = true;
         this._checkAchievements();
@@ -2074,7 +2082,9 @@
 
   GameEngine.prototype.getPortfolio = function () {
     var arr = [];
-    this.state.portfolio.positions.forEach(function (v, k) { arr.push(v); });
+    var positions = this.state.portfolio.positions;
+    var keys = Object.keys(positions);
+    for (var i = 0; i < keys.length; i++) { arr.push(positions[keys[i]]); }
     return arr;
   };
 

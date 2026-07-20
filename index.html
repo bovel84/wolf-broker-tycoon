@@ -432,6 +432,7 @@ tr:hover{background:var(--bg3)}
 <script src="corporate-lifecycle.js"></script>
 <script src="broker-story.js"></script>
 <script src="player-life.js"></script>
+<script src="brokerage-career.js"></script>
 <script>
 
 // ======================== CONSTANTS ========================
@@ -1012,6 +1013,7 @@ function resolveAssembly(ticker){
 // ======================== TRADING ========================
 function openTradeModal(ticker){
   if(typeof PlayerLife!=='undefined'&&PlayerLife.canAct&&!PlayerLife.canAct()){PlayerLife.showGameOver();return}
+  if(typeof BrokerageCareer!=='undefined'&&BrokerageCareer.canTrade&&!BrokerageCareer.canTrade()){toast('warning','Devi essere assunto da una società di brokeraggio o fondarne una');if(BrokerageCareer.showJobs)BrokerageCareer.showJobs();return}
   var c=getCompany(ticker);if(!c)return;
   if(c.listed===false||c.tradingHalted){toast('warning','Titolo non negoziabile: societa ritirata o contrattazioni sospese');return}
   var owned=G.positions[ticker]?G.positions[ticker].shares:0;
@@ -1144,6 +1146,7 @@ function updateTradePreview(){
 
 function executeTrade(){
   if(!tradeModalState)return;
+  if(typeof BrokerageCareer!=='undefined'&&BrokerageCareer.canTrade&&!BrokerageCareer.canTrade()){toast('error','Non hai un intermediario autorizzato');closeTradeModal();return}
   var c=getCompany(tradeModalState.ticker);
   if(!c||c.listed===false||c.tradingHalted){toast('error','Operazione annullata: titolo non negoziabile');closeTradeModal();return}
   var shares=parseInt(document.getElementById('trade-shares').value)||0;
@@ -1183,6 +1186,7 @@ function executeTrade(){
 
 function executeShort(){
   if(!tradeModalState)return;
+  if(typeof BrokerageCareer!=='undefined'&&BrokerageCareer.canTrade&&!BrokerageCareer.canTrade()){toast('error','Non hai un intermediario autorizzato');closeTradeModal();return}
   var c=getCompany(tradeModalState.ticker);
   if(!c||c.listed===false||c.tradingHalted){toast('error','Short non disponibile: titolo non negoziabile');closeTradeModal();return}
   var shares=parseInt(document.getElementById('trade-shares').value)||0;
@@ -1211,6 +1215,7 @@ function executeShort(){
 
 function coverShort(){
   if(!tradeModalState)return;
+  if(typeof BrokerageCareer!=='undefined'&&BrokerageCareer.canTrade&&!BrokerageCareer.canTrade()){toast('error','Non hai un intermediario autorizzato');closeTradeModal();return}
   var c=getCompany(tradeModalState.ticker);
   var shares=parseInt(document.getElementById('trade-shares').value)||0;
   var price=tradeModalState.orderType==='limit'?parseFloat(document.getElementById('trade-limit-price').value)||c.price:c.price;
@@ -1436,6 +1441,7 @@ function renderAll(){
   
   // Save
   renderSaveSlots();
+  if(typeof BrokerageCareer!=='undefined'&&BrokerageCareer.render)BrokerageCareer.render();
 }
 
 function renderIndices(){
@@ -1808,6 +1814,7 @@ if(typeof WorldEngine!=='undefined'&&WorldEngine.install)WorldEngine.install();
 if(typeof CorporateLifecycle!=='undefined'&&CorporateLifecycle.install)CorporateLifecycle.install();
 if(typeof BrokerStory!=='undefined'&&BrokerStory.install)BrokerStory.install();
 if(typeof PlayerLife!=='undefined'&&PlayerLife.install)PlayerLife.install();
+if(typeof BrokerageCareer!=='undefined'&&BrokerageCareer.install)BrokerageCareer.install();
 </script>
 </body>
 </html>

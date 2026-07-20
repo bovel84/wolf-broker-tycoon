@@ -170,8 +170,13 @@
   function syncEngineToLegacy() {
     if (!isBrowser()) return;
     var legacy = legacyStateFromEngine();
-    if (legacy && typeof G !== 'undefined') {
-      for (var k in legacy) G[k] = legacy[k];
+    if (legacy) {
+      if (typeof G === 'undefined' || G === null) {
+        try { G = {}; } catch (e) {}
+      }
+      if (typeof G !== 'undefined' && G !== null) {
+        for (var k in legacy) G[k] = legacy[k];
+      }
     }
   }
 
@@ -494,13 +499,7 @@
     });
   }
 
-  if (isBrowser()) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', install);
-    } else {
-      install();
-    }
-  }
+  root.wolfBridgeInstall = install;
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = { install: install, getEngine: getEngine, legacyStateFromEngine: legacyStateFromEngine, syncLegacyToEngine: syncLegacyToEngine };

@@ -5943,8 +5943,15 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   function syncEngineToLegacy() {
     if (!isBrowser()) return;
     var legacy = legacyStateFromEngine();
-    if (legacy && typeof G !== 'undefined') {
-      for (var k in legacy) G[k] = legacy[k];
+    if (legacy) {
+      if (typeof G === 'undefined' || G === null) {
+        try {
+          G = {};
+        } catch (e) {}
+      }
+      if (typeof G !== 'undefined' && G !== null) {
+        for (var k in legacy) G[k] = legacy[k];
+      }
     }
   }
   function install() {
@@ -6295,13 +6302,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       syncEngineToLegacy();
     });
   }
-  if (isBrowser()) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', install);
-    } else {
-      install();
-    }
-  }
+  root.wolfBridgeInstall = install;
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
       install: install,
@@ -23316,10 +23317,10 @@ if (typeof CompetitorEngine !== 'undefined') {
     window._competitorEngine.init(_md);
   } catch (e) {}
 }
-var _origAdvance = typeof advanceTurn === 'function' ? advanceTurn : function () {};
-if (typeof advanceTurn !== 'undefined') {
-  window.advanceTurn = function () {
-    _origAdvance();
+// Integrazione con UI bridge (se presente) o wrapping legacy
+if (typeof wolfBridge !== 'undefined' && wolfBridge.getEngine) {
+  var _engine = wolfBridge.getEngine();
+  _engine.on('weekAdvanced', function () {
     if (window._competitorEngine) {
       try {
         window._competitorEngine.setMarketData({
@@ -23359,7 +23360,56 @@ if (typeof advanceTurn !== 'undefined') {
         }
       }).catch(function () {});
     }
+  });
+} else if (typeof advanceTurn !== 'undefined') {
+  var _origAdvance = advanceTurn;
+  window.advanceTurn = function () {
+    var result = _origAdvance();
+    if (window._competitorEngine) {
+      try {
+        window._competitorEngine.setMarketData({
+          stocks: typeof G !== 'undefined' && G && G.companies ? G.companies.map(function (c) {
+            return {
+              symbol: c.ticker,
+              price: c.price,
+              sector: c.sector,
+              volume: c.vol || 0,
+              avgVolume: 1000000,
+              change: c.change || 0
+            };
+          }) : [],
+          currentWeek: G ? G.week : 1
+        });
+        window._competitorEngine.setPlayerData(typeof positions !== 'undefined' ? Object.keys(positions).map(function (k) {
+          return {
+            symbol: k,
+            shares: positions[k].shares
+          };
+        }) : [], typeof cash !== 'undefined' ? cash : 10000, typeof G !== 'undefined' && G ? G.rep || 50 : 50, typeof G !== 'undefined' && G ? G.xp || 0 : 0);
+      } catch (e) {}
+    }
+    if (typeof LLMNewsEngine !== 'undefined' && LLMNewsEngine.processNewsTurn) {
+      var gs = {
+        week: typeof G !== 'undefined' && G ? G.week : 1,
+        cash: typeof cash !== 'undefined' ? cash : 10000,
+        level: typeof G !== 'undefined' && G ? G.level || 1 : 1,
+        portfolio: typeof positions !== 'undefined' ? positions : {},
+        companies: typeof G !== 'undefined' && G && G.companies ? G.companies : []
+      };
+      LLMNewsEngine.processNewsTurn(gs).then(function (r) {
+        if (r && r.length > 0 && typeof addNews === 'function') {
+          for (var i = 0; i < r.length; i++) {
+            addNews(r[i].title, r[i].impact, r[i].content);
+          }
+        }
+      }).catch(function () {});
+    }
+    return result;
   };
+}
+// Attiva UI bridge come ultimo passo per sovrascrivere le funzioni legacy
+if (typeof wolfBridgeInstall === 'function') {
+  wolfBridgeInstall();
 }
 </script>
 </body>

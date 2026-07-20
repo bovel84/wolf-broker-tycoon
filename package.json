@@ -5,7 +5,8 @@
   "main": "broker-story.js",
   "scripts": {
     "build": "node build.js",
-    "test": "node test/integration.test.js && node test/html-build.test.js"
+    "lint": "node scripts/lint-es5.js",
+    "test": "npm run lint && node test/integration.test.js && node test/gameplay.test.js && node test/html-build.test.js"
   },
   "repository": {
     "type": "git",

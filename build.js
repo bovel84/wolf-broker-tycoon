@@ -277,7 +277,7 @@ function buildHTML() {
 
   // 5. Assembla tutto il JS
   const integrationJs = buildIntegrationJS();
-  const rawJs = modules.concat([gameOrigJs, integrationJs]).join('\n');
+  const rawJs = modules.concat([gameOrigJs, integrationJs]).concat(['(function(){if(typeof wolfBridge!=="undefined"&&wolfBridge.wrappers){if(wolfBridge.wrappers.executeTrade)window.executeTrade=wolfBridge.wrappers.executeTrade;if(wolfBridge.wrappers.executeShort)window.executeShort=wolfBridge.wrappers.executeShort;if(wolfBridge.wrappers.coverShort)window.coverShort=wolfBridge.wrappers.coverShort;}})();']).join('\n');
 
   console.log('\n  transpiling with Babel...');
   const transpiledJs = transpileWithBabel(rawJs);

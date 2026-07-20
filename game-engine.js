@@ -440,6 +440,61 @@
   };
 
   GameEngine.prototype._generateCompanies = function (n) {
+    var self = this;
+    var MarketEngineCtor = null;
+    if (typeof MarketEngine !== 'undefined') {
+      MarketEngineCtor = MarketEngine;
+    } else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+      try { MarketEngineCtor = require('./market-engine.js'); } catch (e) { MarketEngineCtor = null; }
+    }
+
+    if (MarketEngineCtor) {
+      var me = new MarketEngineCtor();
+      var source = me.companies.slice(0, Math.min(n, me.companies.length));
+      var companies = [];
+      for (var i = 0; i < source.length; i++) {
+        var c = source[i];
+        var eps = c.consensusEPS;
+        if (eps === null || eps === undefined || isNaN(eps)) eps = 0;
+        var revenue = c.fundamentals && c.fundamentals.revenue ? c.fundamentals.revenue : 0;
+        var profit = c.fundamentals && c.fundamentals.profit ? c.fundamentals.profit : 0;
+        companies.push({
+          id: c.id,
+          ticker: c.ticker,
+          name: c.name,
+          sector: c.sector,
+          price: c.price,
+          prevClose: c.prevClose,
+          open: c.openPrice,
+          high: c.dayHigh,
+          low: c.dayLow,
+          volume: c.volumeToday || c.avgVolume,
+          avgVolume: c.avgVolume,
+          marketCap: c.marketCap,
+          sharesOutstanding: c.sharesOutstanding,
+          float: c.float,
+          dividendYield: c.dividendYield,
+          peRatio: c.peRatio || 999,
+          beta: c.beta,
+          momentum: c.momentum,
+          sentiment: 50,
+          isPenny: c.isPenny,
+          isIPO: c.isIPO,
+          IPOWeek: c.ipoWeek,
+          earnings: {
+            revenue: revenue,
+            netIncome: profit,
+            eps: eps,
+            quarter: 1
+          },
+          assemblyScheduled: false,
+          assemblyVotes: {},
+          events: []
+        });
+      }
+      return companies;
+    }
+
     var companies = [];
     for (var i = 0; i < n; i++) {
       var sector = COMPANY_SECTORS[i % COMPANY_SECTORS.length];

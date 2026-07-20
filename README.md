@@ -27,6 +27,12 @@ Gestionale di broker azionario completo e realistico con modalità carriera e as
 - **Vita del broker** — salute, stress, credibilità, pressione legale, tenore di vita, leva e picco patrimoniale evolvono ogni settimana
 - **Caduta progressiva** — avvisi, crisi di solvibilità e margin call anticipano bancarotta, condanna, crollo fisico o reputazionale
 - **Game over narrativo** — causa precisa, statistiche finali, punteggio eredità, epilogo LLM e una sola seconda possibilità quando plausibile
+- **Partenza da disoccupato** — il broker deve firmare con una delle sei società prima di poter operare professionalmente
+- **Sei società di brokeraggio** — culture, salari, commissioni, target e limiti di rischio diversi
+- **Competizione interna IA** — cinque colleghi per desk producono ricavi, scalano classifiche, sottraggono clienti e lottano per bonus e promozioni
+- **Mercato del lavoro** — valutazioni quadrisettimanali, promozioni, licenziamenti, dimissioni e offerte dei concorrenti
+- **Società del giocatore** — capitale iniziale, affitto, dati, compliance, stipendi, clienti, masse, ricavi, costi e classifica contro le sei imprese
+- **Zona grigia** — soffiate, report falsi, ricatti, audit, multe e prove persistenti con conseguenze narrative e legali
 
 ## Tecnologia
 
@@ -61,6 +67,7 @@ Genera `wolf-broker-tycoon.html` single-file giocabile.
 | `corporate-lifecycle.js` | Fallimenti, ristrutturazioni, fusioni, acquisizioni, IPO e spin-off |
 | `broker-story.js` | Prologo, identità del broker, capitoli reattivi, relazioni e finali |
 | `player-life.js` | Condizione personale, spese, rischio, margin call, game over e riscatto |
+| `brokerage-career.js` | Disoccupazione, sei datori, colleghi IA, contratti, società propria e illeciti |
 | `build_html.py` | Assemblatore finale single-file |
 ## Configurazione sicura LLM
 

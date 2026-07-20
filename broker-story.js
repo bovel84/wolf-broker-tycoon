@@ -328,7 +328,7 @@
       body.innerHTML = '<div class="broker-eyebrow">LA BUSTA</div><h1>Il primo segreto</h1><p>La trovi nel doppio fondo della scatola. Dentro ci sono ordini firmati, nomi di società e una nota: <em>Non è stato il mercato. Qualcuno ha scelto chi doveva cadere.</em></p><div class="broker-choice-grid"><button onclick="BrokerStory.envelope(\'return\')"><strong>Restituiscila chiusa</strong><span>Vuoi risposte, ma non a qualsiasi prezzo.</span></button><button onclick="BrokerStory.envelope(\'use\')"><strong>Usa quei nomi</strong><span>Se sono colpevoli, il loro denaro pagherà il debito.</span></button><button onclick="BrokerStory.envelope(\'copy\')"><strong>Copiala e restituiscila</strong><span>La fiducia è utile. Una copia lo è di più.</span></button></div>';
       return;
     }
-    body.innerHTML = '<div class="broker-eyebrow">ATTO I · IL PREZZO DI UN NOME</div><h1>La campana d’apertura</h1><p>' + safe(state.name, 40) + ', le porte si aprono. Elena Valli ti indica una scrivania vuota e un telefono. Victor Kane osserva dalla balconata. Da qualche parte, l’ispettore Adrian Cole apre un fascicolo ancora senza titolo.</p><p class="broker-quote">“Il mercato non chiede chi sei. Decide quanto vali. Il resto della storia dipende da te.”</p><button class="broker-primary" onclick="BrokerStory.begin()">Entra nella sala operativa</button>';
+    body.innerHTML = '<div class="broker-eyebrow">ATTO I · IL PREZZO DI UN NOME</div><h1>Fuori dalla sala operativa</h1><p>' + safe(state.name, 40) + ', nessuna scrivania porta ancora il tuo nome. Sei disoccupato, hai diecimila euro di risparmi e sei società ricevono candidature. Elena Valli può presentarti a un recruiter. Victor Kane osserva chi è disposto a vendersi pur di entrare. Da qualche parte, l’ispettore Adrian Cole apre un fascicolo ancora senza titolo.</p><p class="broker-quote">“Il mercato non chiede chi sei. Prima devi convincere qualcuno a lasciarti entrare.”</p><button class="broker-primary" onclick="BrokerStory.begin()">Cerca il primo lavoro</button>';
   }
 
   function originButton(id) {
@@ -563,6 +563,14 @@
     evaluate: evaluateChapters,
     render: renderCareerPanel,
     getContext: getContext,
+    adjustTraits: function (effects, reason) {
+      applyEffects(effects || {});
+      if (reason) addJournal('Conseguenze professionali', reason, 'career');
+      save();
+      saveGameIfPossible();
+      renderCareerPanel();
+      return getContext();
+    },
     reset: function () {
       try { if (global.localStorage) global.localStorage.removeItem(STORAGE_KEY); } catch (e) {}
       state = createState();

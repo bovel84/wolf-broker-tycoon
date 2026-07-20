@@ -659,6 +659,61 @@
     return ns.characters[id] || null;
   }
 
+  function generateDynamicDialogue(character, gameState, promptStyle) {
+    if (!config.enabled || !config.endpoint || !config.apiKey) {
+      return Promise.resolve('"' + (character.backstory || 'Non ho nulla da dire in questo momento.') + '"');
+    }
+    if (callsThisTurn >= config.maxCallsPerTurn) {
+      return Promise.resolve('"' + (character.backstory || '...') + '"');
+    }
+
+    var p = gameState.player;
+    var memories = getCharacterMemories(gameState, character.id, 3);
+    var relToPlayer = getRelationship(gameState, character.id, 'player:broker');
+    var recentEvents = (ensureNarrativeState(gameState).events || []).slice(0, 3);
+
+    var memText = memories.map(function (m) { return m.text; }).join('. ');
+    var evText = recentEvents.map(function (e) { return e.title + ': ' + e.summary; }).join('. ');
+
+    var userPrompt =
+      'Personaggio: ' + character.name + ' (' + character.role + '), tratti: ' + (character.traits || []).join(', ') + ', umore: ' + character.currentMood + '.\n' +
+      'Relazione con il giocatore: ' + relToPlayer + '/100.\n' +
+      'Memorie del personaggio: ' + (memText || 'nessuna') + '.\n' +
+      'Eventi recenti: ' + (evText || 'nessuno') + '.\n' +
+      'Contesto giocatore: settimana ' + p.week + ', patrimonio ' + money(p.netWorth) + ', etica ' + p.ethics + '/100.\n' +
+      'Stile richiesto: ' + (promptStyle || 'risposta diretta e coinvolgente in italiano, in prima persona, max 2 frasi') + '.\n' +
+      'Rispondi SOLO con una singola stringa JSON valida del formato: {"line":"frase in prima persona"}';
+
+    return callLLM('Sei un personaggio di un videogioco di finanza. Rispondi in italiano, in prima persona, con voce distintiva.', userPrompt).then(function (text) {
+      var parsed = parseJsonObject(text);
+      if (parsed && parsed.line) return '"' + parsed.line + '"';
+      return '"' + (character.backstory || '...') + '"';
+    }).catch(function () {
+      return '"' + (character.backstory || '...') + '"';
+    });
+  }
+
+  function parseJsonObject(text) {
+    if (!text || typeof text !== 'string') return null;
+    var cleaned = text.trim();
+    var fence = String.fromCharCode(96, 96, 96);
+    if (cleaned.indexOf(fence) === 0) {
+      cleaned = cleaned.replace(new RegExp('^' + fence + '(?:json)?\\n?'), '').replace(new RegExp('\\n?' + fence + '$'), '');
+    }
+    var start = cleaned.indexOf('{');
+    var end = cleaned.lastIndexOf('}');
+    if (start === -1 || end === -1) return null;
+    try {
+      return JSON.parse(cleaned.substring(start, end + 1));
+    } catch (e) {
+      try {
+        var match = cleaned.match(/\{[\s\S]*\}/);
+        if (match) return JSON.parse(match[0]);
+      } catch (e2) {}
+      return null;
+    }
+  }
+
   function getCharacters(gameState) {
     var ns = ensureNarrativeState(gameState);
     return ns.characters || {};
@@ -696,6 +751,7 @@
     setRelationship: setRelationship,
     getRelationship: getRelationship,
     addMemory: addMemory,
+    generateDynamicDialogue: generateDynamicDialogue,
     isEnabled: isEnabled
   };
 

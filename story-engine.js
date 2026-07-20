@@ -15,6 +15,12 @@
   function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
   function uid() { return 'id_' + Math.random().toString(36).substr(2, 9); }
+  function money(v) {
+    if (v >= 1e9) return (v / 1e9).toFixed(2) + 'Mrd';
+    if (v >= 1e6) return (v / 1e6).toFixed(2) + 'Mln';
+    if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+    return v.toFixed(0);
+  }
 
   // ============================================================
   // NPC E DIALOGHI
@@ -1624,6 +1630,37 @@
     if (!npc || !npc.dialogues) return null;
     if (index === undefined) return pick(npc.dialogues);
     return npc.dialogues[index] || null;
+  };
+
+  StoryEngine.prototype.getDynamicDialogue = function (npcId, gameState) {
+    var npc = this.getNPC(npcId);
+    if (!npc) return null;
+
+    // Se c'e' il Narrative Engine, costruisci un dialogo contestuale
+    if (typeof LLMNarrativeEngine !== 'undefined' && LLMNarrativeEngine.getCharacter) {
+      var charId = 'npc:' + (npc.name || npcId).toLowerCase().replace(/[^a-z0-9]/g, '_');
+      var character = LLMNarrativeEngine.getCharacter(gameState, charId);
+      var memories = [];
+      if (LLMNarrativeEngine.getCharacterMemories) {
+        memories = LLMNarrativeEngine.getCharacterMemories(gameState, charId, 3);
+      }
+
+      var context = '';
+      if (gameState && gameState.player) {
+        var p = gameState.player;
+        context = 'Settimana ' + p.week + ', patrimonio ' + money(p.netWorth) + ', etica ' + p.ethics + '/100.';
+      }
+
+      var memoryText = memories.map(function (m) { return m.text; }).join('. ');
+      var line = npc.name + ' (' + npc.role + ')';
+      if (character && character.currentMood) line += ' — umore ' + character.currentMood;
+      if (memoryText) line += ': "' + memoryText + '"';
+      if (context) line += ' [' + context + ']';
+      return line;
+    }
+
+    // Fallback statico
+    return this.getDialogue(npcId);
   };
 
   StoryEngine.prototype.getChapter = function (id) {

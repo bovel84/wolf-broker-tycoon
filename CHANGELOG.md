@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.4.0] — 2025-06-26
+
+### Aggiunto
+- **Dialoghi dinamici NPC**: `story-engine.js` supporta `getDynamicDialogue()` usando `LLMNarrativeEngine` quando disponibile.
+- **Character modal** nella UI: ogni personaggio del Diario può essere aperto, mostrare tratti, backstory, memorie e una risposta generata in tempo reale.
+- **Memorie di gameplay** per clienti, agenti e competitor:
+  - nuovi clienti diventano eventi narrativi
+  - clienti reagiscono a forti guadagni/perdite
+  - agenti traditori o in crescita lasciano tracce narrative
+  - competitor registrano operazioni significative nel diario
+- **Roster competitor persistito nello stato** per alimentare il Narrative Engine.
+- **Memorie societarie**: le delibere approvate in assemblea generano tracce narrative legate al CEO/board.
+
+### Cambiato
+- La UI narrativa non è più solo lettura: ora è un primo livello di interazione col mondo vivo.
+
 ## [1.3.0] — 2025-06-26
 
 ### Aggiunto

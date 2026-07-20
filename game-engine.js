@@ -881,6 +881,9 @@
     if (this.state.clients.length > p.stats.maxClients) p.stats.maxClients = this.state.clients.length;
     this.emit('clientJoined', client);
     this.notify('client', 'Nuovo Cliente!', name + ' ha affidato ' + formatMoney(capital) + ' (fee ' + (feeRate * 100) + '%)');
+    if (this.state.narrative) {
+      this.addNarrativeMemory('client:' + name.toLowerCase().replace(/[^a-z0-9]/g, '_'), name + ' diventa cliente del broker affidando ' + formatMoney(capital) + '.', 'positive', 5);
+    }
     this._checkAchievements();
     return client;
   };
@@ -915,6 +918,15 @@
       // Satisfaction update
       if (growth > 0) c.satisfaction = clamp(c.satisfaction + 1, 0, 100);
       else c.satisfaction = clamp(c.satisfaction - 2, 0, 100);
+
+      // Narrative memory for client
+      if (this.state.narrative) {
+        if (growth < -0.05) {
+          this.addNarrativeMemory('client:' + c.name.toLowerCase().replace(/[^a-z0-9]/g, '_'), c.name + ' e\' preoccupato per una perdita del ' + (-growth * 100).toFixed(1) + '% sul capitale.', 'negative', 6);
+        } else if (growth > 0.05) {
+          this.addNarrativeMemory('client:' + c.name.toLowerCase().replace(/[^a-z0-9]/g, '_'), c.name + ' e\' entusiasta di un guadagno del ' + (growth * 100).toFixed(1) + '% sul capitale.', 'positive', 5);
+        }
+      }
 
       // Client leaves if satisfaction too low
       if (c.satisfaction < 20 && rng() < 0.3) {
@@ -1016,8 +1028,18 @@
         this.notify('danger', 'Tradimento!', a.name + ' ti ha tradito e rubato ' + formatMoney(stolen) + '!');
         this.emit('agentBetrayal', { agent: a, stolen: stolen });
         this.state.agents.splice(i, 1);
+        if (this.state.narrative) {
+          this.addNarrativeMemory('agent:' + a.name.toLowerCase().replace(/[^a-z0-9]/g, '_'), a.name + ' ha tradito il broker rubando ' + formatMoney(stolen) + '.', 'negative', 9);
+        }
         this._checkAchievements();
         continue;
+      }
+
+      // Agent narrative memory: level up / mistakes
+      if (this.state.narrative) {
+        if (a.totalEarned > a.salary * 20) {
+          this.addNarrativeMemory('agent:' + a.name.toLowerCase().replace(/[^a-z0-9]/g, '_'), a.name + ' e\' salito di livello ed e\' diventato piu\' efficiente.', 'positive', 5);
+        }
       }
 
       // Level up agent
@@ -1867,6 +1889,7 @@
 
   GameEngine.prototype._applyAssemblyEffect = function (company, prop) {
     var impact = prop.impact || {};
+    var actorId = 'ceo:' + ((company.ceoName || (company.name.split(' ')[0] + ' CEO')).toLowerCase().replace(/[^a-z0-9]/g, '_'));
     if (impact.type === 'div') {
       company.dividendYield = (company.dividendYield || 0) * impact.factor;
       company.price *= impact.price || 1.02;
@@ -1899,6 +1922,7 @@
     }
     company.price = Math.max(0.10, roundCents(company.price));
     company.marketCap = company.price * company.sharesOutstanding;
+    this.addNarrativeMemory(actorId, 'Il board di ' + company.name + ' ha visto approvare la proposta "' + prop.name + '". Il mercato reagisce.', 'positive', 6);
   };
 
   /* ==========================================================================
@@ -2218,7 +2242,32 @@
         }
         this._competitorEngine.setMarketData({ stocks: stocks, currentWeek: this.state.player.week });
         this._competitorEngine.setPlayerData(posArr, this.state.player.cash, this.state.player.reputation.wallStreet || 50, this.state.player.xp || 0);
-        this._competitorEngine.processWeek();
+        var compResult = this._competitorEngine.processWeek();
+
+        // Persist competitor roster into state for Narrative Engine
+        if (!this.state.competitors) this.state.competitors = { list: [] };
+        this.state.competitors.list = [];
+        if (this._competitorEngine.competitors && this._competitorEngine.competitors.length) {
+          for (var cx = 0; cx < this._competitorEngine.competitors.length; cx++) {
+            var ccx = this._competitorEngine.competitors[cx];
+            this.state.competitors.list.push({
+              name: ccx.name || ccx.nickname || ('Competitor ' + (cx + 1)),
+              capital: ccx.capital || 0,
+              strategy: ccx.strategy || 'mixed',
+              relationship: ccx.relationship || 'neutral'
+            });
+          }
+        }
+
+        // Narrative memory for competitor actions
+        if (this.state.narrative && compResult && compResult.trades && compResult.trades.length) {
+          for (var ct = 0; ct < compResult.trades.length; ct++) {
+            var t = compResult.trades[ct];
+            if (!t.competitor || (!t.competitor.name && !t.competitor.nickname)) continue;
+            var compName = t.competitor.name || t.competitor.nickname;
+            this.addNarrativeMemory('competitor:' + compName.toLowerCase().replace(/[^a-z0-9]/g, '_'), compName + ' ha effettuato un\'operazione ' + t.action + ' su ' + (t.target || 'il mercato') + '.', 'neutral', 4);
+          }
+        }
       } catch (e) {}
     }
 
@@ -2301,6 +2350,23 @@
   /* ==========================================================================
    * PUBLIC API HELPERS
    * ========================================================================== */
+
+  GameEngine.prototype.addNarrativeMemory = function (actorId, text, impact, importance) {
+    var NarrativeEngine = (typeof LLMNarrativeEngine !== 'undefined') ? LLMNarrativeEngine : null;
+    if (!NarrativeEngine && typeof require === 'function') {
+      try { NarrativeEngine = require('./llm-narrative-engine.js'); } catch (e) {}
+    }
+    if (!NarrativeEngine || !NarrativeEngine.addMemory || !this.state) return false;
+    NarrativeEngine.ensureNarrativeState(this.state);
+    NarrativeEngine.addMemory(this.state, {
+      type: 'gameplay',
+      text: text,
+      actors: actorId ? [actorId] : [],
+      impact: impact || 'neutral',
+      importance: importance || 5
+    });
+    return true;
+  };
 
   GameEngine.prototype.getPortfolio = function () {
     var arr = [];

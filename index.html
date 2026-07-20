@@ -441,6 +441,14 @@ tr:hover{background:var(--bg3)}
   </div>
 </div>
 
+<!-- CHARACTER MODAL -->
+<div class="modal-overlay" id="character-modal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="character-modal-title">Personaggio</h3><button class="modal-close" onclick="closeCharacterModal()">&times;</button></div>
+    <div class="modal-body" id="character-modal-body"></div>
+  </div>
+</div>
+
 <!-- CONFIRM MODAL -->
 <div class="modal-overlay" id="confirm-modal">
   <div class="modal" style="max-width:400px">
@@ -1723,6 +1731,65 @@ function renderNarrative(){
     memEl.innerHTML=memHtml;
   }
 }
+
+function openCharacterModal(characterId){
+  if(!G||!G.narrative||!G.narrative.characters)return;
+  var c=G.narrative.characters[characterId];
+  if(!c)return;
+  var body=document.getElementById('character-modal-body');
+  var title=document.getElementById('character-modal-title');
+  if(!body||!title)return;
+  title.textContent=c.name;
+
+  var rel=0;
+  if(G.narrative.relationships&&G.narrative.relationships[characterId]&&G.narrative.relationships[characterId]['player:broker']){
+    rel=G.narrative.relationships[characterId]['player:broker'].value||0;
+  }
+
+  var html='';
+  html+='<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px"><div><strong>'+c.name+'</strong><div class="gray" style="font-size:12px">'+c.role+' · '+c.namespace+'</div></div><div><span class="pill b">Mood: '+(c.currentMood||'neutrale')+'</span> <span class="pill y">Relazione: '+rel+'</span></div></div>';
+  html+='<div style="margin-bottom:12px"><div class="gray" style="font-size:11px;margin-bottom:4px">Tratti</div><div>'+(c.traits||[]).map(function(t){return '<span class="pill p" style="margin-right:4px">'+t+'</span>';}).join('')+'</div></div>';
+  if(c.backstory) html+='<div class="card" style="padding:10px;margin-bottom:12px"><h3>Backstory</h3><div style="font-size:12px;line-height:1.5">'+c.backstory+'</div></div>';
+  html+='<div class="card" style="padding:10px;margin-bottom:12px"><h3>Voce del personaggio</h3><div id="character-live-dialogue" style="font-size:13px;line-height:1.6">Sto pensando...</div><div style="margin-top:8px"><button class="btn btn-blue btn-sm" onclick="refreshCharacterDialogue(\''+characterId+'\')">Rigenera risposta</button></div></div>';
+
+  var memHtml='';
+  var mems=(c.memory||[]).slice(0,5);
+  if(mems.length){
+    memHtml+='<div class="card" style="padding:10px"><h3>Memorie recenti</h3>';
+    for(var i=0;i<mems.length;i++){
+      var memObj=null;
+      var all=(G.narrative.memories||[]);
+      for(var j=0;j<all.length;j++){ if(all[j].id===mems[i]||all[j].id===mems[i].id){ memObj=all[j]; break; } }
+      if(memObj) memHtml+='<div class="news-item impact-'+(memObj.impact||'neutral')+'"><span class="news-time">Sett.'+memObj.week+'</span><div class="news-title">'+memObj.text+'</div></div>';
+    }
+    memHtml+='</div>';
+  }
+  html+=memHtml;
+
+  body.innerHTML=html;
+  document.getElementById('character-modal').classList.add('show');
+  refreshCharacterDialogue(characterId);
+}
+
+function refreshCharacterDialogue(characterId){
+  var el=document.getElementById('character-live-dialogue');
+  if(!el||!G||!G.narrative||!G.narrative.characters)return;
+  var c=G.narrative.characters[characterId];
+  if(!c)return;
+  el.textContent='Sto pensando...';
+  var state=(typeof wolfBridge!=='undefined'&&wolfBridge.getEngine)?wolfBridge.getEngine().getState():null;
+  if(typeof LLMNarrativeEngine!=='undefined'&&LLMNarrativeEngine.generateDynamicDialogue&&state){
+    LLMNarrativeEngine.generateDynamicDialogue(c,state).then(function(line){
+      el.textContent=line||'...';
+    }).catch(function(){
+      el.textContent=c.backstory||'...';
+    });
+  }else{
+    el.textContent=c.backstory||'...';
+  }
+}
+
+function closeCharacterModal(){document.getElementById('character-modal').classList.remove('show')}
 
 function renderTransactions(){
   var el=document.getElementById('tx-body');

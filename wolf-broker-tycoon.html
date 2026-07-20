@@ -448,6 +448,14 @@ tr:hover{background:var(--bg3)}
   </div>
 </div>
 
+<!-- CHARACTER MODAL -->
+<div class="modal-overlay" id="character-modal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="character-modal-title">Personaggio</h3><button class="modal-close" onclick="closeCharacterModal()">&times;</button></div>
+    <div class="modal-body" id="character-modal-body"></div>
+  </div>
+</div>
+
 <!-- CONFIRM MODAL -->
 <div class="modal-overlay" id="confirm-modal">
   <div class="modal" style="max-width:400px">
@@ -4241,6 +4249,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     if (this.state.clients.length > p.stats.maxClients) p.stats.maxClients = this.state.clients.length;
     this.emit('clientJoined', client);
     this.notify('client', 'Nuovo Cliente!', name + ' ha affidato ' + formatMoney(capital) + ' (fee ' + feeRate * 100 + '%)');
+    if (this.state.narrative) {
+      this.addNarrativeMemory('client:' + name.toLowerCase().replace(/[^a-z0-9]/g, '_'), name + ' diventa cliente del broker affidando ' + formatMoney(capital) + '.', 'positive', 5);
+    }
     this._checkAchievements();
     return client;
   };
@@ -4273,6 +4284,15 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
 
       // Satisfaction update
       if (growth > 0) c.satisfaction = clamp(c.satisfaction + 1, 0, 100);else c.satisfaction = clamp(c.satisfaction - 2, 0, 100);
+
+      // Narrative memory for client
+      if (this.state.narrative) {
+        if (growth < -0.05) {
+          this.addNarrativeMemory('client:' + c.name.toLowerCase().replace(/[^a-z0-9]/g, '_'), c.name + ' e\' preoccupato per una perdita del ' + (-growth * 100).toFixed(1) + '% sul capitale.', 'negative', 6);
+        } else if (growth > 0.05) {
+          this.addNarrativeMemory('client:' + c.name.toLowerCase().replace(/[^a-z0-9]/g, '_'), c.name + ' e\' entusiasta di un guadagno del ' + (growth * 100).toFixed(1) + '% sul capitale.', 'positive', 5);
+        }
+      }
 
       // Client leaves if satisfaction too low
       if (c.satisfaction < 20 && rng() < 0.3) {
@@ -4377,8 +4397,18 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           stolen: stolen
         });
         this.state.agents.splice(i, 1);
+        if (this.state.narrative) {
+          this.addNarrativeMemory('agent:' + a.name.toLowerCase().replace(/[^a-z0-9]/g, '_'), a.name + ' ha tradito il broker rubando ' + formatMoney(stolen) + '.', 'negative', 9);
+        }
         this._checkAchievements();
         continue;
+      }
+
+      // Agent narrative memory: level up / mistakes
+      if (this.state.narrative) {
+        if (a.totalEarned > a.salary * 20) {
+          this.addNarrativeMemory('agent:' + a.name.toLowerCase().replace(/[^a-z0-9]/g, '_'), a.name + ' e\' salito di livello ed e\' diventato piu\' efficiente.', 'positive', 5);
+        }
       }
 
       // Level up agent
@@ -5472,6 +5502,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   };
   GameEngine.prototype._applyAssemblyEffect = function (company, prop) {
     var impact = prop.impact || {};
+    var actorId = 'ceo:' + (company.ceoName || company.name.split(' ')[0] + ' CEO').toLowerCase().replace(/[^a-z0-9]/g, '_');
     if (impact.type === 'div') {
       company.dividendYield = (company.dividendYield || 0) * impact.factor;
       company.price *= impact.price || 1.02;
@@ -5504,6 +5535,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     }
     company.price = Math.max(0.10, roundCents(company.price));
     company.marketCap = company.price * company.sharesOutstanding;
+    this.addNarrativeMemory(actorId, 'Il board di ' + company.name + ' ha visto approvare la proposta "' + prop.name + '". Il mercato reagisce.', 'positive', 6);
   };
 
   /* ==========================================================================
@@ -5851,7 +5883,34 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
           currentWeek: this.state.player.week
         });
         this._competitorEngine.setPlayerData(posArr, this.state.player.cash, this.state.player.reputation.wallStreet || 50, this.state.player.xp || 0);
-        this._competitorEngine.processWeek();
+        var compResult = this._competitorEngine.processWeek();
+
+        // Persist competitor roster into state for Narrative Engine
+        if (!this.state.competitors) this.state.competitors = {
+          list: []
+        };
+        this.state.competitors.list = [];
+        if (this._competitorEngine.competitors && this._competitorEngine.competitors.length) {
+          for (var cx = 0; cx < this._competitorEngine.competitors.length; cx++) {
+            var ccx = this._competitorEngine.competitors[cx];
+            this.state.competitors.list.push({
+              name: ccx.name || ccx.nickname || 'Competitor ' + (cx + 1),
+              capital: ccx.capital || 0,
+              strategy: ccx.strategy || 'mixed',
+              relationship: ccx.relationship || 'neutral'
+            });
+          }
+        }
+
+        // Narrative memory for competitor actions
+        if (this.state.narrative && compResult && compResult.trades && compResult.trades.length) {
+          for (var ct = 0; ct < compResult.trades.length; ct++) {
+            var t = compResult.trades[ct];
+            if (!t.competitor || !t.competitor.name && !t.competitor.nickname) continue;
+            var compName = t.competitor.name || t.competitor.nickname;
+            this.addNarrativeMemory('competitor:' + compName.toLowerCase().replace(/[^a-z0-9]/g, '_'), compName + ' ha effettuato un\'operazione ' + t.action + ' su ' + (t.target || 'il mercato') + '.', 'neutral', 4);
+          }
+        }
       } catch (e) {}
     }
 
@@ -5939,6 +5998,24 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
    * PUBLIC API HELPERS
    * ========================================================================== */
 
+  GameEngine.prototype.addNarrativeMemory = function (actorId, text, impact, importance) {
+    var NarrativeEngine = typeof LLMNarrativeEngine !== 'undefined' ? LLMNarrativeEngine : null;
+    if (!NarrativeEngine && typeof require === 'function') {
+      try {
+        NarrativeEngine = require('./llm-narrative-engine.js');
+      } catch (e) {}
+    }
+    if (!NarrativeEngine || !NarrativeEngine.addMemory || !this.state) return false;
+    NarrativeEngine.ensureNarrativeState(this.state);
+    NarrativeEngine.addMemory(this.state, {
+      type: 'gameplay',
+      text: text,
+      actors: actorId ? [actorId] : [],
+      impact: impact || 'neutral',
+      importance: importance || 5
+    });
+    return true;
+  };
   GameEngine.prototype.getPortfolio = function () {
     var arr = [];
     var positions = this.state.portfolio.positions;
@@ -7650,6 +7727,12 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   }
   function uid() {
     return 'id_' + Math.random().toString(36).substr(2, 9);
+  }
+  function money(v) {
+    if (v >= 1e9) return (v / 1e9).toFixed(2) + 'Mrd';
+    if (v >= 1e6) return (v / 1e6).toFixed(2) + 'Mln';
+    if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+    return v.toFixed(0);
   }
 
   // ============================================================
@@ -10882,6 +10965,36 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     if (index === undefined) return pick(npc.dialogues);
     return npc.dialogues[index] || null;
   };
+  StoryEngine.prototype.getDynamicDialogue = function (npcId, gameState) {
+    var npc = this.getNPC(npcId);
+    if (!npc) return null;
+
+    // Se c'e' il Narrative Engine, costruisci un dialogo contestuale
+    if (typeof LLMNarrativeEngine !== 'undefined' && LLMNarrativeEngine.getCharacter) {
+      var charId = 'npc:' + (npc.name || npcId).toLowerCase().replace(/[^a-z0-9]/g, '_');
+      var character = LLMNarrativeEngine.getCharacter(gameState, charId);
+      var memories = [];
+      if (LLMNarrativeEngine.getCharacterMemories) {
+        memories = LLMNarrativeEngine.getCharacterMemories(gameState, charId, 3);
+      }
+      var context = '';
+      if (gameState && gameState.player) {
+        var p = gameState.player;
+        context = 'Settimana ' + p.week + ', patrimonio ' + money(p.netWorth) + ', etica ' + p.ethics + '/100.';
+      }
+      var memoryText = memories.map(function (m) {
+        return m.text;
+      }).join('. ');
+      var line = npc.name + ' (' + npc.role + ')';
+      if (character && character.currentMood) line += ' — umore ' + character.currentMood;
+      if (memoryText) line += ': "' + memoryText + '"';
+      if (context) line += ' [' + context + ']';
+      return line;
+    }
+
+    // Fallback statico
+    return this.getDialogue(npcId);
+  };
   StoryEngine.prototype.getChapter = function (id) {
     return CHAPTERS[id - 1] || null;
   };
@@ -13806,6 +13919,52 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     var ns = ensureNarrativeState(gameState);
     return ns.characters[id] || null;
   }
+  function generateDynamicDialogue(character, gameState, promptStyle) {
+    if (!config.enabled || !config.endpoint || !config.apiKey) {
+      return Promise.resolve('"' + (character.backstory || 'Non ho nulla da dire in questo momento.') + '"');
+    }
+    if (callsThisTurn >= config.maxCallsPerTurn) {
+      return Promise.resolve('"' + (character.backstory || '...') + '"');
+    }
+    var p = gameState.player;
+    var memories = getCharacterMemories(gameState, character.id, 3);
+    var relToPlayer = getRelationship(gameState, character.id, 'player:broker');
+    var recentEvents = (ensureNarrativeState(gameState).events || []).slice(0, 3);
+    var memText = memories.map(function (m) {
+      return m.text;
+    }).join('. ');
+    var evText = recentEvents.map(function (e) {
+      return e.title + ': ' + e.summary;
+    }).join('. ');
+    var userPrompt = 'Personaggio: ' + character.name + ' (' + character.role + '), tratti: ' + (character.traits || []).join(', ') + ', umore: ' + character.currentMood + '.\n' + 'Relazione con il giocatore: ' + relToPlayer + '/100.\n' + 'Memorie del personaggio: ' + (memText || 'nessuna') + '.\n' + 'Eventi recenti: ' + (evText || 'nessuno') + '.\n' + 'Contesto giocatore: settimana ' + p.week + ', patrimonio ' + money(p.netWorth) + ', etica ' + p.ethics + '/100.\n' + 'Stile richiesto: ' + (promptStyle || 'risposta diretta e coinvolgente in italiano, in prima persona, max 2 frasi') + '.\n' + 'Rispondi SOLO con una singola stringa JSON valida del formato: {"line":"frase in prima persona"}';
+    return callLLM('Sei un personaggio di un videogioco di finanza. Rispondi in italiano, in prima persona, con voce distintiva.', userPrompt).then(function (text) {
+      var parsed = parseJsonObject(text);
+      if (parsed && parsed.line) return '"' + parsed.line + '"';
+      return '"' + (character.backstory || '...') + '"';
+    }).catch(function () {
+      return '"' + (character.backstory || '...') + '"';
+    });
+  }
+  function parseJsonObject(text) {
+    if (!text || typeof text !== 'string') return null;
+    var cleaned = text.trim();
+    var fence = String.fromCharCode(96, 96, 96);
+    if (cleaned.indexOf(fence) === 0) {
+      cleaned = cleaned.replace(new RegExp('^' + fence + '(?:json)?\\n?'), '').replace(new RegExp('\\n?' + fence + '$'), '');
+    }
+    var start = cleaned.indexOf('{');
+    var end = cleaned.lastIndexOf('}');
+    if (start === -1 || end === -1) return null;
+    try {
+      return JSON.parse(cleaned.substring(start, end + 1));
+    } catch (e) {
+      try {
+        var match = cleaned.match(/\{[\s\S]*\}/);
+        if (match) return JSON.parse(match[0]);
+      } catch (e2) {}
+      return null;
+    }
+  }
   function getCharacters(gameState) {
     var ns = ensureNarrativeState(gameState);
     return ns.characters || {};
@@ -13843,6 +14002,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     setRelationship: setRelationship,
     getRelationship: getRelationship,
     addMemory: addMemory,
+    generateDynamicDialogue: generateDynamicDialogue,
     isEnabled: isEnabled
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = global.LLMNarrativeEngine;
@@ -24135,6 +24295,67 @@ function renderNarrative() {
     if (memHtml === '') memHtml = '<div class="gray" style="font-size:12px;padding:8px">Nessuna memoria.</div>';
     memEl.innerHTML = memHtml;
   }
+}
+function openCharacterModal(characterId) {
+  if (!G || !G.narrative || !G.narrative.characters) return;
+  var c = G.narrative.characters[characterId];
+  if (!c) return;
+  var body = document.getElementById('character-modal-body');
+  var title = document.getElementById('character-modal-title');
+  if (!body || !title) return;
+  title.textContent = c.name;
+  var rel = 0;
+  if (G.narrative.relationships && G.narrative.relationships[characterId] && G.narrative.relationships[characterId]['player:broker']) {
+    rel = G.narrative.relationships[characterId]['player:broker'].value || 0;
+  }
+  var html = '';
+  html += '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px"><div><strong>' + c.name + '</strong><div class="gray" style="font-size:12px">' + c.role + ' · ' + c.namespace + '</div></div><div><span class="pill b">Mood: ' + (c.currentMood || 'neutrale') + '</span> <span class="pill y">Relazione: ' + rel + '</span></div></div>';
+  html += '<div style="margin-bottom:12px"><div class="gray" style="font-size:11px;margin-bottom:4px">Tratti</div><div>' + (c.traits || []).map(function (t) {
+    return '<span class="pill p" style="margin-right:4px">' + t + '</span>';
+  }).join('') + '</div></div>';
+  if (c.backstory) html += '<div class="card" style="padding:10px;margin-bottom:12px"><h3>Backstory</h3><div style="font-size:12px;line-height:1.5">' + c.backstory + '</div></div>';
+  html += '<div class="card" style="padding:10px;margin-bottom:12px"><h3>Voce del personaggio</h3><div id="character-live-dialogue" style="font-size:13px;line-height:1.6">Sto pensando...</div><div style="margin-top:8px"><button class="btn btn-blue btn-sm" onclick="refreshCharacterDialogue(\'' + characterId + '\')">Rigenera risposta</button></div></div>';
+  var memHtml = '';
+  var mems = (c.memory || []).slice(0, 5);
+  if (mems.length) {
+    memHtml += '<div class="card" style="padding:10px"><h3>Memorie recenti</h3>';
+    for (var i = 0; i < mems.length; i++) {
+      var memObj = null;
+      var all = G.narrative.memories || [];
+      for (var j = 0; j < all.length; j++) {
+        if (all[j].id === mems[i] || all[j].id === mems[i].id) {
+          memObj = all[j];
+          break;
+        }
+      }
+      if (memObj) memHtml += '<div class="news-item impact-' + (memObj.impact || 'neutral') + '"><span class="news-time">Sett.' + memObj.week + '</span><div class="news-title">' + memObj.text + '</div></div>';
+    }
+    memHtml += '</div>';
+  }
+  html += memHtml;
+  body.innerHTML = html;
+  document.getElementById('character-modal').classList.add('show');
+  refreshCharacterDialogue(characterId);
+}
+function refreshCharacterDialogue(characterId) {
+  var el = document.getElementById('character-live-dialogue');
+  if (!el || !G || !G.narrative || !G.narrative.characters) return;
+  var c = G.narrative.characters[characterId];
+  if (!c) return;
+  el.textContent = 'Sto pensando...';
+  var state = typeof wolfBridge !== 'undefined' && wolfBridge.getEngine ? wolfBridge.getEngine().getState() : null;
+  if (typeof LLMNarrativeEngine !== 'undefined' && LLMNarrativeEngine.generateDynamicDialogue && state) {
+    LLMNarrativeEngine.generateDynamicDialogue(c, state).then(function (line) {
+      el.textContent = line || '...';
+    }).catch(function () {
+      el.textContent = c.backstory || '...';
+    });
+  } else {
+    el.textContent = c.backstory || '...';
+  }
+}
+function closeCharacterModal() {
+  document.getElementById('character-modal').classList.remove('show');
 }
 function renderTransactions() {
   var el = document.getElementById('tx-body');

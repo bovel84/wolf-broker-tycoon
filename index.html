@@ -24622,7 +24622,7 @@ var ASSEMBLY_PROPOSALS = [{
   desc: 'Aumentare il dividendo trimestrale del 25%',
   effect: function effect(c) {
     c.div *= 1.25;
-    return 'Dividendo aumentato a ' + (c.div * 100).toFixed(1) + '%';
+    return 'Dividendo aumentato a ' + c.div.toFixed(1) + '%';
   },
   vote: 'positive'
 }, {
@@ -24631,7 +24631,7 @@ var ASSEMBLY_PROPOSALS = [{
   desc: 'Ridurre il dividendo per reinvestire',
   effect: function effect(c) {
     c.div *= 0.6;
-    return 'Dividendo ridotto a ' + (c.div * 100).toFixed(1) + '%';
+    return 'Dividendo ridotto a ' + c.div.toFixed(1) + '%';
   },
   vote: 'neutral'
 }, {
@@ -25432,7 +25432,7 @@ function openTradeModal(ticker) {
   var body = document.getElementById('trade-modal-body');
   var html = '<div style="margin-bottom:14px">';
   html += '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><strong>' + c.name + ' (' + ticker + ')</strong><span class="pill b">' + SECTOR_NAMES[c.sector] + '</span></div>';
-  html += '<div style="font-size:12px;color:var(--text2)">Prezzo attuale: <strong style="color:var(--text)">' + formatEur(c.price) + '</strong> • Div: ' + (c.div * 100).toFixed(1) + '% • Vol: ' + (c.vol * 100).toFixed(1) + '%</div>';
+  html += '<div style="font-size:12px;color:var(--text2)">Prezzo attuale: <strong style="color:var(--text)">' + formatEur(c.price) + '</strong> • Div: ' + c.div.toFixed(1) + '% • Vol: ' + (c.vol * 100).toFixed(1) + '%</div>';
   if (c.description) {
     html += '<div style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.4">' + c.description + '</div>';
   }
@@ -25462,11 +25462,13 @@ function openTradeModal(ticker) {
 
   // Shares input
   html += '<div class="trade-row"><label>Quantita\':</label>';
-  html += '<input type="number" id="trade-shares" value="1" min="1" oninput="updateTradePreview()" style="width:80px">';
-  html += '<button class="btn btn-sm" onclick="setShares(10)">+10</button>';
-  html += '<button class="btn btn-sm" onclick="setShares(50)">+50</button>';
-  html += '<button class="btn btn-sm" onclick="setShares(100)">+100</button>';
-  if (owned > 0) html += '<button class="btn btn-sm" onclick="setShares(' + owned + ')">Max</button>';
+  html += '<input type="number" id="trade-shares" value="1" min="1" oninput="updateTradePreview()" style="width:100%;min-height:48px;font-size:16px;margin-bottom:6px">';
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  html += '<button class="btn btn-sm" style="flex:1;min-height:44px;font-size:14px" onclick="setShares(10)">+10</button>';
+  html += '<button class="btn btn-sm" style="flex:1;min-height:44px;font-size:14px" onclick="setShares(50)">+50</button>';
+  html += '<button class="btn btn-sm" style="flex:1;min-height:44px;font-size:14px" onclick="setShares(100)">+100</button>';
+  if (owned > 0) html += '<button class="btn btn-sm" style="flex:1;min-height:44px;font-size:14px" onclick="setShares(' + owned + ')">Max</button>';
+  html += '</div>';
   html += '</div>';
 
   // Limit price
@@ -26153,7 +26155,7 @@ function renderMarket() {
     var chClass = ch >= 0 ? 'green' : 'red';
     var tradeable = c.listed !== false && !c.tradingHalted;
     var status = c.listed === false ? 'RITIRATA' : c.tradingHalted ? 'SOSPESA' : '';
-    html += '<tr style="cursor:' + (tradeable ? 'pointer' : 'default') + ';opacity:' + (tradeable ? '1' : '.55') + '"' + (tradeable ? ' onclick="openTradeModal(\'' + c.ticker + '\')"' : '') + '><td class="ticker-cell">' + c.ticker + '</td><td>' + c.name + (status ? ' <span class="pill r">' + status + '</span>' : '') + '</td><td><span class="pill" style="background:' + SECTOR_COLORS[c.sector] + '22;color:' + SECTOR_COLORS[c.sector] + '">' + SECTOR_NAMES[c.sector] + '</span></td><td class="num">' + formatEur(c.price) + '</td><td class="num ' + chClass + '">' + formatPct(ch) + '</td><td class="num">' + (c.cap / 1000).toFixed(0) + 'M</td><td class="num">' + (c.vol * 100).toFixed(1) + '%</td><td class="num ' + (c.div > 0 ? 'green' : '') + '">' + (c.div * 100).toFixed(1) + '%</td><td>' + (tradeable ? '<button class="btn btn-sm btn-blue" onclick="event.stopPropagation();openTradeModal(\'' + c.ticker + '\')">Trade</button>' : '<button class="btn btn-sm" disabled>Non quotata</button>') + '</td></tr>';
+    html += '<tr style="cursor:' + (tradeable ? 'pointer' : 'default') + ';opacity:' + (tradeable ? '1' : '.55') + '"' + (tradeable ? ' onclick="openTradeModal(\'' + c.ticker + '\')"' : '') + '><td class="ticker-cell">' + c.ticker + '</td><td>' + c.name + (status ? ' <span class="pill r">' + status + '</span>' : '') + '</td><td><span class="pill" style="background:' + SECTOR_COLORS[c.sector] + '22;color:' + SECTOR_COLORS[c.sector] + '">' + SECTOR_NAMES[c.sector] + '</span></td><td class="num">' + formatEur(c.price) + '</td><td class="num ' + chClass + '">' + formatPct(ch) + '</td><td class="num">' + (c.cap / 1000).toFixed(0) + 'M</td><td class="num">' + (c.vol * 100).toFixed(1) + '%</td><td class="num ' + (c.div > 0 ? 'green' : '') + '">' + c.div.toFixed(1) + '%</td><td>' + (tradeable ? '<button class="btn btn-sm btn-blue" onclick="event.stopPropagation();openTradeModal(\'' + c.ticker + '\')">Trade</button>' : '<button class="btn btn-sm" disabled>Non quotata</button>') + '</td></tr>';
   });
   body.innerHTML = html;
 }

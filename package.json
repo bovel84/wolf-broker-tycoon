@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node build.js",
     "lint": "node scripts/lint-es5.js",
-    "test": "npm run lint && node test/integration.test.js && node test/gameplay.test.js && node test/balance.test.js && node test/html-build.test.js",
+    "test": "npm run lint && node test/integration.test.js && node test/gameplay.test.js && node test/balance.test.js && node test/ui.test.js && node test/html-build.test.js",
     "ci": "npm run lint && npm run build && npm test"
   },
   "repository": {

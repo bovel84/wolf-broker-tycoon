@@ -17,6 +17,17 @@ function findTradeableCompany(state, opts) {
   return state.market.companies[0];
 }
 
+function findNonPennyCompany(state, opts) {
+  opts = opts || {};
+  for (var i = 0; i < state.market.companies.length; i++) {
+    var c = state.market.companies[i];
+    if (c.isPenny) continue;
+    if (opts.maxPrice && c.price > opts.maxPrice) continue;
+    return c;
+  }
+  return state.market.companies[0];
+}
+
 function testShortSelling() {
   console.log('  Short selling');
   var ge = new GameEngine();
@@ -51,9 +62,9 @@ function testMarginTrading() {
   var ge = new GameEngine();
   var state = ge.createInitialState('MarginTest', 'normal');
   // Sblocca margin 2x (livello 4): netWorth >= 100000, xp >= 1000, 10 missioni
-  state.player.cash = 110000;
-  state.player.netWorth = 110000;
-  state.player.xp = 1000;
+  state.player.cash = 200000;
+  state.player.netWorth = 200000;
+  state.player.xp = 2000;
   for (var m = 0; m < 10; m++) {
     state.player.achievements.push({ id: 'mission_' + m, source: 'mission', week: 1 });
   }
@@ -80,7 +91,8 @@ function testMissionAndAchievement() {
   var before = state.player.achievements.length;
   var beforeMissions = ge.getCompletedMissions().length;
 
-  ge.buy(c.ticker, 1, {});
+  var buyResult = ge.buy(c.ticker, 1, {});
+  assert(buyResult.success, 'buy deve avere successo: ' + (buyResult.error || 'ok'));
   assert(state.player.stats.totalTrades >= 1, 'Deve avere almeno un trade');
 
   ge._checkAchievements();
@@ -128,7 +140,7 @@ function testSaveRoundTrip() {
   console.log('  Salvataggio round-trip');
   var ge = new GameEngine();
   var state = ge.createInitialState('SaveTest', 'normal');
-  var c = findTradeableCompany(state, { nonPenny: true, maxPrice: 50 });
+  var c = findNonPennyCompany(state, { maxPrice: 50 });
   ge.buy(c.ticker, 10, {});
 
   var serialized = ge._serializeState();

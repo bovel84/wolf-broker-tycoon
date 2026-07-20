@@ -33,6 +33,11 @@ Gestionale di broker azionario completo e realistico con modalità carriera e as
 - **Mercato del lavoro** — valutazioni quadrisettimanali, promozioni, licenziamenti, dimissioni e offerte dei concorrenti
 - **Società del giocatore** — capitale iniziale, affitto, dati, compliance, stipendi, clienti, masse, ricavi, costi e classifica contro le sei imprese
 - **Zona grigia** — soffiate, report falsi, ricatti, audit, multe e prove persistenti con conseguenze narrative e legali
+- **Portafoglio proprietario** — azioni totali, libere e impegnate, quota percentuale, voto, flottante, valore e costo medio
+- **Mercato dei blocchi** — offerte dei soci, premi/sconti, scadenze, ordini del giocatore e compratori IA
+- **Assemblee interattive** — voto con qualsiasi quota, incontri con i blocchi, campagne proxy, lobbying e controproposte
+- **Capo interattivo** — richieste con scadenze, premi, ordini discutibili, negoziazione, feedback, aumenti e contestazioni
+- **Colleghi con memoria** — conversazioni, aiuti, favori, sfide, segnalazioni, rivalità e reazioni LLM opzionali
 
 ## Tecnologia
 
@@ -68,6 +73,7 @@ Genera `wolf-broker-tycoon.html` single-file giocabile.
 | `broker-story.js` | Prologo, identità del broker, capitoli reattivi, relazioni e finali |
 | `player-life.js` | Condizione personale, spese, rischio, margin call, game over e riscatto |
 | `brokerage-career.js` | Disoccupazione, sei datori, colleghi IA, contratti, società propria e illeciti |
+| `stakeholder-interactions.js` | Quote, mercato dei blocchi, assemblee, capo e relazioni nel desk |
 | `build_html.py` | Assemblatore finale single-file |
 ## Configurazione sicura LLM
 

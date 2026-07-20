@@ -115,12 +115,22 @@ function testHTMLBuild() {
   assert(typeof window.advanceTurn === 'function', 'advanceTurn deve essere una funzione globale');
   assert(typeof window.newGame === 'function', 'newGame deve essere una funzione globale');
   assert(typeof window.renderAll === 'function', 'renderAll deve essere una funzione globale');
+  assert(window.ImmersiveEngine, 'ImmersiveEngine deve essere definito');
+  assert(window.ImmersiveUI, 'ImmersiveUI deve essere definita');
+  assert(window.document.getElementById('immersive-fab'), 'FAB Immersive Core mancante');
+  assert(window.document.getElementById('immersive-overlay'), 'Modal Immersive Core mancante');
+  window.ImmersiveUI.open('inbox');
+  assert(window.document.getElementById('immersive-overlay').classList.contains('show'), 'Modal Immersive non si apre');
+  assert(window.document.getElementById('immersive-body').textContent.indexOf('Inbox narrativa') >= 0, 'Inbox narrativa non renderizzata');
+  window.ImmersiveUI.close();
 
   log('Inizializzazione partita da HTML');
   window.newGame();
   assert(window.G, 'G (stato legacy) deve esistere dopo newGame');
   assert(window.G.companies.length >= 20, 'G.companies deve avere almeno 20 societa');
   assert(window.G.cash === 10000, 'G.cash iniziale deve essere 10000');
+  assert(window.G.narrative && window.G.narrative.immersive, 'Stato Immersive mancante dopo newGame');
+  assert(window.G.narrative.immersive.messages.length >= 1, 'Inbox iniziale vuota dopo newGame');
 
   log('Avanzamento turno da HTML');
   var result = window.advanceTurn();

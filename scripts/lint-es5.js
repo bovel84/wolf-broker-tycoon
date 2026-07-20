@@ -23,6 +23,8 @@ var TARGETS = [
   'llm-news-engine.js',
   'llm-game-master.js',
   'llm-narrative-engine.js',
+  'immersive-engine.js',
+  // 'immersive-ui.js', 'ui-engine.js' e 'competitor-engine.js' sono traspilati da Babel
   // 'competitor-engine.js',
   'world-engine.js',
   'corporate-lifecycle.js',

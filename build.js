@@ -32,6 +32,8 @@ const MODULE_FILES = [
   'player-life.js',
   'brokerage-career.js',
   'stakeholder-interactions.js',
+  'immersive-engine.js',
+  'immersive-ui.js',
 ];
 
 function readFile(name) {
@@ -221,6 +223,9 @@ function buildIntegrationJS() {
     "}",
     "// Attiva UI bridge come ultimo passo per sovrascrivere le funzioni legacy",
     "if(typeof wolfBridgeInstall === 'function'){ wolfBridgeInstall(); }",
+    "// Installa Immersive Core sul vero GameEngine dopo il bridge e la carriera",
+    "if(typeof ImmersiveEngine!=='undefined' && typeof wolfBridge!=='undefined' && wolfBridge.getEngine){ ImmersiveEngine.install(wolfBridge.getEngine()); }",
+    "if(typeof ImmersiveUI!=='undefined' && typeof ImmersiveEngine!=='undefined'){ ImmersiveUI.install(ImmersiveEngine); }",
     "// Ripristina wrapper del bridge per funzioni di trading sovrascritte da index.html inline",
     "if(typeof wolfBridge !== 'undefined' && wolfBridge.wrappers){",
     "  if(wolfBridge.wrappers.executeTrade) window.executeTrade = wolfBridge.wrappers.executeTrade;",

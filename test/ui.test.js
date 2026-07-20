@@ -64,6 +64,10 @@ function run() {
     assert(document.getElementById('view-' + views[v]), 'View ' + views[v] + ' mancante');
   }
 
+  // 8. Bundle contiene Immersive Core (l'esecuzione runtime e verificata da html-build.test.js)
+  assert(html.indexOf('ImmersiveEngine') >= 0, 'ImmersiveEngine non incluso nel bundle');
+  assert(html.indexOf('Immersive Core') >= 0, 'UI Immersive Core non inclusa nel bundle');
+
   console.log('UI/UX tests passed.');
 }
 

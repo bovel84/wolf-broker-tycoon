@@ -22238,7 +22238,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       note.innerHTML = '<h3>🗳️ Potere assembleare</h3><div class="gray" style="font-size:11px">Ogni azione dà diritto di voto. Incontra i blocchi, costruisci deleghe, finanzia campagne proxy o deposita una controproposta direttamente nella finestra dell’assemblea.</div>';
       av.insertBefore(note, av.firstChild);
     }
-    var bv = document.getElementById('view-brokerage');
+    var bv = document.getElementById('view-career') || document.getElementById('view-brokerage');
     if (bv && !document.getElementById('stakeholder-workplace-card')) {
       var wc = document.createElement('div');
       wc.id = 'stakeholder-workplace-card';

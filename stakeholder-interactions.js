@@ -400,7 +400,7 @@
     if (pv && !document.getElementById('stakeholder-portfolio-card')) { var pc = document.createElement('div'); pc.id = 'stakeholder-portfolio-card'; pc.className = 'card'; pc.innerHTML = '<h3>📊 Quote, voto e flottante</h3><div id="stakeholder-portfolio-content"></div>'; pv.insertBefore(pc, pv.firstChild); var mc = document.createElement('div'); mc.id = 'stakeholder-market-card'; mc.className = 'card'; mc.innerHTML = '<h3>🤝 Mercato dei blocchi azionari</h3><div id="stakeholder-market-content"></div>'; pv.appendChild(mc); }
     var av = document.getElementById('view-assembly');
     if (av && !document.getElementById('stakeholder-assembly-note')) { var note = document.createElement('div'); note.id = 'stakeholder-assembly-note'; note.className = 'card'; note.innerHTML = '<h3>🗳️ Potere assembleare</h3><div class="gray" style="font-size:11px">Ogni azione dà diritto di voto. Incontra i blocchi, costruisci deleghe, finanzia campagne proxy o deposita una controproposta direttamente nella finestra dell’assemblea.</div>'; av.insertBefore(note, av.firstChild); }
-    var bv = document.getElementById('view-brokerage');
+    var bv = document.getElementById('view-career') || document.getElementById('view-brokerage');
     if (bv && !document.getElementById('stakeholder-workplace-card')) { var wc = document.createElement('div'); wc.id = 'stakeholder-workplace-card'; wc.className = 'card'; wc.innerHTML = '<h3>💬 Capo, richieste e colleghi</h3><div id="stakeholder-workplace-content"></div>'; bv.insertBefore(wc, bv.firstChild); }
   }
 

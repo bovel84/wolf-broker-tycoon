@@ -28,54 +28,54 @@
 
   var DIFFICULTY_CONFIG = {
     easy: {
-      commissionRate: 0.002,
-      slippageRate: 0.001,
+      commissionRate: 0.001,
+      slippageRate: 0.0005,
       eventFrequency: 0.30,
       marketVolatility: 0.015,
       secAggression: 0.5,
-      marketBias: 0.003,
+      marketBias: 0.004,
       label: 'Facile'
     },
     normal: {
-      commissionRate: 0.005,
-      slippageRate: 0.003,
+      commissionRate: 0.0025,
+      slippageRate: 0.0015,
       eventFrequency: 0.50,
-      marketVolatility: 0.025,
+      marketVolatility: 0.012,
       secAggression: 1.0,
-      marketBias: 0.0,
+      marketBias: 0.0015,
       label: 'Normale'
     },
     hard: {
-      commissionRate: 0.008,
-      slippageRate: 0.005,
+      commissionRate: 0.005,
+      slippageRate: 0.003,
       eventFrequency: 0.70,
-      marketVolatility: 0.040,
+      marketVolatility: 0.030,
       secAggression: 1.5,
-      marketBias: -0.002,
+      marketBias: 0.000,
       label: 'Difficile'
     },
     nightmare: {
-      commissionRate: 0.012,
-      slippageRate: 0.008,
+      commissionRate: 0.010,
+      slippageRate: 0.006,
       eventFrequency: 0.85,
-      marketVolatility: 0.060,
+      marketVolatility: 0.050,
       secAggression: 2.5,
-      marketBias: -0.005,
+      marketBias: -0.003,
       label: 'Nightmare'
     }
   };
 
   var LEVELS = [
     { id: 1, name: 'Novizio', minNetWorth: 10000, minXP: 0, minMissions: 0, unlocks: ['long'], desc: 'Solo long positions. Impara le basi.' },
-    { id: 2, name: 'Apprendista', minNetWorth: 25000, minXP: 200, minMissions: 3, unlocks: ['long','limit'], desc: 'Limit orders sbloccati.' },
-    { id: 3, name: 'Trader', minNetWorth: 50000, minXP: 500, minMissions: 6, unlocks: ['long','limit','short'], desc: 'Short selling sbloccato.' },
-    { id: 4, name: 'Agente', minNetWorth: 100000, minXP: 1000, minMissions: 10, unlocks: ['long','limit','short','margin2x'], desc: 'Margin 2x sbloccato. Assumi agenti.' },
-    { id: 5, name: 'Broker', minNetWorth: 250000, minXP: 2000, minMissions: 15, unlocks: ['long','limit','short','margin2x','margin3x','penny'], desc: 'Margin 3x + Penny stocks.' },
-    { id: 6, name: 'Senior Broker', minNetWorth: 500000, minXP: 4000, minMissions: 20, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny'], desc: 'Margin 5x sbloccato.' },
-    { id: 7, name: 'Portfolio Manager', minNetWorth: 1000000, minXP: 8000, minMissions: 25, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options'], desc: 'Opzioni sbloccate.' },
-    { id: 8, name: 'Hedge Fund Manager', minNetWorth: 5000000, minXP: 15000, minMissions: 30, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options','darkpool'], desc: 'Dark pool sbloccato.' },
-    { id: 9, name: 'Market Wizard', minNetWorth: 10000000, minXP: 25000, minMissions: 35, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options','darkpool','all'], desc: 'Tutto sbloccato.' },
-    { id: 10, name: 'Leggenda di Wall Street', minNetWorth: 50000000, minXP: 50000, minMissions: 40, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options','darkpool','all','endgame'], desc: 'Modalità endgame.' }
+    { id: 2, name: 'Apprendista', minNetWorth: 15000, minXP: 200, minMissions: 3, unlocks: ['long','limit'], desc: 'Limit orders sbloccati.' },
+    { id: 3, name: 'Trader', minNetWorth: 30000, minXP: 500, minMissions: 6, unlocks: ['long','limit','short'], desc: 'Short selling sbloccato.' },
+    { id: 4, name: 'Agente', minNetWorth: 60000, minXP: 1000, minMissions: 10, unlocks: ['long','limit','short','margin2x'], desc: 'Margin 2x sbloccato. Assumi agenti.' },
+    { id: 5, name: 'Broker', minNetWorth: 120000, minXP: 2000, minMissions: 15, unlocks: ['long','limit','short','margin2x','margin3x','penny'], desc: 'Margin 3x + Penny stocks.' },
+    { id: 6, name: 'Senior Broker', minNetWorth: 250000, minXP: 4000, minMissions: 20, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny'], desc: 'Margin 5x sbloccato.' },
+    { id: 7, name: 'Portfolio Manager', minNetWorth: 500000, minXP: 8000, minMissions: 25, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options'], desc: 'Opzioni sbloccate.' },
+    { id: 8, name: 'Hedge Fund Manager', minNetWorth: 1500000, minXP: 15000, minMissions: 30, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options','darkpool'], desc: 'Dark pool sbloccato.' },
+    { id: 9, name: 'Market Wizard', minNetWorth: 4000000, minXP: 25000, minMissions: 35, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options','darkpool','all'], desc: 'Tutto sbloccato.' },
+    { id: 10, name: 'Leggenda di Wall Street', minNetWorth: 12000000, minXP: 50000, minMissions: 40, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options','darkpool','all','endgame'], desc: 'Modalità endgame.' }
   ];
 
   var CHAPTERS = [
@@ -396,9 +396,10 @@
         macro: {
           interestRate: 2.5,
           inflation: 2.0,
-          gdpGrowth: 1.5,
+          gdpGrowth: 2.5,
           unemployment: 5.0
         },
+        marketTrend: 0.002,
         pendingOrders: [],
         iposThisWeek: [],
         assembliesThisWeek: []
@@ -1533,7 +1534,7 @@
     }
 
     p.stats.totalTrades++;
-    this.addXP(10);
+    this.addXP(25);
     this._recordTrade('buy', company, shares, price, cost);
     this._updateReputation('wallStreet', 0.5);
     this._checkMissions();
@@ -1851,15 +1852,29 @@
     var diffCfg = this.state.settings.difficultyConfig;
     var companies = this.state.market.companies;
     var sentiment = this.state.market.sentiment;
+    var macro = this.state.market.macro;
+
+    // Evolve macro slowly towards stable growth
+    macro.gdpGrowth = clamp(macro.gdpGrowth + rngGauss(0, 0.03), -1.5, 5.0);
+    macro.inflation = clamp(macro.inflation + rngGauss(0, 0.015), 0.0, 8.0);
+
+    // Persistent market trend with mean reversion
+    if (!this.state.market.marketTrend) this.state.market.marketTrend = 0.002;
+    this.state.market.marketTrend = clamp(this.state.market.marketTrend + rngGauss(0, 0.001) - (this.state.market.marketTrend - 0.002) * 0.05, -0.005, 0.010);
+
+    // Market-wide trend from macro conditions
+    var macroTrend = (macro.gdpGrowth - 1.0) * 0.0010 - (macro.inflation - 2.5) * 0.0002;
+
     for (var i = 0; i < companies.length; i++) {
       var c = companies[i];
       c.prevClose = c.price;
-      // Fundamental growth + momentum + market bias + volatility
-      var fundamental = rngGauss(0.001, 0.01) + (sentiment - 50) / 5000;
-      var momentum = c.momentum * 0.3;
+      // Fundamental growth + momentum + market bias + macro trend + market cycle + volatility
+      var fundamental = rngGauss(0.008, 0.010) + (sentiment - 50) / 5000 + (c.sentiment - 50) / 8000;
+      var momentum = c.momentum * 0.30;
       var bias = diffCfg.marketBias;
+      var cycle = this.state.market.marketTrend;
       var noise = rngGauss(0, diffCfg.marketVolatility);
-      var change = fundamental + momentum + bias + noise;
+      var change = fundamental + momentum + bias + macroTrend + cycle + noise;
       c.price = Math.max(0.10, roundCents(c.price * (1 + change)));
       c.high = Math.max(c.high, c.price);
       c.low = Math.min(c.low, c.price);
@@ -2091,8 +2106,14 @@
     // Step 10: Process agents
     this._processAgents();
 
+    // Step 10.5: Weekly salary / income based on level
+    var salary = 0;
+    if (p.level >= 2) salary += 600 * p.level;
+    p.cash += salary;
+
     // Step 11: Update unrealized P&L and net worth
     this._updateUnrealizedPnL();
+    p.netWorth = p.cash + this.getPortfolioValue();
 
     // Step 12: Update missions
     this._checkMissions();
@@ -2168,6 +2189,23 @@
     var keys = Object.keys(positions);
     for (var i = 0; i < keys.length; i++) { arr.push(positions[keys[i]]); }
     return arr;
+  };
+
+  GameEngine.prototype.getPortfolioValue = function () {
+    var total = 0;
+    var positions = this.state.portfolio.positions;
+    var keys = Object.keys(positions);
+    for (var i = 0; i < keys.length; i++) {
+      var pos = positions[keys[i]];
+      var company = this.getCompany(pos.ticker);
+      if (!company) continue;
+      if (pos.type === 'short') {
+        total -= pos.shares * company.price;
+      } else {
+        total += pos.shares * company.price;
+      }
+    }
+    return total;
   };
 
   GameEngine.prototype.getMarketOverview = function () {

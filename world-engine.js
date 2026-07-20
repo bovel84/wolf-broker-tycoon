@@ -290,7 +290,8 @@
       recentEvents: state.globalEvents.slice(0, 4),
       recentAssemblies: state.assemblyLog.slice(0, 3),
       recentCorporateEvents: state.corporateEvents.slice(0, 5),
-      brokerStory: global.BrokerStory && global.BrokerStory.getContext ? global.BrokerStory.getContext() : null
+      brokerStory: global.BrokerStory && global.BrokerStory.getContext ? global.BrokerStory.getContext() : null,
+      brokerageCareer: global.BrokerageCareer && global.BrokerageCareer.getContext ? global.BrokerageCareer.getContext() : null
     };
   }
 

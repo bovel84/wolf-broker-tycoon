@@ -83,6 +83,67 @@
 		].join("");
 		global.document.head.appendChild(style);
 	}
+	function handleClick(event) {
+		var target = event.target;
+		while (
+			target &&
+			target !== event.currentTarget &&
+			!target.getAttribute("data-imm-action")
+		)
+			target = target.parentNode;
+		if (!target || !target.getAttribute) return;
+		var action = target.getAttribute("data-imm-action");
+		if (!action) return;
+		if (action === "close") close();
+		else if (action === "tab") {
+			currentTab = target.getAttribute("data-tab");
+			currentMessageId = "";
+			currentLocationId = "";
+			currentInteraction = null;
+			render();
+		} else if (action === "message") {
+			currentMessageId = target.getAttribute("data-id");
+			runtime.markMessageRead(currentMessageId);
+			render();
+		} else if (action === "back-inbox") {
+			currentMessageId = "";
+			render();
+		} else if (action === "message-choice") {
+			var result = runtime.resolveMessage(
+				target.getAttribute("data-id"),
+				target.getAttribute("data-choice"),
+			);
+			if (result.success) toastMessage("success", result.choice.reply);
+			else toastMessage("error", result.error);
+			render();
+		} else if (action === "location") {
+			currentLocationId = target.getAttribute("data-id");
+			currentInteraction = null;
+			render();
+		} else if (action === "back-locations") {
+			currentLocationId = "";
+			render();
+		} else if (action === "talk")
+			talk(
+				target.getAttribute("data-character"),
+				target.getAttribute("data-location"),
+			);
+		else if (action === "interaction-choice") {
+			var interactionResult = runtime.resolveInteraction(
+				target.getAttribute("data-id"),
+				target.getAttribute("data-choice"),
+			);
+			if (interactionResult.success) {
+				currentInteraction = interactionResult.interaction;
+				toastMessage("success", interactionResult.choice.reply);
+			} else toastMessage("error", interactionResult.error);
+			render();
+		} else if (action === "interaction-back") {
+			currentInteraction = null;
+			render();
+		}
+	}
+
 	function injectShell() {
 		if (!global.document) return;
 		if (!byId("immersive-fab")) {
@@ -472,66 +533,6 @@
 				currentInteraction = interaction;
 				render();
 			});
-	}
-	function handleClick(event) {
-		var target = event.target;
-		while (
-			target &&
-			target !== event.currentTarget &&
-			!target.getAttribute("data-imm-action")
-		)
-			target = target.parentNode;
-		if (!target || !target.getAttribute) return;
-		var action = target.getAttribute("data-imm-action");
-		if (!action) return;
-		if (action === "close") close();
-		else if (action === "tab") {
-			currentTab = target.getAttribute("data-tab");
-			currentMessageId = "";
-			currentLocationId = "";
-			currentInteraction = null;
-			render();
-		} else if (action === "message") {
-			currentMessageId = target.getAttribute("data-id");
-			runtime.markMessageRead(currentMessageId);
-			render();
-		} else if (action === "back-inbox") {
-			currentMessageId = "";
-			render();
-		} else if (action === "message-choice") {
-			var result = runtime.resolveMessage(
-				target.getAttribute("data-id"),
-				target.getAttribute("data-choice"),
-			);
-			if (result.success) toastMessage("success", result.choice.reply);
-			else toastMessage("error", result.error);
-			render();
-		} else if (action === "location") {
-			currentLocationId = target.getAttribute("data-id");
-			currentInteraction = null;
-			render();
-		} else if (action === "back-locations") {
-			currentLocationId = "";
-			render();
-		} else if (action === "talk")
-			talk(
-				target.getAttribute("data-character"),
-				target.getAttribute("data-location"),
-			);
-		else if (action === "interaction-choice") {
-			var interactionResult = runtime.resolveInteraction(
-				target.getAttribute("data-id"),
-				target.getAttribute("data-choice"),
-			);
-			if (interactionResult.success) {
-				currentInteraction = interactionResult.interaction;
-				toastMessage("success", interactionResult.choice.reply);
-			} else toastMessage("error", interactionResult.error);
-			render();
-		} else if (action === "interaction-back") {
-			currentInteraction = null;
-			render();
-		}
 	}
 	function bindDeskCard(card, characterId, locationId) {
 		if (!card || card.getAttribute("data-immersive-bound") === "1") return;

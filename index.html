@@ -279,7 +279,7 @@ tr:hover{background:var(--bg3)}
 <div class="view" id="view-assembly">
   <div class="card">
     <h2>Assemblee Societarie</h2>
-    <p class="gray" style="margin-bottom:12px">Partecipa alle assemblee delle societa' in cui possiedi almeno il 10% delle azioni.</p>
+    <p class="gray" style="margin-bottom:12px">Ogni azione posseduta attribuisce diritti di voto. Le quote più grandi aumentano il peso, non l’accesso.</p>
     <div id="assembly-list"></div>
   </div>
 </div>
@@ -433,6 +433,7 @@ tr:hover{background:var(--bg3)}
 <script src="broker-story.js"></script>
 <script src="player-life.js"></script>
 <script src="brokerage-career.js"></script>
+<script src="stakeholder-interactions.js"></script>
 <script>
 
 // ======================== CONSTANTS ========================
@@ -872,10 +873,10 @@ function checkAssemblies(){
   for(var t in G.positions){
     var c=getCompany(t);if(!c||c.listed===false)continue;
     var pct=getOwnershipPct(t);
-    if(pct>=10){
+    if(pct>0){
       // Check if already has pending assembly
       var existing=G.pendingAssemblies.find(a=>a.ticker===t);
-      if(!existing && Math.random()<0.15){
+      if(!existing && Math.random()<(0.08+Math.min(0.12,pct/100))){
         // Create assembly
         var numProps=2+Math.floor(Math.random()*3);
         var props=[];
@@ -899,7 +900,7 @@ function checkAssemblies(){
           proposals:props,
           resolved:false
         });
-        toast('info','Assemblea disponibile per '+t+' (possiedi '+pct.toFixed(1)+'%)');
+        toast('info','Assemblea disponibile per '+t+' (diritti di voto '+pct.toFixed(2)+'%)');
       }
     }
   }
@@ -935,6 +936,7 @@ function openAssemblyModal(ticker){
     }
     html+='</div>';
   });
+  if(typeof StakeholderInteractions!=='undefined'&&StakeholderInteractions.assemblyTools)html+=StakeholderInteractions.assemblyTools(ticker);
   
   html+='<div style="margin-top:14px;display:flex;gap:8px">';
   html+='<button class="btn btn-blue" onclick="resolveAssembly(\''+ticker+'\')">Risolvi Assemblea</button>';
@@ -962,6 +964,7 @@ function castVote(ticker,propIdx,vote){
   if(prop.vote==='positive')aiFavor=0.55+Math.random()*0.3;
   else if(prop.vote==='negative')aiFavor=0.25+Math.random()*0.3;
   else aiFavor=0.4+Math.random()*0.2;
+  if(typeof StakeholderInteractions!=='undefined'&&StakeholderInteractions.applyVoteInfluence)aiFavor=StakeholderInteractions.applyVoteInfluence(ticker,aiFavor);
   prop.votesFor=Math.round(aiShares*aiFavor);
   prop.votesAgainst=aiShares-prop.votesFor;
   G.stats.assembliesVoted++;
@@ -983,6 +986,7 @@ function resolveAssembly(ticker){
       var aiFavor=Math.random();
       if(prop.vote==='positive')aiFavor=0.55+Math.random()*0.3;
       else aiFavor=0.4+Math.random()*0.2;
+      if(typeof StakeholderInteractions!=='undefined'&&StakeholderInteractions.applyVoteInfluence)aiFavor=StakeholderInteractions.applyVoteInfluence(ticker,aiFavor);
       prop.votesFor=Math.round(aiShares*aiFavor);
       prop.votesAgainst=aiShares-prop.votesFor;
     }
@@ -990,7 +994,13 @@ function resolveAssembly(ticker){
     var againstVotes=prop.votesAgainst+(prop.playerVote===0?playerShares:0);
     var passed=forVotes>againstVotes;
     if(passed){
-      var result=prop.effect(c);
+      var effectFn=prop.effect;
+      if(typeof effectFn!=='function'){
+        var template=ASSEMBLY_PROPOSALS.find(x=>x.id===prop.id);
+        if(template)effectFn=template.effect;
+      }
+      if(typeof effectFn!=='function'&&prop.id==='shareholder_transparency')effectFn=function(company){company.vol*=0.96;company.price*=1.025;return 'Governance rafforzata, prezzo +2,5%'};
+      var result=typeof effectFn==='function'?effectFn(c):'Delibera registrata senza effetto immediato';
       toast('success','['+ticker+'] '+prop.title+' APPROVATO: '+result);
       // Special dividend
       if(prop.id==='dividend_special'){
@@ -1169,6 +1179,7 @@ function executeTrade(){
   }else if(m==='sell'){
     var pos=G.positions[c.ticker];
     if(!pos||pos.shares<shares){toast('error','Azioni insufficienti');return}
+    if(typeof StakeholderInteractions!=='undefined'&&StakeholderInteractions.availableShares&&shares>StakeholderInteractions.availableShares(c.ticker)){toast('error','Parte delle azioni è già impegnata nel mercato dei blocchi');return}
     var proceeds=total-fee;
     G.cash+=proceeds;
     var realized=(price-pos.avgCost)*shares-fee;
@@ -1442,6 +1453,7 @@ function renderAll(){
   // Save
   renderSaveSlots();
   if(typeof BrokerageCareer!=='undefined'&&BrokerageCareer.render)BrokerageCareer.render();
+  if(typeof StakeholderInteractions!=='undefined'&&StakeholderInteractions.render)StakeholderInteractions.render();
 }
 
 function renderIndices(){
@@ -1815,6 +1827,7 @@ if(typeof CorporateLifecycle!=='undefined'&&CorporateLifecycle.install)Corporate
 if(typeof BrokerStory!=='undefined'&&BrokerStory.install)BrokerStory.install();
 if(typeof PlayerLife!=='undefined'&&PlayerLife.install)PlayerLife.install();
 if(typeof BrokerageCareer!=='undefined'&&BrokerageCareer.install)BrokerageCareer.install();
+if(typeof StakeholderInteractions!=='undefined'&&StakeholderInteractions.install)StakeholderInteractions.install();
 </script>
 </body>
 </html>

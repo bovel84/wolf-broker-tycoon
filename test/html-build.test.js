@@ -128,6 +128,28 @@ function testHTMLBuild() {
   assert(result, 'advanceTurn deve restituire un risultato');
   assert(window.G.week === 2, 'Dopo advanceTurn la settimana deve essere 2');
 
+  log('Trading via UI legacy bridge');
+  if (typeof window.BrokerageCareer !== 'undefined' && window.BrokerageCareer.canTrade) {
+    window.BrokerageCareer.canTrade = function () { return true; };
+  }
+  var ticker = null;
+  for (var i = 0; i < window.G.companies.length; i++) {
+    if (!window.G.companies[i].isPenny && window.G.companies[i].price < 500) {
+      ticker = window.G.companies[i].ticker;
+      break;
+    }
+  }
+  assert(ticker, 'Deve esistere una compagnia tradeable per il test');
+  window.openTradeModal(ticker);
+  assert(window.tradeModalState, 'tradeModalState deve essere impostato');
+  var sharesInput = window.document.getElementById('trade-shares');
+  assert(sharesInput, 'Input shares deve esistere');
+  sharesInput.value = '5';
+  window.executeTrade();
+  assert(window.G.positions[ticker], 'Dopo acquisto G.positions deve contenere ' + ticker);
+  assert(window.G.positions[ticker].shares === 5, 'Deve avere 5 azioni');
+  assert(window.G.transactions.length >= 1, 'Deve esserci almeno una transazione');
+
   window.__cleanupTimers();
   window.close();
   log('Test completato');

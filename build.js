@@ -210,6 +210,12 @@ function buildIntegrationJS() {
     "}",
     "// Attiva UI bridge come ultimo passo per sovrascrivere le funzioni legacy",
     "if(typeof wolfBridgeInstall === 'function'){ wolfBridgeInstall(); }",
+    "// Ripristina wrapper del bridge per funzioni di trading sovrascritte da index.html inline",
+    "if(typeof wolfBridge !== 'undefined' && wolfBridge.wrappers){",
+    "  if(wolfBridge.wrappers.executeTrade) window.executeTrade = wolfBridge.wrappers.executeTrade;",
+    "  if(wolfBridge.wrappers.executeShort) window.executeShort = wolfBridge.wrappers.executeShort;",
+    "  if(wolfBridge.wrappers.coverShort) window.coverShort = wolfBridge.wrappers.coverShort;",
+    "}",
   ].join('\n');
 }
 

@@ -330,7 +330,16 @@
       version: BRIDGE_VERSION,
       getEngine: getEngine,
       sync: syncEngineToLegacy,
-      getLegacyState: legacyStateFromEngine
+      getLegacyState: legacyStateFromEngine,
+      wrappers: {
+        newGame: root.newGame,
+        advanceTurn: root.advanceTurn,
+        executeTrade: root.executeTrade,
+        executeShort: root.executeShort,
+        coverShort: root.coverShort,
+        saveAuto: root.saveAuto,
+        loadAuto: root.loadAuto
+      }
     };
 
     // Sovrascrivi newGame

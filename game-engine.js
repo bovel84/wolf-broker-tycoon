@@ -542,6 +542,7 @@
 
   GameEngine.prototype.getState = function () { return this.state; };
   GameEngine.prototype.setState = function (s) { this.state = s; this.emit('stateLoaded', s); };
+  GameEngine.prototype.installCompetitorEngine = function (ce) { this._competitorEngine = ce; };
 
   /* ==========================================================================
    * 2. XP & LEVELING SYSTEM
@@ -2058,8 +2059,34 @@
     // Step 8: Check assemblies
     this._checkAssemblies();
 
+    // Step 8.5: World Engine turn (governance, regions, corporate events)
+    if (typeof WorldEngine !== 'undefined' && WorldEngine.processWorldTurn) {
+      try { WorldEngine.processWorldTurn(this.state); } catch (e) {}
+    }
+
     // Step 9: Process clients
     this._processClients();
+
+    // Step 9.5: Competitor Engine turn
+    if (this._competitorEngine) {
+      try {
+        var companies = this.state.market.companies;
+        var stocks = [];
+        for (var ci = 0; ci < companies.length; ci++) {
+          var cc = companies[ci];
+          stocks.push({ symbol: cc.ticker, price: cc.price, sector: cc.sector, volume: cc.volume || 0, avgVolume: cc.avgVolume || 1000000, change: cc.change || 0 });
+        }
+        var posArr = [];
+        var posKeys = Object.keys(this.state.portfolio.positions);
+        for (var pi = 0; pi < posKeys.length; pi++) {
+          var pp = this.state.portfolio.positions[posKeys[pi]];
+          posArr.push({ symbol: pp.ticker, shares: pp.shares });
+        }
+        this._competitorEngine.setMarketData({ stocks: stocks, currentWeek: this.state.player.week });
+        this._competitorEngine.setPlayerData(posArr, this.state.player.cash, this.state.player.reputation.wallStreet || 50, this.state.player.xp || 0);
+        this._competitorEngine.processWeek();
+      } catch (e) {}
+    }
 
     // Step 10: Process agents
     this._processAgents();

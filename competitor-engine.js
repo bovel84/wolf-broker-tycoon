@@ -3,7 +3,7 @@
  * Modulo AI per 10 competitor con strategie, OPA, eventi, sfide e dialoghi
  * Vanilla JS, zero dipendenze
  */
-(function () {
+(function (root) {
   'use strict';
 
   // ============================================================
@@ -2037,13 +2037,17 @@
   // ============================================================
   // EXPORT
   // ============================================================
-  window.CompetitorEngine = CompetitorEngine;
-  window.Competitor = Competitor;
+  root.CompetitorEngine = CompetitorEngine;
+  root.Competitor = Competitor;
 
   // Esponi anche le definizioni per debug
-  window.__COMPETITOR_DEFS = COMPETITOR_DEFS;
-  window.__COMPETITOR_EVENTS = COMPETITOR_EVENTS;
-  window.__CHALLENGE_TEMPLATES = CHALLENGE_TEMPLATES;
-  window.__DIALOGUES = DIALOGUES;
+  root.__COMPETITOR_DEFS = COMPETITOR_DEFS;
+  root.__COMPETITOR_EVENTS = COMPETITOR_EVENTS;
+  root.__CHALLENGE_TEMPLATES = CHALLENGE_TEMPLATES;
+  root.__DIALOGUES = DIALOGUES;
 
-})();
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { CompetitorEngine: CompetitorEngine, Competitor: Competitor };
+  }
+
+})(typeof window !== 'undefined' ? window : this);

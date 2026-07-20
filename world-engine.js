@@ -12,6 +12,7 @@
   var processing = false;
   var state = null;
   var selectedCompanyTicker = null;
+  var installedGame = null;
 
   function clamp(v, min, max) { return Math.max(min, Math.min(max, Number(v) || 0)); }
   function round(v, digits) {
@@ -20,6 +21,7 @@
   }
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
   function getGame() {
+    if (installedGame) return installedGame;
     try { return typeof G !== 'undefined' ? G : null; } catch (e) { return null; }
   }
   function getCompetitors() {
@@ -766,11 +768,27 @@
     }
   }
 
-  function install() {
+  function normalizeGame(game) {
+    if (!game) return game;
+    var normalized = {};
+    for (var k in game) normalized[k] = game[k];
+    if (game.market && game.market.companies && !normalized.companies) {
+      normalized.companies = game.market.companies;
+    }
+    if (game.player) {
+      if (!normalized.week) normalized.week = game.player.week;
+      if (!normalized.year) normalized.year = game.player.year || 1;
+      if (!normalized.rep && game.player.reputation) normalized.rep = game.player.reputation.wallStreet || 50;
+    }
+    return normalized;
+  }
+
+  function install(game) {
     if (installed) return;
     installed = true;
-    var game = getGame();
-    loadState(game, getCompetitors());
+    if (game) installedGame = normalizeGame(game);
+    var g = getGame();
+    loadState(g, getCompetitors());
     ensurePanels();
     render();
     if (typeof advanceTurn === 'function') {

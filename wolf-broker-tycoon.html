@@ -3762,6 +3762,9 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     this.state = s;
     this.emit('stateLoaded', s);
   };
+  GameEngine.prototype.installCompetitorEngine = function (ce) {
+    this._competitorEngine = ce;
+  };
 
   /* ==========================================================================
    * 2. XP & LEVELING SYSTEM
@@ -5544,8 +5547,49 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     // Step 8: Check assemblies
     this._checkAssemblies();
 
+    // Step 8.5: World Engine turn (governance, regions, corporate events)
+    if (typeof WorldEngine !== 'undefined' && WorldEngine.processWorldTurn) {
+      try {
+        WorldEngine.processWorldTurn(this.state);
+      } catch (e) {}
+    }
+
     // Step 9: Process clients
     this._processClients();
+
+    // Step 9.5: Competitor Engine turn
+    if (this._competitorEngine) {
+      try {
+        var companies = this.state.market.companies;
+        var stocks = [];
+        for (var ci = 0; ci < companies.length; ci++) {
+          var cc = companies[ci];
+          stocks.push({
+            symbol: cc.ticker,
+            price: cc.price,
+            sector: cc.sector,
+            volume: cc.volume || 0,
+            avgVolume: cc.avgVolume || 1000000,
+            change: cc.change || 0
+          });
+        }
+        var posArr = [];
+        var posKeys = Object.keys(this.state.portfolio.positions);
+        for (var pi = 0; pi < posKeys.length; pi++) {
+          var pp = this.state.portfolio.positions[posKeys[pi]];
+          posArr.push({
+            symbol: pp.ticker,
+            shares: pp.shares
+          });
+        }
+        this._competitorEngine.setMarketData({
+          stocks: stocks,
+          currentWeek: this.state.player.week
+        });
+        this._competitorEngine.setPlayerData(posArr, this.state.player.cash, this.state.player.reputation.wallStreet || 50, this.state.player.xp || 0);
+        this._competitorEngine.processWeek();
+      } catch (e) {}
+    }
 
     // Step 10: Process agents
     this._processAgents();
@@ -12233,7 +12277,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
  * Modulo AI per 10 competitor con strategie, OPA, eventi, sfide e dialoghi
  * Vanilla JS, zero dipendenze
  */
-(function () {
+(function (root) {
   'use strict';
 
   // ============================================================
@@ -14738,15 +14782,21 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   }(); // ============================================================
   // EXPORT
   // ============================================================
-  window.CompetitorEngine = CompetitorEngine;
-  window.Competitor = Competitor;
+  root.CompetitorEngine = CompetitorEngine;
+  root.Competitor = Competitor;
 
   // Esponi anche le definizioni per debug
-  window.__COMPETITOR_DEFS = COMPETITOR_DEFS;
-  window.__COMPETITOR_EVENTS = COMPETITOR_EVENTS;
-  window.__CHALLENGE_TEMPLATES = CHALLENGE_TEMPLATES;
-  window.__DIALOGUES = DIALOGUES;
-})();
+  root.__COMPETITOR_DEFS = COMPETITOR_DEFS;
+  root.__COMPETITOR_EVENTS = COMPETITOR_EVENTS;
+  root.__CHALLENGE_TEMPLATES = CHALLENGE_TEMPLATES;
+  root.__DIALOGUES = DIALOGUES;
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      CompetitorEngine: CompetitorEngine,
+      Competitor: Competitor
+    };
+  }
+})(typeof window !== 'undefined' ? window : this);
 
 /*
  * world-engine.js
@@ -14762,6 +14812,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
   var processing = false;
   var state = null;
   var selectedCompanyTicker = null;
+  var installedGame = null;
   function clamp(v, min, max) {
     return Math.max(min, Math.min(max, Number(v) || 0));
   }
@@ -14773,6 +14824,7 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
     return arr[Math.floor(Math.random() * arr.length)];
   }
   function getGame() {
+    if (installedGame) return installedGame;
     try {
       return typeof G !== 'undefined' ? G : null;
     } catch (e) {
@@ -15658,11 +15710,26 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
       }
     }
   }
-  function install() {
+  function normalizeGame(game) {
+    if (!game) return game;
+    var normalized = {};
+    for (var k in game) normalized[k] = game[k];
+    if (game.market && game.market.companies && !normalized.companies) {
+      normalized.companies = game.market.companies;
+    }
+    if (game.player) {
+      if (!normalized.week) normalized.week = game.player.week;
+      if (!normalized.year) normalized.year = game.player.year || 1;
+      if (!normalized.rep && game.player.reputation) normalized.rep = game.player.reputation.wallStreet || 50;
+    }
+    return normalized;
+  }
+  function install(game) {
     if (installed) return;
     installed = true;
-    var game = getGame();
-    loadState(game, getCompetitors());
+    if (game) installedGame = normalizeGame(game);
+    var g = getGame();
+    loadState(g, getCompetitors());
     ensurePanels();
     render();
     if (typeof advanceTurn === 'function') {

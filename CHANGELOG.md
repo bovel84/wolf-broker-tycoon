@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.0] — 2025-06-26
+
+### Aggiunto
+- **View Diario (Narrativa)** in `index.html`: pannello con Diario di Bordo, Personaggi, Eventi Recenti e Memorie.
+- **Render narrativo** (`renderNarrative`) collegato a `renderAll` e sincronizzato via `ui-bridge.js`.
+- **Bottom nav mobile** aggiornata con accesso al Diario nel menu "Altro".
+- **Test UI** aggiornato per verificare la presenza della view `narrative`.
+
+### Cambiato
+- `ui-bridge.js` esporta `narrative` nello stato legacy `G`, rendendolo disponibile per la UI.
+
 ## [1.2.0] — 2025-06-26
 
 ### Aggiunto

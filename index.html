@@ -201,6 +201,7 @@ tr:hover{background:var(--bg3)}
   <button data-view="portfolio" onclick="switchView('portfolio')">Portafoglio</button>
   <button data-view="assembly" onclick="switchView('assembly')">Assemblee</button>
   <button data-view="news" onclick="switchView('news')">Notizie</button>
+  <button data-view="narrative" onclick="switchView('narrative')">Diario</button>
   <button data-view="transactions" onclick="switchView('transactions')">Transazioni</button>
   <button data-view="career" onclick="switchView('career')">Carriera</button>
   <button data-view="save" onclick="switchView('save')">Salvataggio</button>
@@ -289,6 +290,33 @@ tr:hover{background:var(--bg3)}
   <div class="card">
     <h2>Feed Notizie</h2>
     <div class="news-feed" id="news-full-list"></div>
+  </div>
+</div>
+
+<!-- NARRATIVE VIEW -->
+<div class="view" id="view-narrative">
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <h2>📖 Diario di Bordo</h2>
+        <p class="gray" style="margin-bottom:12px">La storia della tua carriera, degli alleati, dei nemici e del mercato.</p>
+        <div id="narrative-diary"></div>
+      </div>
+      <div class="card">
+        <h3>🎭 Personaggi</h3>
+        <div id="narrative-characters"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>⚡ Eventi Recenti</h3>
+        <div id="narrative-events"></div>
+      </div>
+      <div class="card">
+        <h3>🧠 Memorie</h3>
+        <div class="news-feed" id="narrative-memories" style="max-height:400px"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1454,7 +1482,10 @@ function renderAll(){
   
   // News
   renderNews();
-  
+
+  // Narrative
+  renderNarrative();
+
   // Transactions
   renderTransactions();
   
@@ -1629,6 +1660,68 @@ function renderNews(){
   if(!el||!G)return;
   if(G.news.length===0){el.innerHTML='<div class="empty-state"><div class="emoji">📰</div><div class="msg">Nessuna notizia. Avanza il turno per generare eventi.</div></div>';return}
   el.innerHTML=G.news.map(n=>renderNewsItem(n)).join('');
+}
+
+function renderNarrative(){
+  if(!G||!G.narrative)return;
+  var ns=G.narrative;
+
+  // Diary
+  var diary=document.getElementById('narrative-diary');
+  if(diary){
+    var entries=[];
+    var mems=ns.memories||[];
+    for(var i=0;i<Math.min(5,mems.length);i++){
+      entries.push('<div class="news-item impact-'+mems[i].impact+'"><span class="news-time">Sett.'+mems[i].week+'</span><div class="news-title">'+mems[i].text+'</div></div>');
+    }
+    if(entries.length===0) entries.push('<div class="empty-state"><div class="emoji">📖</div><div class="msg">Il diario e\' vuoto. Avanza il turno per scrivere la tua storia.</div></div>');
+    diary.innerHTML=entries.join('');
+  }
+
+  // Characters
+  var charsEl=document.getElementById('narrative-characters');
+  if(charsEl){
+    var chars=ns.characters||{};
+    var keys=Object.keys(chars);
+    var html='';
+    for(var k=0;k<keys.length;k++){
+      var c=chars[keys[k]];
+      if(!c.active) continue;
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid var(--border)" onclick="openCharacterModal(\''+c.id+'\')" class="pos-row" style="cursor:pointer">';
+      html+='<div style="font-size:24px">'+(c.namespace==='player'?'🧑':c.namespace==='client'?'🤝':c.namespace==='agent'?'🕵️':c.namespace==='competitor'?'🦈':c.namespace==='ceo'?'👔':'🎭')+'</div>';
+      html+='<div style="flex:1"><div style="font-weight:700">'+c.name+'</div><div class="gray" style="font-size:11px">'+c.role+' · '+c.currentMood+'</div></div>';
+      html+='<div style="text-align:right;font-size:11px">'+(c.trust?c.trust+'%':'')+'</div>';
+      html+='</div>';
+    }
+    if(html==='') html='<div class="gray" style="font-size:12px;padding:8px">Nessun personaggio attivo.</div>';
+    charsEl.innerHTML=html;
+  }
+
+  // Events
+  var eventsEl=document.getElementById('narrative-events');
+  if(eventsEl){
+    var evs=ns.events||[];
+    var evHtml='';
+    for(var e=0;e<Math.min(6,evs.length);e++){
+      var ev=evs[e];
+      evHtml+='<div class="news-item impact-'+ev.impact+'"><span class="news-time">Sett.'+ev.week+'</span><div class="news-title">'+ev.title+'</div><div class="gray" style="font-size:11px">'+ev.summary+'</div></div>';
+    }
+    if(evHtml==='') evHtml='<div class="gray" style="font-size:12px;padding:8px">Nessun evento narrativo recente.</div>';
+    eventsEl.innerHTML=evHtml;
+  }
+
+  // Memories
+  var memEl=document.getElementById('narrative-memories');
+  if(memEl){
+    var allMem=ns.memories||[];
+    var memHtml='';
+    for(var m=0;m<Math.min(20,allMem.length);m++){
+      var mm=allMem[m];
+      memHtml+='<div class="news-item impact-'+mm.impact+'"><span class="news-time">Sett.'+mm.week+'</span><div class="news-title">'+mm.text+'</div></div>';
+    }
+    if(memHtml==='') memHtml='<div class="gray" style="font-size:12px;padding:8px">Nessuna memoria.</div>';
+    memEl.innerHTML=memHtml;
+  }
 }
 
 function renderTransactions(){

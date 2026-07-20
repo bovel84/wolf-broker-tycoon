@@ -163,6 +163,9 @@
     };
     legacy.maxMargin = player.level >= 7 ? 5 : (player.level >= 5 ? 3 : (player.level >= 4 ? 2 : 1));
 
+    // Narrative state for UI
+    legacy.narrative = s.narrative || null;
+
     _legacyG = legacy;
     return legacy;
   }

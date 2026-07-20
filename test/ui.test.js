@@ -59,7 +59,7 @@ function run() {
   assert(hasChart, 'CDN Chart.js mancante');
 
   // 7. View principali presenti
-  var views = ['dashboard', 'market', 'portfolio', 'assembly', 'news', 'transactions', 'career', 'save', 'settings'];
+  var views = ['dashboard', 'market', 'portfolio', 'assembly', 'news', 'narrative', 'transactions', 'career', 'save', 'settings'];
   for (var v = 0; v < views.length; v++) {
     assert(document.getElementById('view-' + views[v]), 'View ' + views[v] + ' mancante');
   }

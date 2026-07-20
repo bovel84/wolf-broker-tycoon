@@ -1,6 +1,6 @@
 {
   "name": "wolf-broker-tycoon",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Gestionale di broker azionario completo e realistico con modalità carriera e assemblee societarie.",
   "main": "broker-story.js",
   "scripts": {

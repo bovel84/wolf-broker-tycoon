@@ -296,6 +296,28 @@
     }
   }
 
+  function readTradeModal() {
+    if (!tradeModalState) return null;
+    var c = getCompany(tradeModalState.ticker);
+    if (!c) return null;
+    var sharesEl = document.getElementById('trade-shares');
+    var shares = sharesEl ? (parseInt(sharesEl.value) || 0) : 0;
+    var price = c.price;
+    if (tradeModalState.orderType === 'limit') {
+      var lpEl = document.getElementById('trade-limit-price');
+      price = lpEl ? (parseFloat(lpEl.value) || c.price) : c.price;
+    }
+    return { c: c, shares: shares, price: price };
+  }
+
+  function canTradeAtBrokerage() {
+    if (typeof BrokerageCareer !== 'undefined' && BrokerageCareer.canTrade && !BrokerageCareer.canTrade()) {
+      toast('error', 'Non hai un intermediario autorizzato');
+      return false;
+    }
+    return true;
+  }
+
   function exposeLegacyGlobals() {
     if (!isBrowser()) return;
     // Esponi funzioni legacy come wrapper intorno al bridge/engine
@@ -392,6 +414,73 @@
         renderAll();
         toast('success', 'Caricato slot ' + n);
       } catch (err) { toast('error', 'Errore caricamento'); }
+    };
+
+    // Sovrascrivi trading per passare dal GameEngine
+    root.executeTrade = function () {
+      var d = readTradeModal();
+      if (!d) { closeTradeModal(); return; }
+      if (!canTradeAtBrokerage()) { closeTradeModal(); return; }
+      var e = getEngine();
+      var result = null;
+      var realized = 0;
+      if (tradeModalState.mode === 'buy') {
+        var options = {};
+        if (tradeModalState.orderType === 'limit') options.limitPrice = d.price;
+        result = e.buy(d.c.ticker, d.shares, options);
+      } else if (tradeModalState.mode === 'sell') {
+        result = e.sell(d.c.ticker, d.shares, {});
+        realized = result.success ? (result.profit || 0) : 0;
+      } else if (tradeModalState.mode === 'cover') {
+        return root.coverShort();
+      }
+      if (!result || !result.success) {
+        toast('error', result ? result.error : 'Operazione fallita');
+        return;
+      }
+      syncEngineToLegacy();
+      if (realized !== 0 && typeof updateTradeStats === 'function') updateTradeStats(realized);
+      saveAuto();
+      closeTradeModal();
+      toast((tradeModalState.mode === 'sell' && realized < 0) ? 'warning' : 'success', result.message);
+      renderAll();
+    };
+
+    root.executeShort = function () {
+      var d = readTradeModal();
+      if (!d) { closeTradeModal(); return; }
+      if (!canTradeAtBrokerage()) { closeTradeModal(); return; }
+      var e = getEngine();
+      var options = { short: true };
+      if (tradeModalState.orderType === 'limit') options.limitPrice = d.price;
+      var result = e.buy(d.c.ticker, d.shares, options);
+      if (!result || !result.success) {
+        toast('error', result ? result.error : 'Short fallito');
+        return;
+      }
+      syncEngineToLegacy();
+      saveAuto();
+      closeTradeModal();
+      toast('success', result.message);
+      renderAll();
+    };
+
+    root.coverShort = function () {
+      var d = readTradeModal();
+      if (!d) { closeTradeModal(); return; }
+      if (!canTradeAtBrokerage()) { closeTradeModal(); return; }
+      var e = getEngine();
+      var result = e.sell(d.c.ticker, d.shares, {});
+      if (!result || !result.success) {
+        toast('error', result ? result.error : 'Cover fallito');
+        return;
+      }
+      syncEngineToLegacy();
+      if (typeof updateTradeStats === 'function' && result.profit) updateTradeStats(result.profit);
+      saveAuto();
+      closeTradeModal();
+      toast((result.profit >= 0) ? 'success' : 'warning', result.message);
+      renderAll();
     };
   }
 

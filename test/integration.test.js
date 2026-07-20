@@ -5,6 +5,7 @@
  */
 
 var assert = require('assert');
+var Bridge = require('../ui-bridge.js');
 var GameEngine = require('../game-engine.js');
 var MarketEngine = require('../market-engine.js');
 var WorldEngine = require('../world-engine.js');
@@ -30,17 +31,18 @@ function testGameEngineUsesMarketEngine() {
   assert(state.market.companies[0].ticker, 'La prima societa deve avere un ticker');
 }
 
+function findNonPennyCompany(state) {
+  for (var i = 0; i < state.market.companies.length; i++) {
+    if (!state.market.companies[i].isPenny) return state.market.companies[i];
+  }
+  return state.market.companies[0];
+}
+
 function testTradeAndSave() {
   log('Trade, salvataggio e caricamento funzionano');
   var ge = new GameEngine();
   var state = ge.createInitialState('Test', 'normal');
-  var company = state.market.companies[0];
-  for (var i = 0; i < state.market.companies.length; i++) {
-    if (!state.market.companies[i].isPenny) {
-      company = state.market.companies[i];
-      break;
-    }
-  }
+  var company = findNonPennyCompany(state);
   var result = ge.buy(company.ticker, 10, {});
   assert(result.success, 'L\'acquisto deve avere successo: ' + (result.error || ''));
 
@@ -86,6 +88,29 @@ function testFullLoop() {
   assert(WorldEngine.getState().week >= 1, 'WorldEngine deve avere aggiornato la settimana');
 }
 
+function testBridgeSyncsTrades() {
+  log('UI bridge sincronizza trading legacy');
+  var ge = Bridge.getEngine();
+  ge.createInitialState('Test', 'normal');
+  var state = ge.getState();
+  var company = findNonPennyCompany(state);
+  var buyResult = ge.buy(company.ticker, 10, {});
+  assert(buyResult.success, 'Acquisto via bridge/engine: ' + (buyResult.error || ''));
+
+  var legacy = Bridge.legacyStateFromEngine();
+  assert(legacy.companies.length >= 20, 'Legacy deve vedere le societa');
+  assert(legacy.positions[company.ticker], 'Legacy deve vedere la posizione per ' + company.ticker);
+  assert(legacy.positions[company.ticker].shares === 10, 'La posizione legacy deve avere 10 azioni');
+  assert(legacy.transactions.length === 1, 'Legacy deve avere una transazione');
+
+  // Simula una vendita
+  var sellResult = ge.sell(company.ticker, 5, {});
+  assert(sellResult.success, 'Vendita via bridge/engine: ' + (sellResult.error || ''));
+  legacy = Bridge.legacyStateFromEngine();
+  assert(legacy.positions[company.ticker].shares === 5, 'Dopo vendita legacy deve avere 5 azioni');
+  assert(legacy.transactions.length === 2, 'Legacy deve avere due transazioni');
+}
+
 function run() {
   console.log('\nRunning integration tests...');
   testMarketEngine();
@@ -93,6 +118,7 @@ function run() {
   testTradeAndSave();
   testWorldEngineIntegration();
   testFullLoop();
+  testBridgeSyncsTrades();
   console.log('\nAll tests passed.\n');
 }
 

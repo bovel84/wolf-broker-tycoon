@@ -87,7 +87,7 @@ function testMissionAndAchievement() {
   var state = ge.createInitialState('MissionTest', 'normal');
   ge._initMissions();
 
-  var c = findTradeableCompany(state, { nonPenny: true, maxPrice: 50 });
+  var c = findNonPennyCompany(state, { maxPrice: 50 });
   var before = state.player.achievements.length;
   var beforeMissions = ge.getCompletedMissions().length;
 

@@ -1,111 +1,89 @@
-# 🐺 Wolf of Wall Street Broker Tycoon
+# 🐺 Wolf of Wall Street — Broker Tycoon
 
-Gestionale di broker azionario completo e realistico con modalità carriera e assemblee societarie.
+Gestionale di broker azionario completo e realistico con modalità carriera, assemblee societarie e mercato dinamico.
 
-## Caratteristiche
+## Caratteristiche principali
 
-- **Mercato societario dinamico** — 45 società iniziali, con nuove quotazioni, fusioni, acquisizioni, spin-off e fallimenti
-- **10 livelli carriera** da Apprendista a Magnate
-- **10 competitor AI** con personalità e strategie diverse
-- **LLM Game Master 5.0** — un solo turno AI coerente coordina mondo, aziende, rivali ed eventi societari straordinari
-- **Ciclo di vita realistico** — dissesto, ristrutturazione, liquidazione, M&A, IPO e spin-off con validazione economica
-- **Conseguenze di mercato** — posizioni convertite o liquidate, short regolati, contagio settoriale, indici e governance aggiornati
-- **World Engine persistente** — macroregioni, fondamentali, governance e strategie aziendali evolvono nel tempo
-- **Storia di ogni società** — fondazione, sede, missione, tappe storiche e obiettivo pluriennale
-- **Amministratori autonomi** — competenza, etica, influenza, lealtà, agenda e carriera personale
-- **Soci reali** — fondatori, istituzionali, attivisti, dipendenti e azionisti diffusi con quote e interessi diversi
-- **Competitor con memoria** — obiettivi, convinzione, piani, alleanze e rivalità influenzano le operazioni
-- **Assemblee globali** — CdA, blocchi rivali e quota del giocatore determinano votazioni ed effetti reali
-- **LLM News Engine** — notizie di mercato generate da AI (Ollama Cloud)
-- **Assemblee societarie** con votazioni
-- **Short selling** e margin trading
-- **Salvataggio multi-slot** (3 slot)
-- **Sistema morale** e reputazione
-- **Prologo interattivo** — nome, origine, promessa e primo segreto del broker
-- **Carriera narrativa reattiva** — 8 capitoli originali sbloccati da trade, perdite, assemblee, patrimonio e indagini
-- **Scelte persistenti** — etica, nervi, lealtà, ambizione e relazioni cambiano storia e mondo
-- **Vita del broker** — salute, stress, credibilità, pressione legale, tenore di vita, leva e picco patrimoniale evolvono ogni settimana
-- **Caduta progressiva** — avvisi, crisi di solvibilità e margin call anticipano bancarotta, condanna, crollo fisico o reputazionale
-- **Game over narrativo** — causa precisa, statistiche finali, punteggio eredità, epilogo LLM e una sola seconda possibilità quando plausibile
-- **Partenza da disoccupato** — il broker deve firmare con una delle sei società prima di poter operare professionalmente
-- **Sei società di brokeraggio** — culture, salari, commissioni, target e limiti di rischio diversi
-- **Competizione interna IA** — cinque colleghi per desk producono ricavi, scalano classifiche, sottraggono clienti e lottano per bonus e promozioni
-- **Mercato del lavoro** — valutazioni quadrisettimanali, promozioni, licenziamenti, dimissioni e offerte dei concorrenti
-- **Società del giocatore** — capitale iniziale, affitto, dati, compliance, stipendi, clienti, masse, ricavi, costi e classifica contro le sei imprese
-- **Zona grigia** — soffiate, report falsi, ricatti, audit, multe e prove persistenti con conseguenze narrative e legali
-- **Portafoglio proprietario** — azioni totali, libere e impegnate, quota percentuale, voto, flottante, valore e costo medio
-- **Mercato dei blocchi** — offerte dei soci, premi/sconti, scadenze, ordini del giocatore e compratori IA
-- **Assemblee interattive** — voto con qualsiasi quota, incontri con i blocchi, campagne proxy, lobbying e controproposte
-- **Capo interattivo** — richieste con scadenze, premi, ordini discutibili, negoziazione, feedback, aumenti e contestazioni
-- **Colleghi con memoria** — conversazioni, aiuti, favori, sfide, segnalazioni, rivalità e reazioni LLM opzionali
+- **Mercato dinamico** — oltre 100 società realistiche generate da `MarketEngine`, con prezzi, volatilità, dividendi e trend macro.
+- **10 livelli carriera** — da Novizio a Leggenda di Wall Street, con sblocco progressivo di strumenti (limit, short, margin, penny, opzioni, dark pool).
+- **Competitor AI** — rivali autonomi che operano, formano alleanze e reagiscono alla posizione del giocatore.
+- **World Engine** — simulazione persistente di economia, regioni, governance e ciclo di vita societario.
+- **Assemblee societarie** — vota proposte reali (dividendi, buyback, espansioni, split, cambio CEO) con effetti concreti sul titolo.
+- **Carriera nel brokeraggio** — sei società con culture diverse; ora il giocatore inizia assunto automaticamente, ma può cambiare, salire di grado o fondare la propria firma.
+- **Sistema morale** — etica, reputazione con SEC/clienti/Wall Street e scelte che influenzano finali multipli.
+- **Finali multipli** — *Redenzione*, *Il Lupo*, *Vita quotidiana*, *Caduta* in base a patrimonio, livello ed etica.
+- **Short selling & margin trading** — operazioni short e leva finanziaria fino a 5x.
+- **Salvataggio multi-slot + auto-save** — round-trip JSON con portafoglio, missioni e stato completo.
+- **UI responsive** — navigazione desktop con tab e bottom nav ottimizzata per mobile.
+- **LLM opzionale** — notizie dinamiche e game master AI via Ollama Cloud proxy; disattivato di default.
 
 ## Tecnologia
 
-- Single-file HTML5 (nessuna dipendenza esterna tranne Chart.js CDN)
-- Vanilla JS con restrizioni di compatibilità:
-  - Solo apici singoli con concatenazione (no template literals)
-  - Solo function tradizionali (no arrow functions)
-  - Solo `var` (no `let`/`const`)
-  - Solo Promise `.then/.catch` (no `async/await`)
-- LLM integration via Ollama Cloud proxy (Vercel)
+- **Single-file HTML5**: `wolf-broker-tycoon.html` contiene tutto il codice.
+- **Build Node.js**: `build.js` assembla i moduli JS, li transpila in ES5 con Babel e valida i vincoli.
+- **Vincoli di compatibilità ES5**:
+  - solo `var` (no `let`/`const`)
+  - solo function tradizionali (no arrow functions)
+  - no template literals
+  - no `class`
+  - no `async`/`await`
+- Dipendenza esterna: Chart.js via CDN.
 
-## Build
+## Build e test
 
 ```bash
 npm install
-npm run build
+npm run build      # genera wolf-broker-tycoon.html
+npm test           # lint ES5 + test di integrazione + gameplay + bilanciamento + UI + HTML
+npm run ci         # lint + build + test completo
 ```
 
-Genera `wolf-broker-tycoon.html` single-file giocabile. Il sistema di build:
-- assembla i moduli JavaScript con `index.html`
-- traspila ES6+ -> ES5 tramite Babel per compatibilita' massima
-- valida che l'output finale rispetti i vincoli ES5 del progetto
-
-Se preferisci lanciare direttamente lo script Node:
-
-```bash
-node build.js
-```
-
-Il vecchio script `build_html.py` e' deprecato; e' stato sostituito da `build.js` per non dipendere da un interprete Python locale.
+Il vecchio `build_html.py` è deprecato; la build usa solo Node.js.
 
 ## Moduli
 
 | File | Descrizione |
 |------|-------------|
-| `market-engine.js` | Motore di mercato, prezzi, volatilità |
-| `game-engine.js` | Motore core, livelli, achievement, SEC |
-| `ui-engine.js` | UI, dialoghi, notizie, effetti visivi |
-| `story-engine.js` | 12 capitoli, NPC, missioni, sistema morale |
+| `market-engine.js` | Generazione realistica di società, settori e fondamentali |
+| `game-engine.js` | Core: trading, livelli, missioni, achievement, SEC, finali |
+| `ui-bridge.js` | Ponte tra `GameEngine` e UI legacy inline |
+| `ui-engine.js` | Effetti visivi, dialoghi, toast, achievement pop-up |
+| `story-engine.js` | Capitoli, NPC, missioni, sistema morale |
 | `llm-news-engine.js` | Notizie AI via Ollama Cloud |
 | `llm-game-master.js` | Game Master AI, eventi, competitor |
-| `competitor-engine.js` | 10 broker AI con OPA e sfide |
-| `world-engine.js` | Simulazione persistente di mondo, società, rivali e assemblee |
-| `corporate-lifecycle.js` | Fallimenti, ristrutturazioni, fusioni, acquisizioni, IPO e spin-off |
-| `broker-story.js` | Prologo, identità del broker, capitoli reattivi, relazioni e finali |
-| `player-life.js` | Condizione personale, spese, rischio, margin call, game over e riscatto |
-| `brokerage-career.js` | Disoccupazione, sei datori, colleghi IA, contratti, società propria e illeciti |
-| `stakeholder-interactions.js` | Quote, mercato dei blocchi, assemblee, capo e relazioni nel desk |
-| `build_html.py` | Assemblatore finale single-file |
-## Configurazione sicura LLM
-
-Le chiavi API non sono incluse nel codice. Inserisci endpoint, modello e chiave dalla schermata **Impostazioni LLM**; i dati restano nel browser tramite localStorage. In produzione è consigliato un proxy server-side che non esponga credenziali al client.
-
-L'integrazione LLM è disattivata per impostazione predefinita. Il giocatore deve inserire consapevolmente un endpoint e abilitarla: solo da quel momento contesto di gioco, portafoglio e carriera possono essere inviati al servizio configurato.
+| `competitor-engine.js` | Broker AI con strategie e memoria |
+| `world-engine.js` | Simulazione persistente di mondo, società e rivali |
+| `corporate-lifecycle.js` | Fallimenti, ristrutturazioni, M&A, IPO, spin-off |
+| `broker-story.js` | Prologo e carriera narrativa del broker |
+| `player-life.js` | Condizione personale, stress, margin call, game over |
+| `brokerage-career.js` | Società di brokeraggio, colleghi IA, contratti, firma propria |
+| `stakeholder-interactions.js` | Quote, mercato dei blocchi, relazioni nel desk |
+| `build.js` | Build system Node.js + Babel ES5 |
+| `scripts/lint-es5.js` | Lint ES5 sui sorgenti |
+| `test/*.test.js` | Suite di test automatica |
+| `.github/workflows/ci.yml` | CI GitHub Actions |
 
 ## Flusso settimanale
 
-1. Il motore di mercato aggiorna prezzi ed eventi.
-2. L'LLM riceve a rotazione società complete con storia, obiettivi, amministratori, soci, macroregioni e memoria dei rivali.
-3. Il World Engine valida e limita ogni delta prima di applicarlo.
-4. Il Corporate Lifecycle verifica la salute finanziaria e applica operazioni straordinarie solo a società ammissibili.
-5. Fallimenti e operazioni M&A modificano titoli, portafoglio, short, peer di settore, indici, notizie e storie societarie.
-6. Se l'LLM non è disponibile, il fallback locale mantiene il gioco pienamente funzionante e può generare eventi societari coerenti.
+1. Aggiornamento prezzi, dividendi e report trimestrali.
+2. Eventi societari (aziendali, settoriali, macro).
+3. Check assemblee e votazioni attive.
+4. World Engine e Corporate Lifecycle.
+5. Competitor Engine: azioni dei rivali.
+6. Processo clienti, agenti e stipendi.
+7. Missioni, achievement, chapter progress e SEC raid.
+8. Salvataggio automatico.
 
-## Storia del broker
+## Configurazione sicura LLM
 
-Una nuova partita apre il prologo **La chiamata delle 6:17**. Il giocatore sceglie il nome del broker, il suo passato e la promessa che guiderà la carriera. I capitoli non avanzano con una sequenza fissa: si sbloccano in base ai risultati reali, alle perdite, ai rivali, alle assemblee e alle indagini. Il profilo narrativo viene incluso nel contesto del World Engine e salvato insieme alla partita.
+Le chiavi API non sono incluse nel codice. Inserisci endpoint, modello e chiave dalla schermata **Impostazioni LLM**; i dati restano nel browser tramite localStorage. L'integrazione LLM è **disattivata di default** e deve essere abilitata esplicitamente.
 
-## Governance societaria AI
+## Salvataggi
 
-Ogni settimana l'LLM gestisce un gruppo a rotazione di società. Gli amministratori possono sostenere o ostacolare il piano, perdere influenza, cambiare condotta, essere sospesi o dimettersi. I blocchi azionari modificano fiducia e posizione in base ai risultati. Nelle assemblee il voto deriva da CdA, soci reali, competitor e quota posseduta dal giocatore. Tutti i valori prodotti dall'LLM vengono limitati e validati dal World Engine prima dell'applicazione.
+- Auto-save in `localStorage` ad ogni turno.
+- Slot manuali gestiti da `GameEngine.saveToSlot()` / `loadFromSlot()`.
+- Esporta/importa JSON dalla schermata Salvataggio.
+
+## Compatibilità
+
+Testato su Node.js 18+. L'output HTML è ES5 puro e dovrebbe girare su browser moderni e su ambienti con restrizioni JavaScript severe.

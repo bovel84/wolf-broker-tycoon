@@ -234,6 +234,7 @@
 
   function ensureWorkplace() {
     var c = career(); if (!c) return;
+    if (!c.colleagues || typeof c.colleagues.length !== 'number') c.colleagues = [];
     if (!(c.requests instanceof Array)) c.requests = [];
     if (!(c.requestHistory instanceof Array)) c.requestHistory = [];
     if (!c.boss || c.boss.firmId !== c.employerId) {
@@ -311,12 +312,12 @@
   function bossAction(action) {
     var c = career(); if (!c || !c.boss) return false;
     if (action === 'raise') {
-      if (c.boss.trust >= 68 && c.careerReputation >= 45) { c.contract.salary = Math.round(c.contract.salary * 1.08); c.boss.trust -= 8; addLog('boss', 'Aumento concesso', 'Nuovo stipendio ' + money(c.contract.salary) + ' a settimana.', c.boss.name); notify('success', 'Aumento ottenuto'); }
-      else { c.boss.trust -= 4; addLog('boss', 'Aumento rifiutato', 'Il capo vuole prima risultati e fiducia più solidi.', c.boss.name); }
+      if (c.boss.trust >= 68 && c.careerReputation >= 45 && c.contract) { c.contract.salary = Math.round(c.contract.salary * 1.08); c.boss.trust = clamp(c.boss.trust - 8, 0, 100); addLog('boss', 'Aumento concesso', 'Nuovo stipendio ' + money(c.contract.salary) + ' a settimana.', c.boss.name); notify('success', 'Aumento ottenuto'); }
+      else { c.boss.trust = clamp(c.boss.trust - 4, 0, 100); addLog('boss', 'Aumento rifiutato', 'Il capo vuole prima risultati e fiducia più solidi.', c.boss.name); }
     } else if (action === 'feedback') {
-      c.boss.trust += 2; c.boss.lastMessage = c.cycle.rank <= 2 ? 'Sei davanti. Ora dimostra di saperci restare.' : 'Il desk non paga il potenziale: paga i risultati.'; addLog('boss', 'Colloquio individuale', c.boss.lastMessage, c.boss.name);
+      c.boss.trust = clamp(c.boss.trust + 2, 0, 100); c.boss.lastMessage = c.cycle.rank <= 2 ? 'Sei davanti. Ora dimostra di saperci restare.' : 'Il desk non paga il potenziale: paga i risultati.'; addLog('boss', 'Colloquio individuale', c.boss.lastMessage, c.boss.name);
     } else if (action === 'challenge') {
-      c.boss.trust -= 6; c.employerTrust -= 3; if (global.BrokerStory && global.BrokerStory.adjustTraits) global.BrokerStory.adjustTraits({ nerve: 6, loyalty: -3 }, 'Hai contestato pubblicamente il capo.'); addLog('boss', 'Ordine contestato', 'Hai chiesto motivazioni davanti al desk.', c.boss.name);
+      c.boss.trust = clamp(c.boss.trust - 6, 0, 100); c.employerTrust = clamp(c.employerTrust - 3, 0, 100); if (global.BrokerStory && global.BrokerStory.adjustTraits) global.BrokerStory.adjustTraits({ nerve: 6, loyalty: -3 }, 'Hai contestato pubblicamente il capo.'); addLog('boss', 'Ordine contestato', 'Hai chiesto motivazioni davanti al desk.', c.boss.name);
     }
     saveAndRender(); return true;
   }

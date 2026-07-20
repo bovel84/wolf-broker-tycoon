@@ -19,6 +19,7 @@ const OUT_FILE = path.join(BASE, 'wolf-broker-tycoon.html');
 const MODULE_FILES = [
   'market-engine.js',
   'game-engine.js',
+  'ui-bridge.js',
   'ui-engine.js',
   'story-engine.js',
   'llm-news-engine.js',

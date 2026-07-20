@@ -52,10 +52,22 @@ Gestionale di broker azionario completo e realistico con modalità carriera e as
 ## Build
 
 ```bash
-python3 build_html.py
+npm install
+npm run build
 ```
 
-Genera `wolf-broker-tycoon.html` single-file giocabile.
+Genera `wolf-broker-tycoon.html` single-file giocabile. Il sistema di build:
+- assembla i moduli JavaScript con `index.html`
+- traspila ES6+ -> ES5 tramite Babel per compatibilita' massima
+- valida che l'output finale rispetti i vincoli ES5 del progetto
+
+Se preferisci lanciare direttamente lo script Node:
+
+```bash
+node build.js
+```
+
+Il vecchio script `build_html.py` e' deprecato; e' stato sostituito da `build.js` per non dipendere da un interprete Python locale.
 
 ## Moduli
 

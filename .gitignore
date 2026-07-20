@@ -1,5 +1,8 @@
 _debug.js
 _debug_extracted.js
+_transpiled_debug.js
+node_modules/
+*.log
 *.pyc
 __pycache__/
 .venv/

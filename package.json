@@ -1,0 +1,26 @@
+{
+  "name": "wolf-broker-tycoon",
+  "version": "1.0.0",
+  "description": "Gestionale di broker azionario completo e realistico con modalità carriera e assemblee societarie.",
+  "main": "broker-story.js",
+  "scripts": {
+    "build": "node build.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bovel84/wolf-broker-tycoon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bovel84/wolf-broker-tycoon/issues"
+  },
+  "homepage": "https://github.com/bovel84/wolf-broker-tycoon#readme",
+  "devDependencies": {
+    "@babel/cli": "^8.0.4",
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2"
+  }
+}

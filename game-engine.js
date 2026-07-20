@@ -67,15 +67,15 @@
 
   var LEVELS = [
     { id: 1, name: 'Novizio', minNetWorth: 10000, minXP: 0, minMissions: 0, unlocks: ['long'], desc: 'Solo long positions. Impara le basi.' },
-    { id: 2, name: 'Apprendista', minNetWorth: 15000, minXP: 200, minMissions: 3, unlocks: ['long','limit'], desc: 'Limit orders sbloccati.' },
-    { id: 3, name: 'Trader', minNetWorth: 30000, minXP: 500, minMissions: 6, unlocks: ['long','limit','short'], desc: 'Short selling sbloccato.' },
-    { id: 4, name: 'Agente', minNetWorth: 60000, minXP: 1000, minMissions: 10, unlocks: ['long','limit','short','margin2x'], desc: 'Margin 2x sbloccato. Assumi agenti.' },
-    { id: 5, name: 'Broker', minNetWorth: 120000, minXP: 2000, minMissions: 15, unlocks: ['long','limit','short','margin2x','margin3x','penny'], desc: 'Margin 3x + Penny stocks.' },
-    { id: 6, name: 'Senior Broker', minNetWorth: 250000, minXP: 4000, minMissions: 20, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny'], desc: 'Margin 5x sbloccato.' },
-    { id: 7, name: 'Portfolio Manager', minNetWorth: 500000, minXP: 8000, minMissions: 25, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options'], desc: 'Opzioni sbloccate.' },
-    { id: 8, name: 'Hedge Fund Manager', minNetWorth: 1500000, minXP: 15000, minMissions: 30, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options','darkpool'], desc: 'Dark pool sbloccato.' },
-    { id: 9, name: 'Market Wizard', minNetWorth: 4000000, minXP: 25000, minMissions: 35, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options','darkpool','all'], desc: 'Tutto sbloccato.' },
-    { id: 10, name: 'Leggenda di Wall Street', minNetWorth: 12000000, minXP: 50000, minMissions: 40, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options','darkpool','all','endgame'], desc: 'Modalità endgame.' }
+    { id: 2, name: 'Apprendista', minNetWorth: 15000, minXP: 200, minMissions: 2, unlocks: ['long','limit'], desc: 'Limit orders sbloccati.' },
+    { id: 3, name: 'Trader', minNetWorth: 30000, minXP: 500, minMissions: 4, unlocks: ['long','limit','short'], desc: 'Short selling sbloccato.' },
+    { id: 4, name: 'Agente', minNetWorth: 60000, minXP: 1000, minMissions: 7, unlocks: ['long','limit','short','margin2x'], desc: 'Margin 2x sbloccato. Assumi agenti.' },
+    { id: 5, name: 'Broker', minNetWorth: 120000, minXP: 2000, minMissions: 10, unlocks: ['long','limit','short','margin2x','margin3x','penny'], desc: 'Margin 3x + Penny stocks.' },
+    { id: 6, name: 'Senior Broker', minNetWorth: 250000, minXP: 4000, minMissions: 14, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny'], desc: 'Margin 5x sbloccato.' },
+    { id: 7, name: 'Portfolio Manager', minNetWorth: 500000, minXP: 8000, minMissions: 18, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options'], desc: 'Opzioni sbloccate.' },
+    { id: 8, name: 'Hedge Fund Manager', minNetWorth: 1500000, minXP: 15000, minMissions: 22, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options','darkpool'], desc: 'Dark pool sbloccato.' },
+    { id: 9, name: 'Market Wizard', minNetWorth: 4000000, minXP: 25000, minMissions: 26, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options','darkpool','all'], desc: 'Tutto sbloccato.' },
+    { id: 10, name: 'Leggenda di Wall Street', minNetWorth: 12000000, minXP: 50000, minMissions: 30, unlocks: ['long','limit','short','margin2x','margin3x','margin5x','penny','options','darkpool','all','endgame'], desc: 'Modalità endgame.' }
   ];
 
   var CHAPTERS = [
@@ -215,8 +215,12 @@
   };
 
   var MISSION_TEMPLATES = {
-    first_trade: { name: 'Primo Trade', desc: 'Esegui il tuo primo trade', xp: 50, cash: 0,
+    first_trade: { name: 'Primo Trade', desc: 'Esegui il tuo primo trade', xp: 50, cash: 500,
       check: function(s) { return s.player.stats.totalTrades >= 1; }, deadline: 0 },
+    first_profit: { name: 'Primo Profitto', desc: 'Realizza un profitto positivo', xp: 75, cash: 1000,
+      check: function(s) { return s.portfolio.realizedPnL > 0; }, deadline: 0 },
+    reach_25k: { name: '€25K di Patrimonio', desc: 'Raggiungi €25.000 di patrimonio', xp: 75, cash: 2500,
+      check: function(s) { return s.player.netWorth >= 25000; }, deadline: 0 },
     make_50k: { name: '€50K di Patrimonio', desc: 'Raggiungi €50.000 di patrimonio', xp: 100, cash: 5000,
       check: function(s) { return s.player.netWorth >= 50000; }, deadline: 0 },
     first_short_profit: { name: 'Profitto dallo Short', desc: 'Realizza un profitto da uno short', xp: 100, cash: 2000,
@@ -235,7 +239,7 @@
       check: function(s) { return s.player.chapter >= 10; }, deadline: 0 },
     endgame: { name: 'Eredita Wall Street', desc: 'Raggiungi €50M', xp: 1000, cash: 500000,
       check: function(s) { return s.player.netWorth >= 50000000; }, deadline: 0 },
-    trade_10: { name: 'Dieci Trade', desc: 'Completa 10 trade', xp: 100, cash: 1000,
+    trade_10: { name: 'Dieci Trade', desc: 'Completa 10 trade', xp: 100, cash: 2000,
       check: function(s) { return s.player.stats.totalTrades >= 10; }, deadline: 0 },
     trade_50: { name: 'Cinquanta Trade', desc: 'Completa 50 trade', xp: 200, cash: 5000,
       check: function(s) { return s.player.stats.totalTrades >= 50; }, deadline: 0 },

@@ -1753,6 +1753,17 @@
    * ASSEMBLY SYSTEM
    * ========================================================================== */
 
+  var ASSEMBLY_PROPOSALS = [
+    { id: 'dividend_increase', name: 'Aumento Dividendo', desc: 'Aumentare il dividendo annuo del 25%', effect: 'div+25', voteNeed: 0.5, impact: { type: 'div', factor: 1.25, price: 1.03 } },
+    { id: 'dividend_cut', name: 'Taglio Dividendo', desc: 'Ridurre il dividendo per reinvestire', effect: 'div-40', voteNeed: 0.5, impact: { type: 'div', factor: 0.6, price: 0.98 } },
+    { id: 'buyback', name: 'Buyback Azioni', desc: 'Riacquistare azioni proprie sul mercato', effect: 'buyback', voteNeed: 0.5, impact: { type: 'buyback', price: 1.06 } },
+    { id: 'expansion', name: 'Espansione Strategica', desc: 'Aprire nuovi mercati e linee di prodotto', effect: 'expansion', voteNeed: 0.5, impact: { type: 'growth', price: 1.05, momentum: 0.01 } },
+    { id: 'cost_cutting', name: 'Taglio Costi', desc: 'Ridurre i costi operativi del 15%', effect: 'costs', voteNeed: 0.5, impact: { type: 'margin', price: 1.03 } },
+    { id: 'ceo_change', name: 'Cambio CEO', desc: 'Sostituire il CEO con nuova leadership', effect: 'ceo', voteNeed: 0.5, impact: { type: 'volatility', price: 0.97, volUp: 1.3 } },
+    { id: 'stock_split', name: 'Split 2:1', desc: 'Raddoppiare le azioni, dimezzare il prezzo', effect: 'split', voteNeed: 0.67, impact: { type: 'split', factor: 2 } },
+    { id: 'special_dividend', name: 'Dividendo Straordinario', desc: 'Distribuire 2€ per azione una tantum', effect: 'special_div', voteNeed: 0.5, impact: { type: 'specialDiv', amount: 2 } }
+  ];
+
   GameEngine.prototype._checkAssemblies = function () {
     var p = this.state.player;
     var companies = this.state.market.companies;
@@ -1765,34 +1776,116 @@
       if (ownership > 0.01 && rng() < 0.05) {
         c.assemblyScheduled = true;
         c.assemblyVotes = { for: 0, against: 0, abstain: 0 };
+        var proposalCount = 2 + Math.floor(rng() * 3);
+        var proposals = [];
+        var pool = ASSEMBLY_PROPOSALS.slice().sort(function () { return rng() - 0.5; });
+        for (var k = 0; k < proposalCount && k < pool.length; k++) {
+          proposals.push({
+            id: pool[k].id,
+            name: pool[k].name,
+            desc: pool[k].desc,
+            effect: pool[k].effect,
+            voteNeed: pool[k].voteNeed,
+            impact: pool[k].impact,
+            playerVoted: false,
+            playerVote: null,
+            aiFor: Math.floor(c.sharesOutstanding * (0.10 + rng() * 0.25)),
+            aiAgainst: Math.floor(c.sharesOutstanding * (0.05 + rng() * 0.20)),
+            aiAbstain: Math.floor(c.sharesOutstanding * (0.05 + rng() * 0.15)),
+            resolved: false
+          });
+        }
+        c.assemblyProposals = proposals;
         this.state.market.assembliesThisWeek.push(c);
         this.notify('info', 'Assemblea ' + c.ticker, 'Hai diritto di voto. Possiedi ' + (ownership * 100).toFixed(2) + '%');
       }
     }
   };
 
-  GameEngine.prototype.voteAssembly = function (ticker, vote) {
+  GameEngine.prototype.voteAssembly = function (ticker, proposalIndex, vote) {
     var company = this.getCompany(ticker);
     if (!company || !company.assemblyScheduled) return { success: false, error: 'Nessuna assemblea attiva' };
     var pos = this.state.portfolio.positions[company.id];
     if (!pos) return { success: false, error: 'Non possiedi azioni' };
+    var proposals = company.assemblyProposals || [];
+    if (proposalIndex < 0 || proposalIndex >= proposals.length) return { success: false, error: 'Proposta non valida' };
+    var prop = proposals[proposalIndex];
+    if (prop.playerVoted) return { success: false, error: 'Hai gia votato questa proposta' };
     var votes = pos.shares;
     if (vote === 'for') company.assemblyVotes.for += votes;
     else if (vote === 'against') company.assemblyVotes.against += votes;
     else company.assemblyVotes.abstain += votes;
-    company.assemblyScheduled = false;
+    prop.playerVoted = true;
+    prop.playerVote = vote;
     this.state.player.stats.assembliesVoted++;
     this.state.player.ethics = clamp(this.state.player.ethics + 1, 0, 100);
     this.addXP(20);
-    this.notify('success', 'Voto Registrato', 'Hai votato ' + vote + ' con ' + votes + ' azioni');
+    this.notify('success', 'Voto Registrato', 'Hai votato ' + vote + ' su ' + prop.name + ' con ' + votes + ' azioni');
     this._checkAchievements();
-    // Check control
-    if (company.assemblyVotes.for > company.sharesOutstanding * 0.5) {
-      this.state.player.stats.companiesControlled++;
-      this.notify('success', 'Controllo!', 'Hai ottenuto il controllo di ' + company.name);
-    }
-    this.emit('assemblyVote', { ticker: ticker, vote: vote, shares: votes });
+    this.emit('assemblyVote', { ticker: ticker, proposal: prop.id, vote: vote, shares: votes });
     return { success: true };
+  };
+
+  GameEngine.prototype.resolveAssembly = function (ticker) {
+    var company = this.getCompany(ticker);
+    if (!company || !company.assemblyScheduled) return { success: false, error: 'Nessuna assemblea attiva' };
+    var self = this;
+    var proposals = company.assemblyProposals || [];
+    var totalVotes = company.assemblyVotes.for + company.assemblyVotes.against + company.assemblyVotes.abstain;
+    var pos = this.state.portfolio.positions[company.id];
+    for (var i = 0; i < proposals.length; i++) {
+      var prop = proposals[i];
+      if (prop.resolved) continue;
+      prop.resolved = true;
+      var forVotes = company.assemblyVotes.for + prop.aiFor;
+      var againstVotes = company.assemblyVotes.against + prop.aiAgainst;
+      var abstainVotes = company.assemblyVotes.abstain + prop.aiAbstain;
+      var quorum = company.sharesOutstanding * prop.voteNeed;
+      var passed = forVotes > quorum && forVotes > againstVotes;
+      if (passed) self._applyAssemblyEffect(company, prop);
+      var msg = passed ? 'Approvata' : 'Respinta';
+      this.notify('info', company.ticker + ': ' + prop.name, msg + ' (' + (forVotes / company.sharesOutstanding * 100).toFixed(1) + '% a favore)');
+    }
+    company.assemblyScheduled = false;
+    company.assemblyResolvedWeek = this.state.player.week;
+    this.emit('assemblyResolved', { ticker: ticker });
+    return { success: true };
+  };
+
+  GameEngine.prototype._applyAssemblyEffect = function (company, prop) {
+    var impact = prop.impact || {};
+    if (impact.type === 'div') {
+      company.dividendYield = (company.dividendYield || 0) * impact.factor;
+      company.price *= impact.price || 1.02;
+    } else if (impact.type === 'buyback') {
+      company.price *= impact.price || 1.06;
+      company.sharesOutstanding = Math.max(1, Math.floor(company.sharesOutstanding * 0.95));
+    } else if (impact.type === 'growth') {
+      company.price *= impact.price || 1.05;
+      company.sentiment = clamp(company.sentiment + 10, 0, 100);
+    } else if (impact.type === 'margin') {
+      company.price *= impact.price || 1.03;
+    } else if (impact.type === 'volatility') {
+      company.price *= impact.price || 0.97;
+      company.volatility = (company.volatility || 0.02) * (impact.volUp || 1.3);
+    } else if (impact.type === 'split') {
+      var factor = impact.factor || 2;
+      var pos = this.state.portfolio.positions[company.id];
+      if (pos) pos.shares *= factor;
+      company.sharesOutstanding *= factor;
+      company.price = roundCents(company.price / factor);
+      this.notify('success', 'Split Azionario', company.ticker + ' split ' + factor + ':1 — azioni raddoppiate');
+    } else if (impact.type === 'specialDiv') {
+      var amount = impact.amount || 2;
+      var position = this.state.portfolio.positions[company.id];
+      if (position) {
+        var payout = position.shares * amount;
+        this.state.player.cash += payout;
+        this.notify('success', 'Dividendo Straordinario', '+' + formatMoney(payout) + ' da ' + company.ticker);
+      }
+    }
+    company.price = Math.max(0.10, roundCents(company.price));
+    company.marketCap = company.price * company.sharesOutstanding;
   };
 
   /* ==========================================================================
@@ -2077,6 +2170,15 @@
 
     // Step 8: Check assemblies
     this._checkAssemblies();
+
+    // Step 8.2: Resolve pending assemblies from previous weeks
+    var assembCompanies = this.state.market.companies;
+    for (var ai = 0; ai < assembCompanies.length; ai++) {
+      var ac = assembCompanies[ai];
+      if (ac.assemblyScheduled && ac.assemblyResolvedWeek && (this.state.player.week - ac.assemblyResolvedWeek) >= 2) {
+        this.resolveAssembly(ac.ticker);
+      }
+    }
 
     // Step 8.5: World Engine turn (governance, regions, corporate events)
     if (typeof WorldEngine !== 'undefined' && WorldEngine.processWorldTurn) {

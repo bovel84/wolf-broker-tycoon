@@ -950,30 +950,41 @@ function openAssemblyModal(ticker){
 function closeAssemblyModal(){document.getElementById('assembly-modal').classList.remove('show')}
 
 function castVote(ticker,propIdx,vote){
-  var assembly=G.pendingAssemblies.find(a=>a.ticker===ticker&&!a.resolved);
-  if(!assembly||assembly.proposals[propIdx].playerVoted)return;
-  assembly.proposals[propIdx].playerVoted=true;
-  assembly.proposals[propIdx].playerVote=vote;
-  // AI voters
-  var c=getCompany(ticker);
-  var total=companySharesOutstanding(c);
-  var playerShares=getSharesOwned(ticker);
-  var aiShares=total-playerShares;
-  var prop=assembly.proposals[propIdx];
-  var aiFavor=Math.random();
-  if(prop.vote==='positive')aiFavor=0.55+Math.random()*0.3;
-  else if(prop.vote==='negative')aiFavor=0.25+Math.random()*0.3;
-  else aiFavor=0.4+Math.random()*0.2;
-  if(typeof StakeholderInteractions!=='undefined'&&StakeholderInteractions.applyVoteInfluence)aiFavor=StakeholderInteractions.applyVoteInfluence(ticker,aiFavor);
-  prop.votesFor=Math.round(aiShares*aiFavor);
-  prop.votesAgainst=aiShares-prop.votesFor;
-  G.stats.assembliesVoted++;
+  if(typeof wolfBridge!=='undefined' && wolfBridge.voteAssembly){
+    var voteStr = vote===1 ? 'for' : 'against';
+    wolfBridge.voteAssembly(ticker, propIdx, voteStr);
+  } else {
+    var assembly=G.pendingAssemblies.find(a=>a.ticker===ticker&&!a.resolved);
+    if(!assembly||assembly.proposals[propIdx].playerVoted)return;
+    assembly.proposals[propIdx].playerVoted=true;
+    assembly.proposals[propIdx].playerVote=vote;
+    var c=getCompany(ticker);
+    var total=companySharesOutstanding(c);
+    var playerShares=getSharesOwned(ticker);
+    var aiShares=total-playerShares;
+    var prop=assembly.proposals[propIdx];
+    var aiFavor=Math.random();
+    if(prop.vote==='positive')aiFavor=0.55+Math.random()*0.3;
+    else if(prop.vote==='negative')aiFavor=0.25+Math.random()*0.3;
+    else aiFavor=0.4+Math.random()*0.2;
+    if(typeof StakeholderInteractions!=='undefined'&&StakeholderInteractions.applyVoteInfluence)aiFavor=StakeholderInteractions.applyVoteInfluence(ticker,aiFavor);
+    prop.votesFor=Math.round(aiShares*aiFavor);
+    prop.votesAgainst=aiShares-prop.votesFor;
+    G.stats.assembliesVoted++;
+  }
   saveAuto();
   openAssemblyModal(ticker);
+  renderAll();
   toast('success','Voto registrato per '+ticker);
 }
 
 function resolveAssembly(ticker){
+  if(typeof wolfBridge!=='undefined' && wolfBridge.resolveAssembly){
+    wolfBridge.resolveAssembly(ticker);
+    closeAssemblyModal();
+    renderAll();
+    return;
+  }
   var assembly=G.pendingAssemblies.find(a=>a.ticker===ticker&&!a.resolved);
   if(!assembly)return;
   var c=getCompany(ticker);
@@ -1588,19 +1599,29 @@ function renderAssembly(){
   var el=document.getElementById('assembly-list');
   if(!el)return;
   if(!G.pendingAssemblies||G.pendingAssemblies.length===0){
-    el.innerHTML='<div class="empty-state"><div class="emoji">🏛️</div><div class="msg">Nessuna assemblea disponibile. Possiedi almeno il 10% di una societa per partecipare.</div></div>';
+    el.innerHTML='<div class="empty-state"><div class="emoji">🏛️</div><div class="msg">Nessuna assemblea disponibile. Possiedi almeno l\'1% di una societa per partecipare.</div></div>';
     return;
   }
   var html='';
   G.pendingAssemblies.forEach(a=>{
     var c=getCompany(a.ticker);
     var pct=getOwnershipPct(a.ticker);
+    var allResolved=true;
+    for(var i=0;i<a.proposals.length;i++){ if(!a.proposals[i].playerVoted){ allResolved=false; break; } }
     html+='<div class="assembly-card"><div class="company-info"><div><strong>'+c.name+'</strong> ('+a.ticker+')</div><div><span class="pill b">'+pct.toFixed(1)+'%</span> <span class="pill y">Sett.'+a.week+'</span></div></div>';
     html+='<div class="gray" style="font-size:12px;margin-bottom:8px">'+a.proposals.length+' proposte in votazione</div>';
-    a.proposals.forEach(p=>{html+='<div class="prop-desc" style="font-size:11px;color:var(--text2)">• '+p.title+'</div>'});
-    html+='<div style="margin-top:8px"><button class="btn btn-sm btn-blue" onclick="openAssemblyModal(\''+a.ticker+'\')">Apri Assemblea</button></div></div>';
+    a.proposals.forEach(p=>{html+='<div class="prop-desc" style="font-size:11px;color:var(--text2)">• '+(p.title||p.name)+'</div>'});
+    html+='<div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-sm btn-blue" onclick="openAssemblyModal(\''+a.ticker+'\')">Apri Assemblea</button>'+(allResolved?'<button class="btn btn-sm btn-green" onclick="executeAssemblyResolve(\''+a.ticker+'\')">Chiudi Votazione</button>':'')+'</div></div>';
   });
   el.innerHTML=html;
+}
+
+function executeAssemblyResolve(ticker){
+  if(typeof wolfBridge!=='undefined' && wolfBridge.resolveAssembly){
+    wolfBridge.resolveAssembly(ticker);
+  }
+  renderAssembly();
+  renderAll();
 }
 
 function renderNews(){

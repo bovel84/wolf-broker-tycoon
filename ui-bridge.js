@@ -342,6 +342,19 @@
       }
     };
 
+
+    wolfBridge.resolveAssembly = function (ticker) {
+      var result = engine.resolveAssembly(ticker);
+      if (result.success) syncEngineToLegacy();
+      return result;
+    };
+    wolfBridge.voteAssembly = function (ticker, proposalIndex, vote) {
+      var result = engine.voteAssembly(ticker, proposalIndex, vote);
+      if (result.success) syncEngineToLegacy();
+      return result;
+    };
+
+
     // Sovrascrivi newGame
     root.newGame = function () {
       var e = getEngine();

@@ -1,6 +1,7 @@
 _debug.js
 _debug_extracted.js
 _transpiled_debug.js
+_bundle_debug.js
 node_modules/
 *.log
 *.pyc

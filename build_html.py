@@ -109,6 +109,7 @@ module_files = [
     'broker-story.js',
     'player-life.js',
     'brokerage-career.js',
+    'stakeholder-interactions.js',
 ]
 
 modules = []

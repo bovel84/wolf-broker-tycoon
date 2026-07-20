@@ -73,6 +73,8 @@ Genera `wolf-broker-tycoon.html` single-file giocabile.
 
 Le chiavi API non sono incluse nel codice. Inserisci endpoint, modello e chiave dalla schermata **Impostazioni LLM**; i dati restano nel browser tramite localStorage. In produzione è consigliato un proxy server-side che non esponga credenziali al client.
 
+L'integrazione LLM è disattivata per impostazione predefinita. Il giocatore deve inserire consapevolmente un endpoint e abilitarla: solo da quel momento contesto di gioco, portafoglio e carriera possono essere inviati al servizio configurato.
+
 ## Flusso settimanale
 
 1. Il motore di mercato aggiorna prezzi ed eventi.

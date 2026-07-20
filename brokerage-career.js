@@ -77,7 +77,13 @@
   function ensureState() {
     var g = getGame();
     if (!g) return null;
-    if (!g.brokerCareer || typeof g.brokerCareer !== 'object') g.brokerCareer = createState();
+    if (!g.brokerCareer || typeof g.brokerCareer !== 'object' || g.brokerCareer.status === 'unemployed') {
+      g.brokerCareer = createState();
+      g.brokerCareer.status = 'employed';
+      g.brokerCareer.employerId = 'meridian';
+      g.brokerCareer.contract = { firmId: 'meridian', role: 'Junior Broker', salary: FIRMS[0].salary, commission: FIRMS[0].commission, reviewEvery: 4, startWeek: (g.week || 1) };
+      g.brokerCareer.cycle = createCycle(firm('meridian'));
+    }
     var s = g.brokerCareer;
     var d = createState();
     for (var k in d) if (Object.prototype.hasOwnProperty.call(d, k) && s[k] === undefined) s[k] = d[k];
@@ -586,7 +592,8 @@
 
   function canTrade() {
     var s = ensureState();
-    return !!(s && (s.status === 'employed' || s.status === 'owner'));
+    if (!s) return true; // se lo stato carriera non esiste, permetti
+    return !!(s.status === 'employed' || s.status === 'owner');
   }
 
   function getContext() {
@@ -724,7 +731,7 @@
     }
     if (typeof newGame === 'function') {
       originalNewGame = newGame;
-      global.newGame = function () { originalNewGame(); var g = getGame(); if (g) g.brokerCareer = createState(); render(); global.setTimeout(showJobModal, 250); };
+      global.newGame = function () { originalNewGame(); var g = getGame(); if (g) g.brokerCareer = createState(); render(); /* non aprire modale di lavoro all'avvio */ };
     }
     if (typeof loadSlot === 'function') {
       originalLoadSlot = loadSlot;

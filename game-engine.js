@@ -1156,7 +1156,7 @@
   GameEngine.prototype._checkEnding = function () {
     var p = this.state.player;
     if (p.chapter < 10) return null;
-    if (p.netWorth >= 50000000) {
+    if (p.netWorth >= 12000000 || p.level >= 10) {
       var ending;
       if (p.ethics > 70) {
         ending = {
@@ -1178,6 +1178,13 @@
           title: 'Caduta',
           text: 'La giustizia ha prevalso. Hai perso tutto. Prigione, vergogna, e un mucchio di rimpianti.',
           score: p.netWorth * 0.1
+        };
+      } else if (p.ethics < 10) {
+        ending = {
+          id: 'wolf',
+          title: 'Il Lupo',
+          text: 'Regni come re oscuro di Wall Street. Il tuo impero e vasto ma costruito su sabbie mobili. Nessuno si fida di te, ma tutti ti temono.',
+          score: p.netWorth
         };
       } else {
         ending = {

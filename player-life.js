@@ -110,7 +110,9 @@
     var levelCost = (g.level || 0) * 38;
     var wealthCost = Math.max(0, nw) * 0.00012;
     var crisisDiscount = s.insolvencyWeeks > 0 ? 0.65 : 1;
-    return round(clamp((85 + levelCost + wealthCost) * crisisDiscount, 60, 2500), 2);
+    var career = global.BrokerageCareer && global.BrokerageCareer.getContext ? global.BrokerageCareer.getContext() : null;
+    var workFactor = career && career.status === 'unemployed' ? 0.78 : (career && career.status === 'owner' ? 1.18 : 1);
+    return round(clamp((85 + levelCost + wealthCost) * crisisDiscount * workFactor, 55, 2800), 2);
   }
 
   function updatePersonalMetrics() {
@@ -425,6 +427,19 @@
     return { status: s.status, stress: s.stress, health: s.health, credibility: s.credibility, legalPressure: s.legalPressure, leverage: s.leverage, insolvencyWeeks: s.insolvencyWeeks, marginCalls: s.marginCalls, secondChanceUsed: s.secondChanceUsed, peakNetWorth: s.peakNetWorth, gameOver: s.gameOver };
   }
 
+  function adjust(changes, reason) {
+    var s = ensureState();
+    if (!s) return null;
+    changes = changes || {};
+    if (typeof changes.stress === 'number') s.stress = round(clamp(s.stress + changes.stress, 0, 100), 1);
+    if (typeof changes.health === 'number') s.health = round(clamp(s.health + changes.health, 0, 100), 1);
+    if (typeof changes.credibility === 'number') s.credibility = round(clamp(s.credibility + changes.credibility, 0, 100), 1);
+    if (typeof changes.legalPressure === 'number') s.legalPressure = round(clamp(s.legalPressure + changes.legalPressure, 0, 100), 1);
+    if (reason) addIncident('career', reason, 'La vita professionale modifica stress, salute, credibilità o pressione legale.');
+    render();
+    return getContext();
+  }
+
   function install() {
     if (installed) return;
     installed = true;
@@ -479,6 +494,7 @@
     loadCareer: loadCareer,
     showGameOver: showGameOver,
     triggerGameOver: triggerGameOver,
+    adjust: adjust,
     getContext: getContext,
     render: render,
     version: VERSION

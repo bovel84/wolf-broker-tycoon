@@ -666,6 +666,24 @@
       });
     }
 
+    // PROFILO section
+    var profileHTML = '';
+    if (c.description) {
+      profileHTML = '<div class="ue-company-profile" style="color:' + COLORS.white + ';font-size:13px;line-height:1.6;">' + c.description + '</div>';
+    } else {
+      profileHTML = '<div style="color:' + COLORS.grayLight + ';font-size:12px;">Nessuna descrizione disponibile.</div>';
+    }
+
+    // CARATTERISTICHE section
+    var characteristicsHTML = '';
+    if (c.characteristics && c.characteristics.length) {
+      c.characteristics.forEach(function(ch) {
+        characteristicsHTML += '<span class="ue-rating-pill" style="background:' + COLORS.cardBg + ';color:' + COLORS.grayLight + ';border:1px solid ' + COLORS.border + ';text-transform:none;font-size:11px;">' + ch + '</span>';
+      });
+    } else {
+      characteristicsHTML = '<span style="color:' + COLORS.grayLight + ';font-size:12px;">Nessuna caratteristica disponibile.</span>';
+    }
+
     let eventsHTML = '';
     if (c.events && c.events.length) {
       c.events.forEach(e => {
@@ -685,7 +703,7 @@
       ratingsHTML = '<span style="color:' + COLORS.grayLight + ';font-size:12px;">Nessun rating disponibile.</span>';
     }
 
-    modal.innerHTML = '\n      <div class="ue-company-header">\n        <div>\n          <span class="ue-company-name">' + (c.name || 'Unknown') + '</span>\n          <span class="ue-company-ticker">' + (c.ticker || '') + '</span>\n        </div>\n        <div style="text-align:right">\n          <div class="ue-company-price">$' + (formatNum(c.price || 0)) + '</div>\n          <div class="ue-company-change ' + (changeCls) + '">' + (changeSign) + (c.change || 0) + (changePct) + '</div>\n        </div>\n        <span class="ue-company-close">✕</span>\n      </div>\n      <div class="ue-company-body">\n        <div class="ue-company-section">\n          <div class="ue-company-section-title">PRICE CHART</div>\n          <div class="ue-company-chart-container">\n            <canvas id="ue-company-chart"></canvas>\n          </div>\n        </div>\n        <div class="ue-company-section">\n          <div class="ue-company-section-title">FUNDAMENTALS</div>\n          <div class="ue-company-fundamentals">' + (fundamentalsHTML) + '</div>\n        </div>\n        <div class="ue-company-section">\n          <div class="ue-company-section-title">RECENT EVENTS</div>\n          ' + (eventsHTML) + '\n        </div>\n        <div class="ue-company-section">\n          <div class="ue-company-section-title">ANALYST RATINGS</div>\n          <div class="ue-company-ratings">' + (ratingsHTML) + '</div>\n        </div>\n        <div style="display:flex;gap:12px;">\n          <button class="ue-company-trade-btn ue-buy" id="ue-company-buy">BUY</button>\n          <button class="ue-company-trade-btn ue-sell" id="ue-company-sell">SELL</button>\n        </div>\n      </div>\n    ';
+    modal.innerHTML = '\n      <div class="ue-company-header">\n        <div>\n          <span class="ue-company-name">' + (c.name || 'Unknown') + '</span>\n          <span class="ue-company-ticker">' + (c.ticker || '') + '</span>\n        </div>\n        <div style="text-align:right">\n          <div class="ue-company-price">$' + (formatNum(c.price || 0)) + '</div>\n          <div class="ue-company-change ' + (changeCls) + '">' + (changeSign) + (c.change || 0) + (changePct) + '</div>\n        </div>\n        <span class="ue-company-close">✕</span>\n      </div>\n      <div class="ue-company-body">\n        <div class="ue-company-section">\n          <div class="ue-company-section-title">PROFILO</div>\n          ' + profileHTML + '\n        </div>\n        <div class="ue-company-section">\n          <div class="ue-company-section-title">CARATTERISTICHE</div>\n          <div class="ue-company-ratings">' + characteristicsHTML + '</div>\n        </div>\n        <div class="ue-company-section">\n          <div class="ue-company-section-title">PRICE CHART</div>\n          <div class="ue-company-chart-container">\n            <canvas id="ue-company-chart"></canvas>\n          </div>\n        </div>\n        <div class="ue-company-section">\n          <div class="ue-company-section-title">FUNDAMENTALS</div>\n          <div class="ue-company-fundamentals">' + (fundamentalsHTML) + '</div>\n        </div>\n        <div class="ue-company-section">\n          <div class="ue-company-section-title">RECENT EVENTS</div>\n          ' + (eventsHTML) + '\n        </div>\n        <div class="ue-company-section">\n          <div class="ue-company-section-title">ANALYST RATINGS</div>\n          <div class="ue-company-ratings">' + (ratingsHTML) + '</div>\n        </div>\n        <div style="display:flex;gap:12px;">\n          <button class="ue-company-trade-btn ue-buy" id="ue-company-buy">BUY</button>\n          <button class="ue-company-trade-btn ue-sell" id="ue-company-sell">SELL</button>\n        </div>\n      </div>\n    ';
 
     overlay.appendChild(modal);
     mount(overlay);

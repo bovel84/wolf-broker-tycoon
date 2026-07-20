@@ -289,6 +289,125 @@
     ['GlobalReach Media', 'COMM']
   ];
 
+  // ============================================================
+  // DESCRIZIONI E CARATTERISTICHE DELLE 100 SOCIETÀ
+  // ============================================================
+
+  var COMPANY_DESCRIPTIONS = [
+    // TECH (12)
+    { description: "Produttore di server ad alte prestazioni per data center e cloud computing.", characteristics: ["Altissima volatilità", "Esposizione al ciclo semiconduttori", "Concorrenza aggressiva"] },
+    { description: "Operatore di telecomunicazioni con copertura nazionale e servizi 5G.", characteristics: ["Flusso di cassa stabile", "Debt elevata", "Regolamentazione pesante"] },
+    { description: "Azienda di software enterprise con soluzioni ERP e CRM per grandi clienti.", characteristics: ["Ricavi ricorrenti SaaS", "Margini elevati", "Customer lock-in"] },
+    { description: "Specialista in cybersecurity con soluzioni di protezione per reti aziendali.", characteristics: ["Crescita aggressiva", "Settore in espansione", "Acquisizioni frequenti"] },
+    { description: "Sviluppatore di tecnologie quantistiche per calcolo avanzato e crittografia.", characteristics: ["R&D intensivo", "Pre-revenue", "Rischio speculativo"] },
+    { description: "Piattaforma di big data analytics e intelligenza artificiale per imprese.", characteristics: ["IP forte", "Partnership strategiche", "Burn rate elevato"] },
+    { description: "Fabbricante di chip per smartphone, IoT e automazione industriale.", characteristics: ["Ciclo produttivo lungo", "Esposizione domanda consumer", "Capex intensivo"] },
+    { description: "Laboratorio di ricerca su visione artificiale e realtà aumentata.", characteristics: ["Innovazione discontinua", "Nichi di mercato", "Volatilità estrema"] },
+    { description: "Consulenza software e integrazione sistemi per il settore pubblico e privato.", characteristics: ["Business model servizi", "Dipendenza appalti", "Crescita moderata"] },
+    { description: "Fornitore di infrastrutture cloud e soluzioni hyperconvergenti.", characteristics: ["Beneficiario trend cloud", "Concorrenza iper-scaler", "Margini sotto pressione"] },
+    { description: "Gestore di database centralizzati e servizi di migrazione dati.", characteristics: ["Clientela sticky", "Ricavi licenze", "Rischio obsolescenza"] },
+    { description: "Studio di sviluppo grafico e motori di rendering per videogiochi.", characteristics: ["Hit-driven", "Cicli di release", "Fanbase leale"] },
+    // ENERGY (10)
+    { description: "Società di esplorazione e estrazione di oro e minerali preziosi.", characteristics: ["Commodity-driven", "Dividend aristocrat", "Rischio geopolitico"] },
+    { description: "Maggiore operatore integrato di petrolio e gas con raffinazione e distribuzione.", characteristics: ["Dividend aristocrat", "Esposizione prezzo petrolio", "Transizione energetica"] },
+    { description: "Sviluppatore di parchi solari e impianti fotovoltaici su larga scala.", characteristics: ["Crescita aggressiva", "Subsidies dipendente", "Capex intensivo"] },
+    { description: "Operatore di centrali nucleari con contratti governativi a lungo termine.", characteristics: ["Regolamentazione severa", "Flusso di cassa stabile", "Rischio black swan"] },
+    { description: "Società di trivellazione offshore per giacimenti deep-water.", characteristics: ["Ciclico", "Debt elevata", "Earnings volatile"] },
+    { description: "Produttore di energia da fonti rinnovabili miste (eolico, solare, idro).", characteristics: ["ESG-friendly", "Crescita organica", "Dipendenza meteo"] },
+    { description: "Estrattore di carbone termico con miniere in Nord America.", characteristics: ["Declino strutturale", "Yield alto", "Rischio normativo"] },
+    { description: "Utility integrata con produzione geotermica e idroelettrica.", characteristics: ["Mono-zona", "Dividend stabile", "Crescita limitata"] },
+    { description: "Sviluppatore di parchi eolici onshore e offshore in Europa.", characteristics: ["Beneficiario green transition", "Capex elevato", "Permitting risk"] },
+    { description: "Operatore di rete elettrica nazionale con monopolio regolamentato.", characteristics: ["Utility defensiva", "Yield sicuro", "Crescita zero"] },
+    // FIN (10)
+    { description: "Gruppo bancario universale con investment banking e retail.", characteristics: ["Ciclico", "Too big to fail", "Esposizione tassi"] },
+    { description: "Società di gestione patrimoniale e private banking per HNWI.", characteristics: ["Fee-based", "Concorrenza fee", "Dipendenza AUM"] },
+    { description: "Holding di investimento con partecipazioni in società pubbliche e private.", characteristics: ["Discount NAV", "Attivista", "Ristrutturazioni"] },
+    { description: "Fiduciaria specializzata in trust e servizi di custodia globale.", characteristics: ["Ricavi ricorrenti", "Basso rischio", "Crescita per acquisizioni"] },
+    { description: "Private equity con focus su buyout e ristrutturazioni industriali.", characteristics: ["Carried interest", "J-curve", "Illiquidità"] },
+    { description: "Compagnia assicurativa multi-linea con portafoglio vita e danni.", characteristics: ["Float assicurativo", "Risque cat", "Investment portfolio"] },
+    { description: "Mutuatario specializzato in mutui residenziali e commerciali.", characteristics: ["Sensibilità tassi", "Prepayment risk", "Ciclico"] },
+    { description: "Banca di credito cooperativo con filiali nel territorio nazionale.", characteristics: ["Nicho locale", "NPL risk", "Crescita organica"] },
+    { description: "Piattaforma di fintech e trading online per investitori retail.", characteristics: ["Disruptor", "Crescita utenti", "Regolamentazione incerta"] },
+    { description: "Gestore di fondi comuni e hedge fund con performance fee.", characteristics: ["Alpha-driven", "Key person risk", "Fee compression"] },
+    // HEALTH (10)
+    { description: "Casa farmaceutica con pipeline oncologica e farmaci orfani.", characteristics: ["Pipeline risk", "Patent cliff", "Dividend moderato"] },
+    { description: "Operatore di cliniche private e ospedali day-surgery.", characteristics: ["Ricavi misti", "Regolamentazione sanitaria", "Inflazione costi"] },
+    { description: "Laboratorio di ricerca e sviluppo di farmaci generici e biosimilari.", characteristics: ["Volume-driven", "Concorrenza India/Cina", "Margini declinanti"] },
+    { description: "Biotech focalizzato su terapie geniche e editing CRISPR.", characteristics: ["Binary risk", "Pre-revenue", "Diluzione probabile"] },
+    { description: "Produttore di dispositivi medici per monitoraggio cardiaco e diagnostica.", characteristics: ["Sticky revenue", "Innovazione continua", "Regolamentazione FDA"] },
+    { description: "Società di test genetici e diagnostica molecolare personalizzata.", characteristics: ["Crescita aggressiva", "Dati sensibili", "Concorrenza crescente"] },
+    { description: "Ricerca su farmaci neurologici per Alzheimer e Parkinson.", characteristics: ["Rischio clinico alto", "Fallimenti storici", "Opzione speculativa"] },
+    { description: "Specialista in dispositivi per chirurgia cardiaca e stent.", characteristics: ["Market leader nicho", "Ricorrenza impianti", "Litigio brevetti"] },
+    { description: "Fornitore di consumabili dentali e strumenti per odontoiatria.", characteristics: ["Mercato stabile", "Crescita lenta", "Defensivo"] },
+    { description: "Azienda di terapie termali e medicina preventiva wellness.", characteristics: ["Nicho wellness", "Stagionale", "Margini modesti"] },
+    // CONSUMER (10)
+    { description: "Catena di grande distribuzione organizzata con punti vendita nazionali.", characteristics: ["Defensivo", "Pressione margini", "E-commerce risk"] },
+    { description: "Insegna di supermercati discount con format urbano e prossimità.", characteristics: ["Resiliente", "Same-store growth", "Concorrenza forte"] },
+    { description: "Marchio di abbigliamento premium con vendita diretza e wholesale.", characteristics: ["Brand equity", "Stagionalità", "Trend risk"] },
+    { description: "Retailer di mobili e arredamento con catalogo e showroom fisici.", characteristics: ["Ciclico", "Dipendenza housing", "Logistica complessa"] },
+    { description: "Costruttore automobilistico con gamma elettrificata e modelli SUV.", characteristics: ["Ciclico", "Transizione EV", "Ricarichi garantiti"] },
+    { description: "Operatore di cinema, parchi tematici e contenuti family entertainment.", characteristics: ["Stagionale", "Content-driven", "Ripresa post-COVID"] },
+    { description: "Birrificio artigianale e industriale con distribuzione nazionale.", characteristics: ["Brand loyalty", "Commodity input", "Acquisizioni"] },
+    { description: "Catena di fast food con franchising e modelli take-away.", characteristics: ["Franchise model", "Stabile", "Inflazione input"] },
+    { description: "Marchio di abbigliamento e attrezzature sportive technical.", characteristics: ["Brand premium", "Endorsement atleti", "Stagionalità"] },
+    { description: "Produttore di detergenti e prodotti per igiene domestica.", characteristics: ["Defensivo", "Commodity-like", "Dividend stabile"] },
+    // INDUSTRIAL (10)
+    { description: "Costruttore aeronautico con contratti militari e velivoli commerciali.", characteristics: ["Contratti lungo termine", "Costi fissi alti", "Rischio programma"] },
+    { description: "Operatore logistico con rete di magazzini e trasporto intermodale.", characteristics: ["Asset-heavy", "Ciclico", "E-commerce beneficiary"] },
+    { description: "Impresa di costruzioni generali con commesse infrastrutturali.", characteristics: ["Order book driven", "Margherite basse", "Rischio appalti"] },
+    { description: "Fabbricante di macchinari industriali per agricoltura e movimento terra.", characteristics: ["Ciclico", "Capex-driven", "Esposizione globale"] },
+    { description: "Operatore ferroviario con contratti di trasporto merci e passeggeri.", characteristics: ["Monopolio naturale", "Sussidi statali", "Infrastruttura pesante"] },
+    { description: "Compagnia di cargo aereo con flotta dedicata e reti internazionali.", characteristics: ["Ciclico", "Jet fuel risk", "Capacity management"] },
+    { description: "Cantiere navale per costruzione navi mercantili e militari.", characteristics: ["Ordini back-log", "Ciclico", "Concorrenza asiatica"] },
+    { description: "Trasformatore di acciaio e produttore di profilati metallici.", characteristics: ["Commodity input", "Margini stretti", "Ciclico"] },
+    { description: "Appaltatore della difesa con sistemi missilistici e droni.", characteristics: ["Contratti governativi", "R&D segreto", "Export risk"] },
+    { description: "Ingegnere di motori elettrici e sistemi di trazione ferroviaria.", characteristics: ["Nicho industriale", "Innovazione", "Clientela B2B"] },
+    // MATERIALS (8)
+    { description: "Società mineraria con estrazione di pietre decorative e aggregati.", characteristics: ["Commodity-driven", "Ciclico", "Capex minerario"] },
+    { description: "Siderurgico integrato con acciaierie e laminazione a freddo.", characteristics: ["Ciclico", "Overcapacity globale", "Carbon risk"] },
+    { description: "Produttore di prodotti chimici base e intermedi industriali.", characteristics: ["Margini ciclici", "Regolamentazione REACH", "Energie-intensive"] },
+    { description: "Gestore di foreste e produttore di pasta di carta e legname.", characteristics: ["Rinnovabile", "Stagionale", "ESG positivo"] },
+    { description: "Fabbricante di vetro tecnico e vetro piano per edilizia e automotive.", characteristics: ["Ciclico", "Energy-intensive", "Innovazione vetri smart"] },
+    { description: "Cementiere con impianti globali e produzione di calcestruzzi.", characteristics: ["Capex pesante", "Ciclico", "Carbon transition"] },
+    { description: "Produttore di fertilizzanti azotati e prodotti per agricoltura.", characteristics: ["Stagionale", "Prezzo gas", "Demanda agricola"] },
+    { description: "Estrattore di terre rare e minerali critici per semiconduttori.", characteristics: ["Monopolio geopolitico", "Critico per tech", "Rischio Cina"] },
+    // UTILITIES (7)
+    { description: "Operatore di rete elettrica nazionale con contratti regolamentati.", characteristics: ["Utility defensiva", "Yield sicuro", "Capex rete"] },
+    { description: "Gestore di acquedotti e servizi idrici integrati.", characteristics: ["Monopolio locale", "Stabile", "Regolamentato"] },
+    { description: "Operatore di gasdotti e reti di distribuzione gas naturale.", characteristics: ["Transizione energetica", "Asset-heavy", "Yield moderato"] },
+    { description: "Autorità di trasporto metropolitano con metro e bus urbani.", characteristics: ["Servizio pubblico", "Sussidi dipendente", "Infrastruttura"] },
+    { description: "Società di gestione rifiuti e riciclaggio industriale.", characteristics: ["ESG-friendly", "Contratti lungo-termine", "Crescita strutturale"] },
+    { description: "Distributore di gas combustibile e servizi termici urbani.", characteristics: ["Regolamentato", "Stagionale", "Transition risk"] },
+    { description: "Operatore di centrali idroelettriche con concessioni statali.", characteristics: ["Rinnova-bile", "Concessione pubblica", "Dividend stabile"] },
+    // REAL ESTATE (8)
+    { description: "Società immobiliare con portafoglio uffici nel centro città.", characteristics: ["REIT", "Sensibilità tassi", "Cap rate risk"] },
+    { description: "Fondo immobiliare con investimenti in immobili residenziali urbani.", characteristics: ["Yield immobiliare", "Liquidity discount", "Distribuzione mensile"] },
+    { description: "Sviluppatore di centri commerciali e retail park.", characteristics: ["Ciclico", "E-commerce disruption", "Tenant risk"] },
+    { description: "Costruttore di case residenziali e complessi suburban.", characteristics: ["Ciclico", "Dipendenza mutui", "Land bank"] },
+    { description: "Investitore in immobili prestigiosi e immobili storici.", characteristics: ["Nicho prestige", "Valutazione opaca", "Illiquidità"] },
+    { description: "REIT industriale con magazzini e capannoni logistici.", characteristics: ["Beneficiario e-commerce", "Yield crescente", "Capex sviluppo"] },
+    { description: "Sviluppatore di aree portuali e immobili waterfront.", characteristics: ["Nichi waterfront", "Riqualificazione urbana", "Lungo orizzonte"] },
+    { description: "Holding immobiliare con portafoglio diversificato residenziale e commerciale.", characteristics: ["Diversificato", "NAV discount", "Gestione attiva"] },
+    // COMMUNICATIONS (6)
+    { description: "Operatore di banda larga con rete in fibra ottica nazionale.", characteristics: ["Capex rete", "Concorrenza nuova", "Flusso cassa"] },
+    { description: "Emittente televisiva generalista con canali digitali e streaming.", characteristics: ["Declino lineare", "Advertising cyclic", "Content cost"] },
+    { description: "Operatore di reti wireless e infrastrutture per cellulari.", characteristics: ["Towers business", "Contratti lungo-termine", "Capex"] },
+    { description: "Catena di multisale cinematografiche con distribuzione esclusiva.", characteristics: ["Content-driven", "Stagionale", "Pressione streaming"] },
+    { description: "Casa editrice con catalogo librario e riviste specializzate.", characteristics: ["Declino stampa", "IP value", "Dipendenza pubblicità"] },
+    { description: "Operatore satellitare per telecomunicazioni e broadcasting globale.", characteristics: ["Capex satellite", "Contratti B2B", "Rischio lancio"] },
+    // Extra per altri settori (10)
+    { description: "Azienda di estrazione dati e business intelligence per grandi corporate.", characteristics: ["AI-driven", "Crescita aggressiva", "Concorrenza iper-scaler"] },
+    { description: "Specialista cybersecurity con focus su protezione endpoint e zero-trust.", characteristics: ["Settore in boom", "M&A target", "Burn rate"] },
+    { description: "Società di esplorazione petrolifera con giacimenti offshore emergenti.", characteristics: ["Exploration risk", "Altissima volatilità", "Speculativo"] },
+    { description: "Banca digitale con conti correnti e servizi di pagamento mobile-first.", characteristics: ["Disruptor bancario", "NPL basso", "Crescita utenti"] },
+    { description: "Catena di cliniche oftalmiche e centri laser oculistici.", characteristics: ["Nicho medico", "Ricavi privati", "Crescita demografica"] },
+    { description: "Produttore di robot industriali e sistemi di automazione flessibile.", characteristics: ["Crescita strutturale", "Concorrenza asiatica", "R&D elevato"] },
+    { description: "Estrattore e trasformatore di titanio per aerospace e medical.", characteristics: ["Nichi metallo", "Supply chain critico", "Prezzo volatile"] },
+    { description: "Utility solare con impianti fotovoltaici e contratti PPA lunghi.", characteristics: ["PPA stabili", "ESG", "Capex iniziale"] },
+    { description: "Sviluppatore di eco-quartieri e complessi residenziali a basso consumo.", characteristics: ["ESG premium", "Sussidi green", "Ciclico"] },
+    { description: "Gruppo mediatico con portali news e piattaforme digitali globali.", characteristics: ["Advertising-driven", "Declino stampa", "Riposizionamento digitale"] }
+  ];
+
   // Genera ticker da nome
   function genTicker(name) {
     var words = name.split(' ');
@@ -437,7 +556,10 @@
       // Beta (correlazione con mercato)
       beta: round2(rand(0.5, 1.8)),
       // Tag per UI
-      tags: []
+      tags: [],
+      // Profilo e caratteristiche
+      description: (COMPANY_DESCRIPTIONS[idx] || {}).description || '',
+      characteristics: (COMPANY_DESCRIPTIONS[idx] || {}).characteristics || []
     };
   }
 
@@ -2107,6 +2229,8 @@
       maStatus: c.maStatus,
       maPremium: c.maPremium,
       tags: c.tags,
+      description: c.description,
+      characteristics: c.characteristics,
       fundamentals: {
         revenue: c.fundamentals.revenue,
         profit: c.fundamentals.profit,

@@ -204,10 +204,87 @@ tr:hover{background:var(--bg3)}
 .empty-state{text-align:center;padding:40px 20px;color:var(--text2)}
 .empty-state .emoji{font-size:48px;margin-bottom:12px}
 .empty-state .msg{font-size:14px}
+
+/* START SCREEN */
+.start-screen{position:fixed;inset:0;background:linear-gradient(135deg,var(--bg),var(--bg2));display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.start-screen.hidden{display:none}
+.start-content{max-width:600px;width:100%;text-align:center}
+.start-logo{font-size:48px;font-weight:900;margin-bottom:8px;letter-spacing:-1px}
+.start-logo .main{color:var(--blue)}.start-logo .sub{color:var(--green)}
+.start-tagline{font-size:16px;color:var(--text2);margin-bottom:32px;font-style:italic}
+.start-menu{display:flex;flex-direction:column;gap:12px}
+.start-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:16px 24px;border-radius:8px;font-size:16px;font-weight:700;transition:.2s;display:flex;align-items:center;justify-content:center;gap:12px}
+.start-btn:hover{background:var(--bg4);border-color:var(--blue);transform:translateY(-2px);box-shadow:0 8px 24px rgba(59,130,246,.2)}
+.start-btn.primary{background:linear-gradient(135deg,var(--blue),var(--purple));border:none;color:#fff}
+.start-btn.primary:hover{box-shadow:0 8px 32px rgba(59,130,246,.4)}
+.start-btn .icon{font-size:20px}
+.start-features{margin-top:40px;text-align:left;background:var(--bg3);border-radius:8px;padding:20px}
+.start-features h4{font-size:14px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.start-features ul{list-style:none;padding:0;margin:0}
+.start-features li{padding:8px 0;font-size:13px;color:var(--text);display:flex;gap:10px;align-items:flex-start}
+.start-features li::before{content:'✓';color:var(--green);font-weight:700}
+.start-footer{margin-top:32px;font-size:12px;color:var(--text2)}
+.save-preview{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:20px;text-align:left}
+.save-preview .sp-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px}
+.save-preview .sp-data{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:12px;color:var(--text2)}
+.save-preview .sp-item .label{font-size:10px;text-transform:uppercase}.save-preview .sp-item .val{font-weight:700;color:var(--text)}
 </style>
 </head>
 <body>
 
+<!-- START SCREEN -->
+<div class="start-screen" id="start-screen">
+  <div class="start-content">
+    <div class="start-logo"><span class="main">Stock</span><span class="sub">Broker</span> Tycoon</div>
+    <div class="start-tagline">Diventa il più grande broker di Wall Street</div>
+    
+    <div class="start-menu">
+      <button class="start-btn primary" onclick="startNewGame()">
+        <span class="icon">🚀</span> Nuova Partita
+      </button>
+      <button class="start-btn" id="btn-continue" onclick="continueGame()" style="display:none">
+        <span class="icon">▶️</span> Continua Partita
+      </button>
+      <button class="start-btn" onclick="showLoadGame()">
+        <span class="icon">📂</span> Carica Partita
+      </button>
+      <button class="start-btn" onclick="showInstructions()">
+        <span class="icon">📖</span> Come Si Gioca
+      </button>
+    </div>
+    
+    <div class="start-features">
+      <h4>Caratteristiche del Gioco</h4>
+      <ul>
+        <li>Compra e vendi azioni di 20+ aziende reali</li>
+        <li>Analizza dati finanziari: P/E, ROE, Debt Ratio, Growth</li>
+        <li>Visita luoghi esclusivi per ottenere soffiate</li>
+        <li>Costruisci relazioni con CEO e insider</li>
+        <li>Sali di livello sbloccando nuove opportunità</li>
+        <li>Partecipa ad assemblee aziendali e vota proposte</li>
+        <li>Gestisci short selling e margin trading</li>
+        <li>Notizie dinamiche generate da AI (opzionale)</li>
+      </ul>
+    </div>
+    
+    <div class="save-preview" id="save-preview" style="display:none">
+      <div class="sp-title">Ultimo Salvataggio Rilevato</div>
+      <div class="sp-data">
+        <div class="sp-item"><div class="label">Settimana</div><div class="val" id="sp-week">-</div></div>
+        <div class="sp-item"><div class="label">Livello</div><div class="val" id="sp-level">-</div></div>
+        <div class="sp-item"><div class="label">Patrimonio</div><div class="val" id="sp-networth">-</div></div>
+      </div>
+    </div>
+    
+    <div class="start-footer">
+      v2.0 - Realizzato con ❤️ per gli appassionati di finanza
+    </div>
+  </div>
+</div>
+
+<!-- MAIN GAME UI -->
+<div id="game-ui" style="display:none">
+  
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="logo">Stock<span>Broker</span> Tycoon</div>
@@ -2047,8 +2124,51 @@ function llmTestConnection(){
 
 // ======================== INIT ========================
 function init(){
-  if(!loadAuto())newGame();
-  initCity();
+  // Init handled by start screen
+  checkSavedGame();
+}
+// Don't auto-init game anymore - wait for user to click start
+// init();
+if(typeof CompetitorEngine!=='undefined'&&!window._competitorEngine){
+  try{
+    window._competitorEngine=new CompetitorEngine();
+    // Will be initialized after game starts
+  }catch(e){console.warn('Competitor Engine init:',e)}
+}
+if(typeof WorldEngine!=='undefined'&&WorldEngine.install)WorldEngine.install();
+if(typeof BrokerStory!=='undefined'&&BrokerStory.install)BrokerStory.install();
+
+// ======================== START SCREEN FUNCTIONS ========================
+function checkSavedGame(){
+  try{
+    var data=localStorage.getItem('sbt_autosave');
+    if(data){
+      var saved=JSON.parse(data);
+      document.getElementById('btn-continue').style.display='flex';
+      document.getElementById('save-preview').style.display='block';
+      document.getElementById('sp-week').textContent=saved.week||1;
+      document.getElementById('sp-level').textContent=getLevelName(saved.level||0);
+      var nw=saved.cash||0;
+      for(var t in saved.positions){
+        var c=saved.companies?saved.companies.find(function(x){return x.ticker===t}):null;
+        if(c)nw+=saved.positions[t].shares*c.price;
+      }
+      document.getElementById('sp-networth').textContent=formatEur(nw);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+function getLevelName(lvl){
+  var names=['Principiante','Apprendista','Trader Junior','Trader Senior','Portfolio Manager','Director','VP','SVP','EVP','Managing Director','Partner','Legend'];
+  return names[Math.min(lvl,names.length-1)]||'Legend';
+}
+
+function startNewGame(){
+  newGame();
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('game-ui').style.display='block';
   renderAll();
   updateTicker();
   setInterval(updateTicker,30000);
@@ -2056,15 +2176,33 @@ function init(){
     b.onclick=()=>switchView(b.dataset.view);
   });
 }
-init();
-if(typeof CompetitorEngine!=='undefined'&&!window._competitorEngine){
-  try{
-    window._competitorEngine=new CompetitorEngine();
-    window._competitorEngine.init({stocks:G.companies.map(function(c){return{symbol:c.ticker,price:c.price,sector:c.sector,volume:c.vol||0,avgVolume:1000000,change:c.change||0}}),currentWeek:G.week});
-  }catch(e){console.warn('Competitor Engine init:',e)}
+
+function continueGame(){
+  if(loadAuto()){
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('game-ui').style.display='block';
+    initCity();
+    renderAll();
+    updateTicker();
+    setInterval(updateTicker,30000);
+    document.querySelectorAll('.nav button').forEach(b=>{
+      b.onclick=()=>switchView(b.dataset.view);
+    });
+  }
 }
-if(typeof WorldEngine!=='undefined'&&WorldEngine.install)WorldEngine.install();
-if(typeof BrokerStory!=='undefined'&&BrokerStory.install)BrokerStory.install();
+
+function showLoadGame(){
+  switchView('save');
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('game-ui').style.display='block';
+}
+
+function showInstructions(){
+  alert('COME SI GIOCA:\n\n1. INIZIA: Compra azioni dal mercato quando pensi che saliranno\n2. ANALIZZA: Usa i dati finanziari (P/E, ROE, Growth) per valutare le aziende\n3. VISITA LUOGHI: Sali di livello per sbloccare luoghi esclusivi dove ottenere soffiate\n4. COSTRUISCI RELAZIONI: Migliora i rapporti con CEO e insider\n5. PARTECIPA: Vota nelle assemblee aziendali per influenzare le decisioni\n6. AVANZA: Clicca "Avanza Turno" per far progredire il mercato\n7. VINCI: Aumenta il tuo patrimonio e scala la carriera!\n\nBuona fortuna, broker!');
+}
+
+// Init start screen
+checkSavedGame();
 </script>
 </body>
 </html>

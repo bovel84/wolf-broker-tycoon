@@ -208,6 +208,7 @@ tr:hover{background:var(--bg3)}
   <button data-view="portfolio" onclick="switchView('portfolio')">Portafoglio</button>
   <button data-view="assembly" onclick="switchView('assembly')">Assemblee</button>
   <button data-view="news" onclick="switchView('news')">Notizie</button>
+  <button data-view="locations" onclick="switchView('locations')">Luoghi</button>
   <button data-view="transactions" onclick="switchView('transactions')">Transazioni</button>
   <button data-view="career" onclick="switchView('career')">Carriera</button>
   <button data-view="save" onclick="switchView('save')">Salvataggio</button>
@@ -455,7 +456,6 @@ tr:hover{background:var(--bg3)}
 
 <script src="locations-engine.js"></script>
 <script>
-<script src="locations-engine.js"></script>
 /* ============================================================
  * market-engine.js — Company & Market Engine
  * Versione: 2.0
@@ -13383,7 +13383,8 @@ function renderAll(){
   // Career
   renderCareer();
   
-  // Save
+  // Locations
+  if(typeof renderLocations==="function")renderLocations();
   renderSaveSlots();
 }
 
@@ -13641,6 +13642,163 @@ function renderSaveSlots(){
     html+='</div></div>';
   }
   el.innerHTML=html;
+}
+
+// ======================== LOCATIONS RENDER ========================
+function renderLocations(){
+  if(typeof LocationsEngine==='undefined')return;
+  
+  var playerLevel=G&&G.level?G.level:1;
+  var playerCash=G&&G.cash?G.cash:10000;
+  var playerEnergy=G&&G.energy?G.energy:100;
+  
+  // Render locations grid
+  var gridEl=document.getElementById('locations-grid');
+  if(gridEl){
+    var unlocked=LocationsEngine.getUnlockedLocations(playerLevel);
+    var currentLoc=LocationsEngine.getCurrentLocation();
+    var html='';
+    
+    unlocked.forEach(function(loc){
+      var isCurrent=currentLoc&&currentLoc.id===loc.id;
+      var canAfford=playerCash>=loc.cost;
+      var hasEnergy=playerEnergy>=loc.energyCost;
+      var level=LocationsEngine.getState().locationLevels[loc.id]||0;
+      
+      html+='<div class=\"assembly-card\" style=\"'+(isCurrent?'border-color:var(--blue);':'')+'\">';
+      html+='<div class=\"company-info\">';
+      html+='<div><span style=\"font-size:24px;margin-right:8px\">'+loc.icon+'</span><strong>'+loc.name+'</strong></div>';
+      html+='<div class=\"pill '+ (level>0?'g':'r') +'\">Liv.'+level+'</div>';
+      html+='</div>';
+      html+='<div class=\"gray\" style=\"font-size:12px;margin-bottom:10px\">'+loc.description+'</div>';
+      html+='<div style=\"display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap\">';
+      html+='<span class=\"pill y\">€'+loc.cost+'</span>';
+      html+='<span class=\"pill b\">⚡'+loc.energyCost+'</span>';
+      if(level>0)html+='<span class=\"pill p\">Visite: '+level+'</span>';
+      html+='</div>';
+      html+='<div style=\"display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px\">';
+      loc.actions.forEach(function(act){
+        html+='<span class=\"pill\" style=\"background:var(--bg3);color:var(--text2)\">'+act.replace('_',' ')+'</span>';
+      });
+      html+='</div>';
+      html+='<button class=\"btn btn-sm '+(!canAfford||!hasEnergy?'btn:disabled':'btn-blue')+'\" '+(canAfford&&hasEnergy?'onclick=\"visitLocation(\\''+loc.id+'\\')\":\"disabled')+'\">Visita</button>';
+      html+='</div>';
+    });
+    
+    if(unlocked.length===0){
+      html='<div class=\"empty-state\"><div class=\"emoji\">🔒</div><div class=\"msg\">Nessun luogo sbloccato. Sali di livello per accedere a nuovi luoghi.</div></div>';
+    }
+    
+    gridEl.innerHTML=html;
+  }
+  
+  // Render current location info
+  var currEl=document.getElementById('current-location-info');
+  if(currEl){
+    var loc=LocationsEngine.getCurrentLocation();
+    if(loc){
+      currEl.innerHTML='<div style=\"display:flex;align-items:center;gap:12px\"><span style=\"font-size:32px\">'+loc.icon+'</span><div><div style=\"font-size:16px;font-weight:700\">'+loc.name+'</div><div class=\"gray\" style=\"font-size:12px\">'+loc.description+'</div></div></div>';
+    }else{
+      currEl.innerHTML='<div class=\"gray\">Nessun luogo selezionato</div>';
+    }
+  }
+  
+  // Render pending tips
+  var tipsEl=document.getElementById('pending-tips-list');
+  if(tipsEl){
+    var leads=LocationsEngine.getPendingLeads();
+    if(leads.length===0){
+      tipsEl.innerHTML='<div class=\"empty-state\"><div class=\"emoji\">📭</div><div class=\"msg\">Nessuna soffiata pendente. Visita i luoghi per raccogliere informazioni.</div></div>';
+    }else{
+      var html='';
+      leads.forEach(function(lead,idx){
+        html+='<div class=\"proposal-item\">';
+        html+='<div class=\"prop-title\">'+(lead.tip?lead.tip.ticker:'Lead')+' - '+lead.tip.direction+'</div>';
+        html+='<div class=\"prop-desc\">'+(lead.tip?lead.tip.hint:lead.summary)+'</div>';
+        html+='<div style=\"display:flex;gap:8px;align-items:center\">';
+        html+='<span class=\"pill '+ (lead.tip&&lead.tip.confidence>70?'g':'y') +'\">Confidenza: '+(lead.tip?lead.tip.confidence:lead.reliability)+'%</span>';
+        html+='<span class=\"pill b\">Scade: Sett.'+ (lead.tip?lead.tip.expiresWeek:lead.week+3) +'</span>';
+        html+='<button class=\"btn btn-sm btn-blue\" onclick=\"useLead('+idx+')\">Usa</button>';
+        html+='</div>';
+        html+='</div>';
+      });
+      tipsEl.innerHTML=html;
+    }
+  }
+  
+  // Render active contacts
+  var contactsEl=document.getElementById('active-contacts-list');
+  if(contactsEl){
+    var contacts=LocationsEngine.getActiveContacts();
+    if(contacts.length===0){
+      contactsEl.innerHTML='<div class=\"empty-state\"><div class=\"emoji\">👤</div><div class=\"msg\">Nessun contatto attivo. Fai networking nei luoghi esclusivi.</div></div>';
+    }else{
+      var html='';
+      contacts.forEach(function(c){
+        html+='<div class=\"proposal-item\">';
+        html+='<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:6px\">';
+        html+='<div><strong>'+c.name+'</strong> <span class=\"pill p\">'+c.role+'</span></div>';
+        html+='<div class=\"pill '+ (c.relationship>70?'g':(c.relationship>40?'y':'r')) +'\">Rel: '+c.relationship+'%</div>';
+        html+='</div>';
+        html+='<div class=\"gray\" style=\"font-size:11px\">Utilità: '+c.usefulness+'% • Conosciuto: Sett.'+c.metWeek+'</div>';
+        html+='</div>';
+      });
+      contactsEl.innerHTML=html;
+    }
+  }
+}
+
+function visitLocation(locId){
+  if(typeof LocationsEngine==='undefined'||typeof G==='undefined')return;
+  
+  var result=LocationsEngine.visitLocation(locId,G.cash,G.energy||100);
+  
+  if(result.success){
+    G.cash=result.cashRemaining;
+    G.energy=result.energyRemaining;
+    
+    var msg=result.result.message;
+    if(result.result.type==='tip'){
+      msg+=' 🎯 '+result.result.data.ticker+': '+result.result.data.hint;
+      showToast('info',msg);
+    }else if(result.result.type==='contact'){
+      msg+=' 🤝 '+result.result.data.name+' ('+result.result.data.role+')';
+      showToast('success',msg);
+    }else if(result.result.type==='lead'){
+      msg+=' 💡 '+result.result.data.summary;
+      showToast('info',msg);
+    }else{
+      showToast('warning',msg);
+    }
+    
+    if(result.result.newTip){
+      showToast('success','Nuovo suggerimento scoperto: '+result.result.newTip);
+    }
+    
+    renderAll();
+  }else{
+    if(result.error==='Fondi insufficienti'){
+      showToast('error','Fondi insufficienti! Servono €'+result.required);
+    }else if(result.error==='Energia insufficiente'){
+      showToast('error','Energia insufficiente! Servono ⚡'+result.required);
+    }else{
+      showToast('error',result.error);
+    }
+  }
+}
+
+function useLead(leadIndex){
+  if(typeof LocationsEngine==='undefined'||typeof G==='undefined')return;
+  
+  var result=LocationsEngine.useLead(leadIndex,G.cash);
+  
+  if(result.success){
+    G.cash-=result.cost;
+    showToast('success','Lead utilizzato! '+result.tip.hint);
+    renderAll();
+  }else{
+    showToast('error',result.error);
+  }
 }
 
 // ======================== LLM SETTINGS PANEL ========================

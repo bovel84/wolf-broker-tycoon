@@ -63,6 +63,33 @@ input,select{font-family:inherit;outline:none}
 .card h3{font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
 .card h2{font-size:16px;margin-bottom:12px}
 
+/* CITY LOCATIONS */
+.location-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;transition:.2s;cursor:pointer;position:relative;overflow:hidden}
+.location-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 4px 20px rgba(59,130,246,.2)}
+.location-card.locked{opacity:.5;cursor:not-allowed;filter:grayscale(.8)}
+.location-card .loc-icon{font-size:32px;margin-bottom:8px}
+.location-card .loc-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.location-card .loc-desc{font-size:11px;color:var(--text2);margin-bottom:8px;line-height:1.4}
+.location-card .loc-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.location-card .loc-stat{background:var(--bg4);padding:6px;border-radius:4px;font-size:10px}
+.location-card .loc-stat .label{color:var(--text2);font-size:9px;text-transform:uppercase}
+.location-card .loc-stat .val{font-size:12px;font-weight:700;margin-top:2px}
+.location-card .loc-cost{position:absolute;top:10px;right:10px;background:var(--bg4);padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:var(--yellow)}
+.contact-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.contact-card .contact-avatar{width:48px;height:48px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:24px}
+.contact-card .contact-info{flex:1}
+.contact-card .contact-name{font-size:13px;font-weight:700}
+.contact-card .contact-role{font-size:11px;color:var(--text2)}
+.contact-card .contact-rel{display:flex;align-items:center;gap:8px;margin-top:4px}
+.contact-card .rel-bar{flex:1;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.contact-card .rel-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:2px;transition:width .3s}
+.contact-card .rel-pct{font-size:10px;font-weight:700;color:var(--blue);min-width:35px;text-align:right}
+.contact-actions{display:flex;gap:6px}
+.tip-card{background:var(--bg4);border-left:3px solid var(--yellow);border-radius:6px;padding:12px;margin-bottom:8px}
+.tip-card .tip-title{font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:4px}
+.tip-card .tip-text{font-size:11px;color:var(--text2);line-height:1.5}
+.tip-card .tip-source{font-size:10px;color:var(--text2);margin-top:6px;font-style:italic}
+
 /* DASHBOARD */
 .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
 .kpi{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px}
@@ -200,6 +227,7 @@ tr:hover{background:var(--bg3)}
   <button data-view="market" onclick="switchView('market')">Mercato</button>
   <button data-view="portfolio" onclick="switchView('portfolio')">Portafoglio</button>
   <button data-view="assembly" onclick="switchView('assembly')">Assemblee</button>
+  <button data-view="city" onclick="switchView('city')">🏙️ Città</button>
   <button data-view="news" onclick="switchView('news')">Notizie</button>
   <button data-view="transactions" onclick="switchView('transactions')">Transazioni</button>
   <button data-view="career" onclick="switchView('career')">Carriera</button>
@@ -281,6 +309,24 @@ tr:hover{background:var(--bg3)}
     <h2>Assemblee Societarie</h2>
     <p class="gray" style="margin-bottom:12px">Partecipa alle assemblee delle societa' in cui possiedi almeno il 10% delle azioni.</p>
     <div id="assembly-list"></div>
+  </div>
+</div>
+
+<!-- CITY VIEW -->
+<div class="view" id="view-city">
+  <div class="card">
+    <h2>🏙️ La Città - Luoghi di Informazione</h2>
+    <p class="gray" style="margin-bottom:16px">Esplora la città per intercettare soffiate, incontrare insider e raccogliere informazioni privilegiate. Ogni luogo ha un costo di visita e una probabilità di ottenere informazioni utili.</p>
+    <div class="grid-3" id="city-locations"></div>
+  </div>
+  <div class="card">
+    <h3>📍 Luoghi Sbloccati</h3>
+    <div id="city-unlocked"></div>
+  </div>
+  <div class="card">
+    <h3>🕵️‍♂️ Contatti & Insider</h3>
+    <p class="gray" style="margin-bottom:12px">Costruisci relazioni con personaggi chiave per accedere a informazioni esclusive.</p>
+    <div id="city-contacts"></div>
   </div>
 </div>
 
@@ -583,6 +629,7 @@ function newGame(){
     maxMargin:1,
     unlocked:{limitOrders:false,shortSelling:false,margin2x:false,multiSlot:false,margin3x:false,shortMulti:false,sectorAnalysis:false,margin5x:false}
   };
+  initCity();
   updateUnlocks();
   saveAuto();
 }
@@ -1246,6 +1293,12 @@ function checkLevelUp(){
       updateUnlocks();
       toast('success','⬆ LIVELLO SUPERIORE! Ora sei: '+req.name);
       G.news.unshift({week:G.week,title:'Promozione: '+req.name,desc:'Hai raggiunto il livello '+req.name,type:'positive',scope:'macro'});
+      
+      // Sblocca nuovi luoghi in città
+      if(i===1)unlockLocation('conference');
+      if(i===2){unlockLocation('club');unlockLocation('charity');}
+      if(i===3)unlockLocation('rooftop');
+      if(i===4)unlockLocation('marina');
     }else break;
   }
 }
@@ -1424,6 +1477,9 @@ function renderAll(){
   
   // Save
   renderSaveSlots();
+  
+  // City
+  renderCity();
 }
 
 function renderIndices(){
@@ -1682,6 +1738,222 @@ function renderSaveSlots(){
   el.innerHTML=html;
 }
 
+// ======================== CITY ENGINE ========================
+const CITY_LOCATIONS=[
+  {id:'cafe',name:'Caffè degli Insider',icon:'☕',desc:'Trader e broker si incontrano qui. Le voci corrono veloci.',baseCost:100,hintChance:0.4,unlockLevel:0},
+  {id:'club',name:'Golf Club Elite',icon:'⛳',desc:'Dove i CEO amano rilassarsi. Accesso a informazioni di alto livello.',baseCost:500,hintChance:0.6,unlockLevel:2},
+  {id:'library',name:'Biblioteca Finanziaria',icon:'📚',desc:'Archivi storici e dati aziendali. Perfetto per analisi fondamentali.',baseCost:50,hintChance:0.3,unlockLevel:0},
+  {id:'conference',name:'Centro Conferenze',icon:'🎤',desc:'Presentazioni aziendali e roadshow. Incontri il management.',baseCost:300,hintChance:0.5,unlockLevel:1},
+  {id:'rooftop',name:'Rooftop Bar',icon:'🍸',desc:'Feste esclusive con hedge fund manager. Informazioni privilegiate.',baseCost:1000,hintChance:0.7,unlockLevel:3},
+  {id:'gym',name:'Palestra Executive',icon:'💪',desc:'Dove i dirigenti fanno allenamento... e affari.',baseCost:200,hintChance:0.35,unlockLevel:1},
+  {id:'charity',name:'Gala di Beneficenza',icon:'🎭',desc:'Eventi benefici con l'élite finanziaria. Networking di qualità.',baseCost:750,hintChance:0.65,unlockLevel:2},
+  {id:'marina',name:'Marina Yacht Club',icon:'⛵',desc:'I miliardari ormeggiano qui. Le migliori soffiate.',baseCost:1500,hintChance:0.8,unlockLevel:4}
+];
+
+const CITY_CONTACTS=[
+  {id:'analyst',name:'Marco Valori',role:'Analista Senior',avatar:'👨‍💼',relation:0,maxRelation:100},
+  {id:'ceo',name:'Elena Fortis',role:'CEO TechCorp',avatar:'👩‍💼',relation:0,maxRelation:100},
+  {id:'trader',name:'Luca Rapid',role:'Hedge Fund Trader',avatar:'🧑‍💻',relation:0,maxRelation:100},
+  {id:'journalist',name:'Sofia Verità',role:'Giornalista Finanziaria',avatar:'👩‍🦰',relation:0,maxRelation:100},
+  {id:'banker',name:'Roberto Capital',role:'Investment Banker',avatar:'🤵',relation:0,maxRelation:100}
+];
+
+function initCity(){
+  if(!G.city){
+    G.city={
+      unlocked:['cafe','library'],
+      visits:{},
+      contacts:JSON.parse(JSON.stringify(CITY_CONTACTS)),
+      tips:[]
+    };
+    CITY_LOCATIONS.forEach(loc=>{G.city.visits[loc.id]=0});
+  }
+}
+
+function renderCity(){
+  renderCityLocations();
+  renderCityUnlocked();
+  renderCityContacts();
+  renderCityTips();
+}
+
+function renderCityLocations(){
+  var el=document.getElementById('city-locations');
+  if(!el)return;
+  var html='';
+  CITY_LOCATIONS.forEach(loc=>{
+    var unlocked=G.city&&G.city.unlocked.includes(loc.id);
+    var visited=G.city&&G.city.visits[loc.id]||0;
+    var locked=!unlocked&&(G.level<loc.unlockLevel);
+    html+='<div class=\"location-card'+(locked?' locked':'')+'\" onclick=\"'+(locked?'':'visitLocation(\\''+loc.id+'\\')')+'\">';
+    html+='<div class=\"loc-cost\">€'+loc.baseCost+'</div>';
+    html+='<div class=\"loc-icon\">'+loc.icon+'</div>';
+    html+='<div class=\"loc-name\">'+loc.name+'</div>';
+    html+='<div class=\"loc-desc\">'+loc.desc+'</div>';
+    html+='<div class=\"loc-stats\">';
+    html+='<div class=\"loc-stat\"><div class=\"label\">Prob. Soffiata</div><div class=\"val green\">'+(loc.hintChance*100).toFixed(0)+'%</div></div>';
+    html+='<div class=\"loc-stat\"><div class=\"label\">Visite</div><div class=\"val\">'+visited+'</div></div>';
+    html+='</div>';
+    if(locked)html+='<div style=\"margin-top:8px;font-size:10px;color:var(--text2)\" class=\"pill r\">Sblocca al livello '+loc.unlockLevel+'</div>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
+function renderCityUnlocked(){
+  var el=document.getElementById('city-unlocked');
+  if(!el||!G.city)return;
+  if(G.city.unlocked.length===0){el.innerHTML='<div class=\"empty-state\"><div class=\"emoji\">🔒</div><div class=\"msg\">Nessun luogo sbloccato ancora.</div></div>';return;}
+  var html='<div style=\"display:flex;gap:8px;flex-wrap:wrap\">';
+  G.city.unlocked.forEach(id=>{
+    var loc=CITY_LOCATIONS.find(l=>l.id===id);
+    if(loc)html+='<span class=\"pill b\">'+loc.icon+' '+loc.name+'</span>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+function renderCityContacts(){
+  var el=document.getElementById('city-contacts');
+  if(!el||!G.city)return;
+  var html='';
+  G.city.contacts.forEach(c=>{
+    var relPct=(c.relation/c.maxRelation)*100;
+    html+='<div class=\"contact-card\">';
+    html+='<div class=\"contact-avatar\">'+c.avatar+'</div>';
+    html+='<div class=\"contact-info\">';
+    html+='<div class=\"contact-name\">'+c.name+'</div>';
+    html+='<div class=\"contact-role\">'+c.role+'</div>';
+    html+='<div class=\"contact-rel\">';
+    html+='<div class=\"rel-bar\"><div class=\"rel-fill\" style=\"width:'+relPct+'%\"></div></div>';
+    html+='<div class=\"rel-pct\">'+relPct.toFixed(0)+'%</div>';
+    html+='</div>';
+    html+='</div>';
+    html+='<div class=\"contact-actions\">';
+    html+='<button class=\"btn btn-sm btn-blue\" onclick=\"meetContact(\\''+c.id+'\\')\">Incontra (€50)</button>';
+    if(c.relation>=50)html+='<button class=\"btn btn-sm btn-purple\" onclick=\"askTip(\\''+c.id+'\\')\">Chiedi Soffiata</button>';
+    html+='</div>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
+function renderCityTips(){
+  // Tips are shown as toasts when received
+}
+
+function visitLocation(locId){
+  var loc=CITY_LOCATIONS.find(l=>l.id===locId);
+  if(!loc||!G.city||!G.city.unlocked.includes(locId))return;
+  if(G.cash<loc.baseCost){toast('error','Liquidità insufficiente!');return;}
+  
+  G.cash-=loc.baseCost;
+  G.city.visits[locId]=(G.city.visits[locId]||0)+1;
+  
+  // Chance to get a hint
+  if(Math.random()<loc.hintChance){
+    generateLocationHint(loc);
+  }else{
+    toast('info','Hai visitato '+loc.name+' ma non hai sentito nulla di interessante.');
+  }
+  saveAuto();
+  renderAll();
+}
+
+function generateLocationHint(loc){
+  var companies=G.companies||COMPANIES;
+  var company=companies[Math.floor(Math.random()*companies.length)];
+  var hints=[
+    {type:'buy',text:'Ho sentito che '+company.name+' sta per annunciare risultati eccellenti...',confidence:0.7},
+    {type:'sell',text:'Qualcuno dice che '+company.name+' ha problemi nascosti...',confidence:0.6},
+    {type:'rumor',text:'Si mormora di una fusione nel settore '+SECTOR_NAMES[company.sector]+'...',confidence:0.5},
+    {type:'insider',text:'Un insider ha menzionato '+company.ticker+' in modo molto positivo.',confidence:0.8}
+  ];
+  var hint=hints[Math.floor(Math.random()*hints.length)];
+  
+  G.city.tips.push({
+    week:G.week,
+    location:loc.name,
+    ticker:company.ticker,
+    type:hint.type,
+    text:hint.text,
+    confidence:hint.confidence
+  });
+  
+  toast('success','🕵️‍♂️ Soffiata da '+loc.name+': '+hint.text);
+  
+  // Show tip card
+  showTipCard(hint, loc.name);
+}
+
+function showTipCard(hint,source){
+  var container=document.getElementById('city-tips-container')||document.querySelector('#view-city .card:first-child');
+  if(!container)return;
+  var card=document.createElement('div');
+  card.className='tip-card';
+  card.innerHTML='<div class=\"tip-title\">🔥 '+ (hint.type==='buy'?'COMPRA':(hint.type==='sell'?'VENDI':'VOCE')) +'</div>'+
+                 '<div class=\"tip-text\">'+hint.text+'</div>'+
+                 '<div class=\"tip-source\">Fonte: '+source+' • Affidabilità: '+(hint.confidence*100).toFixed(0)+'%</div>';
+  container.insertBefore(card,container.firstChild);
+}
+
+function meetContact(contactId){
+  var contact=G.city.contacts.find(c=>c.id===contactId);
+  if(!contact||G.cash<50){toast('error','Liquidità insufficiente o contatto non trovato!');return;}
+  
+  G.cash-=50;
+  var gain=Math.floor(Math.random()*15)+10;
+  contact.relation=Math.min(contact.relation+gain,contact.maxRelation);
+  
+  toast('success','Hai incontrato '+contact.name+'. Relazione: +'+gain);
+  saveAuto();
+  renderAll();
+}
+
+function askTip(contactId){
+  var contact=G.city.contacts.find(c=>c.id===contactId);
+  if(!contact||contact.relation<50){toast('error','Relazione insufficiente!');return;}
+  
+  var cost=100+(100-contact.relation)*2;
+  if(G.cash<cost){toast('error','Liquidità insufficiente!');return;}
+  
+  G.cash-=cost;
+  
+  // Better relation = better tips
+  var quality=contact.relation/100;
+  var companies=G.companies||COMPANIES;
+  var company=companies[Math.floor(Math.random()*companies.length)];
+  
+  var goodTip=Math.random()<quality;
+  var hintType=goodTip?(Math.random()>0.5?'buy':'sell'):'rumor';
+  
+  var texts={
+    buy:'Il mio istinto mi dice di comprare '+company.ticker+' ora.',
+    sell:'Starei attento con '+company.ticker+' nelle prossime settimane.',
+    rumor:'Ho sentito voci su '+company.name+', ma non so quanto siano affidabili.'
+  };
+  
+  G.city.tips.push({
+    week:G.week,
+    contact:contact.name,
+    ticker:company.ticker,
+    type:hintType,
+    text:texts[hintType],
+    confidence:0.5+quality*0.4
+  });
+  
+  toast('success','📞 '+contact.name+' ti ha dato un suggerimento su '+company.ticker);
+  saveAuto();
+  renderAll();
+}
+
+function unlockLocation(locId){
+  if(G.city&&!G.city.unlocked.includes(locId)){
+    G.city.unlocked.push(locId);
+    toast('success','🔓 Nuovo luogo sbloccato: '+CITY_LOCATIONS.find(l=>l.id===locId).name);
+  }
+}
+
 // ======================== LLM SETTINGS PANEL ========================
 function llmLoadSettingsUI(){
   var s={};
@@ -1776,6 +2048,7 @@ function llmTestConnection(){
 // ======================== INIT ========================
 function init(){
   if(!loadAuto())newGame();
+  initCity();
   renderAll();
   updateTicker();
   setInterval(updateTicker,30000);

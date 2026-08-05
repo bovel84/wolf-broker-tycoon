@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.0] — 2026-08-05
+
+- Aggiunti due snodi narrativi alla carriera: il primo indizio sul fallimento del padre e il registro contabile decisivo.
+- Le scelte influenzano denaro, tratti del broker, relazioni e contesto dell'IA narrativa.
+- Corretta la build: le funzioni di navigazione non vengono più dichiarate due volte nel bundle.
+
 ## [1.7.0] — 2025-06-26
 
 ### Aggiunto

@@ -1160,6 +1160,7 @@
 						ensureState(created);
 						ensureCharacters(created);
 						buildLocations(created);
+						processWeek(created);
 					}
 				});
 				engine.on("stateLoaded", function () {

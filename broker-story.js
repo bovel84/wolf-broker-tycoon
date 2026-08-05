@@ -7,7 +7,7 @@
   'use strict';
 
   var STORAGE_KEY = 'wbt_broker_story_v1';
-  var VERSION = '1.0.0';
+  var VERSION = '1.1.0';
   var installed = false;
   var state = null;
   var originalStart = null;
@@ -115,6 +115,19 @@
 
   var CHAPTERS = [
     {
+      id: 'first_desk',
+      act: 1,
+      title: 'Il prezzo della scrivania',
+      kicker: 'La prima firma non è mai gratuita',
+      condition: function (g) { return !!(g && g.brokerCareer && g.brokerCareer.employerId); },
+      text: 'La prima sera nel desk trovi una cartella senza mittente: il nome della società dove lavorava tuo padre compare accanto a quello del tuo nuovo datore di lavoro. Non è una prova, soltanto una connessione. Ma qualcuno ha scelto di fartela trovare proprio adesso.',
+      choices: [
+        { id: 'trust_elena', label: 'Mostra la cartella a Elena', reply: 'Elena non promette risposte: promette di non lasciarti solo quando arriveranno le domande.', effects: { ethics: 6, loyalty: 6, elena: 12 } },
+        { id: 'study_firm', label: 'Studia i conti della società', reply: 'Impari che una carriera si costruisce anche leggendo ciò che gli altri preferiscono non spiegare.', effects: { ethics: 4, ambition: 5, nerve: 3, inspector: 3 } },
+        { id: 'hide_folder', label: 'Nascondi tutto e fai risultato', reply: 'Decidi che prima viene il posto. La verità può aspettare, ma non smette di osservarti.', effects: { ambition: 7, nerve: 4, ethics: -4, victor: 3 } }
+      ]
+    },
+    {
       id: 'first_order',
       act: 1,
       title: 'Il primo ordine',
@@ -193,6 +206,19 @@
         { id: 'collabora', label: 'Consegna i registri', reply: 'Salvi una parte di te e perdi la fiducia di chi prosperava nel silenzio.', effects: { ethics: 18, inspector: 20, victor: -18, elena: 8, cash: -5000 } },
         { id: 'silenzio', label: 'Non dire nulla', reply: 'Il silenzio protegge tutti. Per ora.', effects: { loyalty: 10, nerve: 8, ethics: -7, inspector: 10 } },
         { id: 'depista', label: 'Costruisci una versione alternativa', reply: 'La menzogna regge. Il suo costo arriverà più avanti.', effects: { nerve: 10, ambition: 6, ethics: -18, inspector: 18 } }
+      ]
+    },
+    {
+      id: 'the_missing_ledger',
+      act: 4,
+      title: 'Il libro mastro mancante',
+      kicker: 'La verità ha un valore di mercato',
+      condition: function (g) { return g && g.week >= 30 && state.unlocked.first_desk && !state.unlocked.the_missing_ledger; },
+      text: 'Un ex amministratore consegna a Elena un registro contabile. Le date coincidono con il fallimento di tuo padre: perdite spostate, garanzie cancellate e una firma riconducibile a Victor Kane. Pubblicarlo può salvare altri investitori, ma distruggere il tuo contratto, la tua società o entrambe le cose.',
+      choices: [
+        { id: 'publish', label: 'Consegna il registro all’ispettore', reply: 'Scegli di perdere il controllo della storia pur di non perderne il significato.', effects: { ethics: 16, nerve: 9, inspector: 18, victor: -14, cash: -3500 } },
+        { id: 'negotiate', label: 'Usalo per negoziare protezione', reply: 'La verità diventa una moneta. Ogni vantaggio ottenuto avrà un prezzo da ricordare.', effects: { ambition: 12, nerve: 7, ethics: -9, victor: 10, cash: 6000 } },
+        { id: 'destroy', label: 'Distruggi il registro', reply: 'Proteggi ciò che hai costruito. Il passato resta sepolto, ma non davvero chiuso.', effects: { loyalty: 7, ethics: -16, victor: 14, inspector: -8 } }
       ]
     },
     {
@@ -441,6 +467,11 @@
       ambition: state.ambition,
       act: state.act,
       ending: state.ending,
+      mystery: {
+        firstLeadFound: !!state.unlocked.first_desk,
+        ledgerResolved: !!state.unlocked.the_missing_ledger,
+        truthRoute: state.vow === 'truth'
+      },
       latestDecision: state.decisions.length ? state.decisions[state.decisions.length - 1] : null,
       relationships: state.relationships
     };

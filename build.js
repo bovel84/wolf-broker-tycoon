@@ -8,6 +8,11 @@ const fs = require('fs');
 const path = require('path');
 const babel = require('@babel/core');
 
+// Minification (optional — falls back gracefully if not installed)
+var minifyHtml, minifyJs;
+try { minifyHtml = require('html-minifier-terser').minify; } catch (e) {}
+try { minifyJs = require('terser').minify; } catch (e) {}
+
 const BASE = __dirname;
 const OUT_FILE = path.join(BASE, 'wolf-broker-tycoon.html');
 const MODULE_FILES = [
@@ -87,7 +92,7 @@ function integrationJS() {
   ].join('\n');
 }
 
-function buildHTML() {
+async function buildHTML() {
   console.log('=== Wolf of Wall Street - Broker Tycoon Build ===');
   const htmlOrig = readFile('index.html');
   const cssMatch = htmlOrig.match(/<style>([\s\S]*?)<\/style>/);
@@ -136,15 +141,43 @@ function buildHTML() {
     '</html>'
   ].join('\n');
 
-  fs.writeFileSync(OUT_FILE, htmlFinal, 'utf8');
+  var outputHtml = htmlFinal;
+
+  // Minify JS if terser is available
+  if (minifyJs) {
+    console.log('  minifying JS with terser...');
+    var minified = minifyJs(transformed.code, { compress: { passes: 2 }, mangle: true, format: { comments: false } });
+    if (minified && minified.code) {
+      outputHtml = htmlFinal.replace(transformed.code, minified.code);
+      console.log('  JS minified: ' + transformed.code.length + ' -> ' + minified.code.length + ' bytes');
+    }
+  } else {
+    console.log('  terser not installed — skipping JS minification');
+  }
+
+  // Minify HTML if html-minifier-terser is available
+  if (minifyHtml) {
+    console.log('  minifying HTML with html-minifier-terser...');
+    outputHtml = await minifyHtml(outputHtml, {
+      collapseWhitespace: true,
+      removeComments: true,
+      minifyCSS: true,
+      minifyJS: false,
+      removeOptionalTags: false,
+      collapseBooleanAttributes: true
+    });
+    console.log('  HTML minified: ' + htmlFinal.length + ' -> ' + outputHtml.length + ' bytes');
+  } else {
+    console.log('  html-minifier-terser not installed — skipping HTML minification');
+  }
+
+  fs.writeFileSync(OUT_FILE, outputHtml, 'utf8');
   const dropboxDir = path.join(require('os').homedir(), 'Dropbox');
   if (fs.existsSync(dropboxDir)) fs.copyFileSync(OUT_FILE, path.join(dropboxDir, 'wolf-broker-tycoon.html'));
   console.log('DONE: ' + fs.statSync(OUT_FILE).size + ' bytes');
 }
 
-try {
-  buildHTML();
-} catch (error) {
+buildHTML().catch(function (error) {
   console.error('BUILD FAILED: ' + error.message);
   process.exit(1);
-}
+});

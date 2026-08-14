@@ -7,15 +7,16 @@
     "build": "node build.js",
     "lint": "node scripts/lint-es5.js",
     "test": "npm run lint && node test/integration.test.js && node test/gameplay.test.js && node test/balance.test.js && node test/narrative.test.js && node test/immersive.test.js && node test/ui.test.js && node test/html-build.test.js",
-    "ci": "npm run lint && npm run build && npm test"
+    "ci": "npm run lint && npm run build && npm test",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bovel84/wolf-broker-tycoon.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Andrea Cannas",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/bovel84/wolf-broker-tycoon/issues"
   },
@@ -24,6 +25,11 @@
     "@babel/cli": "^8.0.4",
     "@babel/core": "^8.0.1",
     "@babel/preset-env": "^8.0.2",
-    "happy-dom": "^20.11.0"
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "happy-dom": "^20.11.0",
+    "html-minifier-terser": "^7.2.0",
+    "husky": "^9.0.0",
+    "terser": "^5.31.0"
   }
 }

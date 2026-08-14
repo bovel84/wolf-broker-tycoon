@@ -35,11 +35,25 @@ Gestionale di broker azionario completo e realistico con modalità carriera, ass
   - no `async`/`await`
 - Dipendenza esterna: Chart.js via CDN.
 
+## Avvio rapido
+
+**macOS/Linux:**
+```bash
+./start.sh
+```
+
+**Windows:**
+```bat
+start.bat
+```
+
+Lo script verifica il build e apre il gioco nel browser.
+
 ## Build e test
 
 ```bash
 npm install
-npm run build      # genera wolf-broker-tycoon.html
+npm run build      # genera wolf-broker-tycoon.html (con minificazione se terser/html-minifier-terser installati)
 npm test           # lint ES5 + test di integrazione + gameplay + bilanciamento + UI + HTML
 npm run ci         # lint + build + test completo
 ```
@@ -81,7 +95,9 @@ Il vecchio `build_html.py` è deprecato; la build usa solo Node.js.
 7. Missioni, achievement, chapter progress e SEC raid.
 8. Salvataggio automatico.
 
-## Configurazione sicura LLM
+## Configurazione LLM
+
+Vedi la [guida completa](docs/llm-setup.md) per configurare Ollama Cloud, Ollama locale o altri provider compatibili OpenAI.
 
 Le chiavi API non sono incluse nel codice. Inserisci endpoint, modello e chiave dalla schermata **Impostazioni LLM**; i dati restano nel browser tramite localStorage. L'integrazione LLM è **disattivata di default** e deve essere abilitata esplicitamente.
 

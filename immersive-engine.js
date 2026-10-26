@@ -808,13 +808,13 @@
 			settings &&
 			settings.enabled &&
 			settings.endpoint &&
-			settings.apiKey &&
 			global.fetch
 		);
 	}
 	function callLLM(systemPrompt, userPrompt) {
 		var settings = llmSettings();
 		if (!llmEnabled()) return Promise.resolve(null);
+		if (global.WolfLLM) return global.WolfLLM.request(systemPrompt, userPrompt, settings).then(parseJsonObject).catch(function () { return null; });
 		var body = {
 			model: settings.model || "glm-5.2",
 			messages: [
@@ -1093,6 +1093,7 @@
 		if (im.lastProcessedWeek === key || processingWeeks[key])
 			return Promise.resolve(null);
 		processingWeeks[key] = true;
+		im.lastProcessedWeek = key;
 		ensureCharacters(state);
 		buildLocations(state);
 		addWeeklyFallbackMessages(state);
@@ -1151,31 +1152,34 @@
 			installed = true;
 			if (engine.on) {
 				engine.on("weekAdvanced", function () {
+					if (global.WOLF_MANAGED_TURNS) return;
 					processWeek(engine.getState());
 				});
 				engine.on("stateCreated", function () {
+					if (global.WOLF_MANAGED_TURNS) return;
 					var created = engine.getState();
 					if (created) {
 						delete processingWeeks[weekKey(created)];
 						ensureState(created);
 						ensureCharacters(created);
 						buildLocations(created);
-						processWeek(created);
+						if (!global.WOLF_MANAGED_TURNS) processWeek(created);
 					}
 				});
 				engine.on("stateLoaded", function () {
+					if (global.WOLF_MANAGED_TURNS) return;
 					var loaded = engine.getState();
 					if (loaded) {
 						ensureState(loaded);
 						ensureCharacters(loaded);
 						buildLocations(loaded);
-						if (!ensureState(loaded).messages.length) processWeek(loaded);
+						if (!ensureState(loaded).messages.length && !global.WOLF_MANAGED_TURNS) processWeek(loaded);
 						else notifyUI();
 					}
 				});
 			}
 			if (
-				typeof global.newGame === "function" &&
+				!global.WOLF_MANAGED_TURNS && typeof global.newGame === "function" &&
 				!global.newGame.__immersiveWrapped
 			) {
 				var previousNewGame = global.newGame;
@@ -1195,7 +1199,10 @@
 				global.newGame = immersiveNewGame;
 			}
 		}
-		if (!ensureState(state).messages.length) processWeek(state);
+		if (!ensureState(state).messages.length) {
+			if (global.WOLF_MANAGED_TURNS) addWeeklyFallbackMessages(state);
+			else processWeek(state);
+		}
 		return true;
 	}
 

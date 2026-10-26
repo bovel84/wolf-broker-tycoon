@@ -1052,7 +1052,7 @@
 		difficulty = difficulty || "normal";
 		var diffCfg = DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.normal;
 
-		var companies = this._generateCompanies(20);
+		var companies = this._generateCompanies(100);
 
 		var state = {
 			player: {
@@ -1206,6 +1206,10 @@
 					dividendYield: c.dividendYield,
 					peRatio: c.peRatio || 999,
 					beta: c.beta,
+					volatility: c.volatility || 0.025,
+					listed: true,
+					tradingHalted: false,
+					weekHistory: [c.price],
 					momentum: c.momentum,
 					sentiment: 50,
 					isPenny: c.isPenny,
@@ -2374,6 +2378,10 @@
 			clients: s.clients,
 			agents: s.agents,
 			narrative: s.narrative || null,
+			legacyData: s.legacyData || {},
+			desk: s.desk || null,
+			netWorthHistory: s.netWorthHistory || [],
+			competitorState: s.competitorState || null,
 			competitors: s.competitors || null,
 			notifications: s.notifications.slice(0, 20),
 			settings: s.settings,
@@ -2390,6 +2398,12 @@
 	GameEngine.prototype._deserializeState = function (data) {
 		if (!data || !data.player) return null;
 		var s = data;
+		var missions = s.player.missions || [];
+		for (var mi = 0; mi < missions.length; mi++) {
+			var template = MISSION_TEMPLATES[missions[mi].id];
+			if (template) missions[mi].check = template.check;
+		}
+		s.player.missions = missions;
 		if (!s.portfolio)
 			s.portfolio = {
 				positions: {},
@@ -2551,8 +2565,14 @@
 
 	GameEngine.prototype.buy = function (ticker, shares, options) {
 		options = options || {};
+		if (!isFinite(shares) || shares <= 0 || Math.floor(shares) !== shares)
+			return { success: false, error: "Inserisci una quantita intera positiva" };
 		var company = this.getCompany(ticker);
 		if (!company) return { success: false, error: "Azienda non trovata" };
+		if (company.listed === false || company.tradingHalted)
+			return { success: false, error: "Titolo non negoziabile" };
+		if (options.limit && (!isFinite(options.limitPrice) || options.limitPrice <= 0))
+			return { success: false, error: "Prezzo limite non valido" };
 		var p = this.state.player;
 		var diffCfg = this.state.settings.difficultyConfig;
 		var price = company.price;
@@ -2582,6 +2602,7 @@
 				shares: shares,
 				limitPrice: options.limitPrice,
 				placedWeek: p.week,
+				placedTurn: p.stats.weeksPlayed,
 				options: options,
 			});
 			return {
@@ -2623,10 +2644,10 @@
 			p.cash -= commission + slippage;
 			var shortPos = this.state.portfolio.positions[company.id + "_short"];
 			if (shortPos) {
-				shortPos.shares += shares;
 				shortPos.avgPrice =
 					(shortPos.avgPrice * shortPos.shares + price * shares) /
 					(shortPos.shares + shares);
+				shortPos.shares += shares;
 			} else {
 				this.state.portfolio.positions[company.id + "_short"] = {
 					companyId: company.id,
@@ -2649,6 +2670,7 @@
 		this._updateReputation("wallStreet", 0.5);
 		this._checkMissions();
 		this._checkAchievements();
+		this._updateUnrealizedPnL();
 		this.emit("trade", {
 			type: "buy",
 			ticker: company.ticker,
@@ -2670,6 +2692,8 @@
 
 	GameEngine.prototype.sell = function (ticker, shares, options) {
 		options = options || {};
+		if (!isFinite(shares) || shares <= 0 || Math.floor(shares) !== shares)
+			return { success: false, error: "Inserisci una quantita intera positiva" };
 		var company = this.getCompany(ticker);
 		if (!company) return { success: false, error: "Azienda non trovata" };
 		var p = this.state.player;
@@ -2677,8 +2701,17 @@
 		var price = company.price;
 		var pos = this.state.portfolio.positions[company.id];
 		var shortPos = this.state.portfolio.positions[company.id + "_short"];
+		if (company.listed === false || company.tradingHalted) return { success: false, error: "Titolo non negoziabile" };
+		if (options.limit) {
+			if (!this.hasUnlock("limit")) return { success: false, error: "Limit orders non sbloccati" };
+			if (!isFinite(options.limitPrice) || options.limitPrice <= 0 || !pos || pos.shares < shares)
+				return { success: false, error: "Ordine limite non valido" };
+			this.state.market.pendingOrders.push({ id: uid(), type: "limit_sell", ticker: ticker, companyId: company.id, shares: shares,
+				limitPrice: options.limitPrice, placedWeek: p.week, placedTurn: p.stats.weeksPlayed });
+			return { success: true, message: "Ordine di vendita limite inserito" };
+		}
 
-		if (pos && pos.shares >= shares) {
+		if (!options.cover && pos && pos.shares >= shares) {
 			// Long sell
 			var proceeds = price * shares;
 			var commission = proceeds * diffCfg.commissionRate;
@@ -2705,6 +2738,7 @@
 			if (pos && pos.isPenny && profit > 0) p.stats.pennyProfit += profit;
 			this._checkMissions();
 			this._checkAchievements();
+			this._updateUnrealizedPnL();
 			this.emit("trade", {
 				type: "sell",
 				ticker: company.ticker,
@@ -2756,6 +2790,7 @@
 			this.addXP(10);
 			this._checkMissions();
 			this._checkAchievements();
+			this._updateUnrealizedPnL();
 			this.emit("trade", {
 				type: "cover",
 				ticker: company.ticker,
@@ -3033,12 +3068,15 @@
 		var companies = this.state.market.companies;
 		for (var i = 0; i < companies.length; i++) {
 			var c = companies[i];
+			if (c.listed === false || c.tradingHalted) continue;
 			if (c.assemblyScheduled) continue;
 			var pos = this.state.portfolio.positions[c.id];
 			if (!pos) continue;
 			var ownership = pos.shares / c.sharesOutstanding;
 			if (ownership > 0.01 && rng() < 0.05) {
 				c.assemblyScheduled = true;
+				c.assemblyWeek = p.week;
+				c.assemblyOpenedTurn = p.stats.weeksPlayed;
 				c.assemblyVotes = { for: 0, against: 0, abstain: 0 };
 				var proposalCount = 2 + Math.floor(rng() * 3);
 				var proposals = [];
@@ -3090,6 +3128,7 @@
 		else company.assemblyVotes.abstain += votes;
 		prop.playerVoted = true;
 		prop.playerVote = vote;
+		prop.playerShares = votes;
 		this.state.player.stats.assembliesVoted++;
 		this.state.player.ethics = clamp(this.state.player.ethics + 1, 0, 100);
 		this.addXP(20);
@@ -3123,9 +3162,10 @@
 			var prop = proposals[i];
 			if (prop.resolved) continue;
 			prop.resolved = true;
-			var forVotes = company.assemblyVotes.for + prop.aiFor;
-			var againstVotes = company.assemblyVotes.against + prop.aiAgainst;
-			var abstainVotes = company.assemblyVotes.abstain + prop.aiAbstain;
+			var playerShares = prop.playerShares || (pos ? pos.shares : 0);
+			var forVotes = (prop.playerVote === "for" ? playerShares : 0) + prop.aiFor;
+			var againstVotes = (prop.playerVote === "against" ? playerShares : 0) + prop.aiAgainst;
+			var abstainVotes = (prop.playerVote === "abstain" ? playerShares : 0) + prop.aiAbstain;
 			var quorum = company.sharesOutstanding * prop.voteNeed;
 			var passed = forVotes > quorum && forVotes > againstVotes;
 			if (passed) self._applyAssemblyEffect(company, prop);
@@ -3172,8 +3212,12 @@
 		} else if (impact.type === "split") {
 			var factor = impact.factor || 2;
 			var pos = this.state.portfolio.positions[company.id];
-			if (pos) pos.shares *= factor;
+			if (pos) { pos.shares *= factor; pos.avgPrice /= factor; }
+			var shortPosition = this.state.portfolio.positions[company.id + "_short"];
+			if (shortPosition) { shortPosition.shares *= factor; shortPosition.avgPrice /= factor; }
 			company.sharesOutstanding *= factor;
+			company.float *= factor;
+			company.prevClose /= factor;
 			company.price = roundCents(company.price / factor);
 			this.notify(
 				"success",
@@ -3325,7 +3369,7 @@
 
 		for (var i = 0; i < companies.length; i++) {
 			var c = companies[i];
-			c.prevClose = c.price;
+			if (c.listed === false || c.tradingHalted) continue;
 			// Fundamental growth + momentum + market bias + macro trend + market cycle + volatility
 			var fundamental =
 				rngGauss(0.008, 0.01) +
@@ -3386,7 +3430,7 @@
 					this.sell(order.ticker, order.shares, {});
 				}
 				orders.splice(i, 1);
-			} else if (p.week - order.placedWeek > 8) {
+			} else if (p.stats.weeksPlayed - (order.placedTurn || 0) > 8) {
 				// Expire after 8 weeks
 				orders.splice(i, 1);
 				this.notify(
@@ -3533,7 +3577,7 @@
 
 		// Update net worth
 		var p = this.state.player;
-		p.netWorth = p.cash + totalUnrealized;
+		p.netWorth = p.cash + this.getPortfolioValue();
 		if (p.netWorth > p.stats.highestNetWorth)
 			p.stats.highestNetWorth = p.netWorth;
 	};
@@ -3546,6 +3590,9 @@
 		if (!this.state) return null;
 		var p = this.state.player;
 		var self = this;
+		for (var baseline = 0; baseline < this.state.market.companies.length; baseline++) {
+			this.state.market.companies[baseline].prevClose = this.state.market.companies[baseline].price;
+		}
 
 		// Step 1: Process pending limit orders
 		this._processPendingOrders();
@@ -3577,15 +3624,15 @@
 			var ac = assembCompanies[ai];
 			if (
 				ac.assemblyScheduled &&
-				ac.assemblyResolvedWeek &&
-				this.state.player.week - ac.assemblyResolvedWeek >= 2
+				p.stats.weeksPlayed - (ac.assemblyOpenedTurn || 0) >= 2
 			) {
 				this.resolveAssembly(ac.ticker);
 			}
 		}
 
 		// Step 8.5: World Engine turn (governance, regions, corporate events)
-		if (typeof WorldEngine !== "undefined" && WorldEngine.processWorldTurn) {
+		if (typeof WorldEngine !== "undefined" && WorldEngine.processWorldTurn &&
+			!(typeof window !== "undefined" && window.WOLF_MANAGED_TURNS)) {
 			try {
 				WorldEngine.processWorldTurn(this.state);
 			} catch (e) {}
@@ -3630,6 +3677,17 @@
 
 				// Persist competitor roster into state for Narrative Engine
 				if (!this.state.competitors) this.state.competitors = { list: [] };
+				this.state.competitors.activity = [];
+				var rivalTrades = compResult && compResult.trades || [];
+				for (var rt = 0; rt < rivalTrades.length; rt++) {
+					var record = rivalTrades[rt];
+					var executed = record.trades || [];
+					for (var ri = 0; ri < executed.length && this.state.competitors.activity.length < 8; ri++) {
+						var trade = executed[ri];
+						this.state.competitors.activity.push({ competitor: { nickname: record.competitor.nickname, name: record.competitor.name },
+							action: trade.action, target: trade.symbol, quantity: trade.shares, reason: trade.reason || "Strategia del desk rivale", aggression: 5 });
+					}
+				}
 				this.state.competitors.list = [];
 				if (
 					this._competitorEngine.competitors &&
@@ -3683,7 +3741,7 @@
 
 		// Step 10.5: Weekly salary / income based on level
 		var salary = 0;
-		if (p.level >= 2) salary += 600 * p.level;
+		if (p.level >= 2 && !(typeof window !== "undefined" && window.WOLF_MANAGED_TURNS)) salary += 600 * p.level;
 		p.cash += salary;
 
 		// Step 11: Update unrealized P&L and net worth
@@ -3803,7 +3861,7 @@
 			var company = this.getCompany(pos.ticker);
 			if (!company) continue;
 			if (pos.type === "short") {
-				total -= pos.shares * company.price;
+				total += pos.shares * (pos.avgPrice - company.price);
 			} else {
 				total += pos.shares * company.price;
 			}

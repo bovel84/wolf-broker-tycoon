@@ -323,7 +323,7 @@
   function newCareer() {
     hideGameOver();
     if (global.BrokerStory && global.BrokerStory.reset) global.BrokerStory.reset();
-    if (typeof newGame === 'function') newGame();
+    if (!global.WOLF_MANAGED_TURNS && typeof newGame === 'function') newGame();
     if (global.BrokerStory && global.BrokerStory.showPrologue) global.BrokerStory.showPrologue();
   }
 
@@ -445,7 +445,7 @@
     installed = true;
     ensureState();
     ensureUI();
-    if (typeof advanceTurn === 'function') {
+    if (!global.WOLF_MANAGED_TURNS && typeof advanceTurn === 'function') {
       originalAdvance = advanceTurn;
       global.advanceTurn = function () {
         if (!canAct()) { showGameOver(); return; }
@@ -453,7 +453,7 @@
         global.setTimeout(processWeek, 80);
       };
     }
-    if (typeof newGame === 'function') {
+    if (!global.WOLF_MANAGED_TURNS && typeof newGame === 'function') {
       originalNewGame = newGame;
       global.newGame = function () {
         originalNewGame();
@@ -486,6 +486,7 @@
   }
 
   global.PlayerLife = {
+    bindGame: function () { ensureState(); hideGameOver(); render(); if (!canAct()) showGameOver(); },
     install: install,
     processWeek: processWeek,
     canAct: canAct,

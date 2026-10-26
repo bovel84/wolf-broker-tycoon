@@ -163,6 +163,15 @@
   // ============================================================
 
   function callAPI(messages) {
+    CONFIG = _loadSettings();
+    if (global.WolfLLM) {
+      stats.totalCalls++; stats.turnCalls++;
+      return global.WolfLLM.request(messages[0].content, messages[1].content, CONFIG).then(function (text) {
+        if (!text) throw new Error('LLM non disponibile');
+        var parsed = tryParseJSON(text);
+        return parsed !== null ? parsed : text;
+      });
+    }
     return new Promise(function (resolve, reject) {
       // Se LLM disabilitato, restituisci errore per trigger fallback
       if (CONFIG.enabled === false) {
@@ -804,7 +813,8 @@
   }
 
   function isAvailable() {
-    return !!CONFIG.apiKey && !!CONFIG.endpoint && CONFIG.enabled !== false;
+    CONFIG = _loadSettings();
+    return !!CONFIG.endpoint && CONFIG.enabled === true;
   }
 
   function getStats() {
@@ -826,6 +836,7 @@
   // ============================================================
 
   global.LLMGameMaster = {
+    clearCache: function () { cache = []; stats.turnCalls = 0; },
     configure: configure,
     getSettings: getSettings,
     saveSettings: saveSettings,

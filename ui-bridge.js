@@ -13,6 +13,28 @@
   var BRIDGE_VERSION = '1.0.0';
   var engine = null;
   var _legacyG = null;
+  var linkedState = null;
+  var installed = false;
+
+  function link(target, name, source, key, read, write) {
+    Object.defineProperty(target, name, {
+      enumerable: true, configurable: true,
+      get: function () { return read ? read(source[key]) : source[key]; },
+      set: function (value) { source[key] = write ? write(value) : value; }
+    });
+  }
+
+  var sectorNames = { TECH: 'tech', ENERGY: 'energy', FIN: 'finance', HEAL: 'health', CONS: 'consumer', INDU: 'industrial', MATR: 'materials', UTIL: 'utilities', RE: 'realestate', COMM: 'communications' };
+  function canonicalCompany(lc) {
+    var sector = lc.sector;
+    for (var code in sectorNames) if (sectorNames[code] === sector) sector = code;
+    var shares = lc.sharesOutstanding || Math.max(1, lc.cap * 1000000 / lc.price);
+    return { id: lc.ticker, ticker: lc.ticker, name: lc.name, sector: sector, price: lc.price, prevClose: lc.prevPrice || lc.price,
+      marketCap: lc.cap * 1000000, sharesOutstanding: shares, float: shares, volatility: lc.vol || 0.025, dividendYield: (lc.div || 0) / 100,
+      sentiment: 50, momentum: 0, avgVolume: 1000000, volume: 1000000, high: lc.price, low: lc.price,
+      isPenny: lc.price < 5, listed: lc.listed !== false, tradingHalted: !!lc.tradingHalted, events: [], earnings: { revenue: 0, netIncome: 0, eps: 0, quarter: 1 },
+      weekHistory: lc.weekHistory || [lc.price], assemblyScheduled: false, assemblyVotes: {} };
+  }
 
   function isBrowser() { return typeof window !== 'undefined' && typeof document !== 'undefined'; }
 
@@ -26,10 +48,10 @@
   }
 
   function tickerToLegacy(c) {
-    return {
+    var view = {
       ticker: c.ticker,
       name: c.name,
-      sector: c.sector.toLowerCase(),
+      sector: sectorNames[c.sector] || c.sector.toLowerCase(),
       price: c.price,
       cap: c.marketCap / 1000000,
       vol: c.volatility || 0.025,
@@ -37,19 +59,34 @@
       prevPrice: c.prevClose,
       change: ((c.price - c.prevClose) / c.prevClose * 100) || 0,
       weekHistory: (c.weekHistory && c.weekHistory.length) ? c.weekHistory : [c.price],
-      listed: true,
-      tradingHalted: false
+      listed: c.listed !== false,
+      tradingHalted: !!c.tradingHalted,
+      sharesOutstanding: c.sharesOutstanding,
+      isPenny: c.isPenny,
+      isIPO: c.isIPO,
+      description: c.description || '',
+      peRatio: c.peRatio
     };
+    ['price', 'name', 'listed', 'tradingHalted', 'sharesOutstanding', 'weekHistory'].forEach(function (key) { link(view, key, c, key); });
+    link(view, 'cap', c, 'marketCap', function (v) { return v / 1000000; }, function (v) { return v * 1000000; });
+    link(view, 'div', c, 'dividendYield', function (v) { return (v || 0) * 100; }, function (v) { return v / 100; });
+    link(view, 'vol', c, 'volatility');
+    link(view, 'prevPrice', c, 'prevClose');
+    return view;
   }
 
   function positionToLegacy(key, pos) {
-    return {
+    var view = {
       shares: pos.shares,
       avgCost: pos.avgPrice,
       currentPrice: pos.currentPrice,
       totalCost: pos.totalCost,
       pnl: pos.unrealizedPnL || 0
     };
+    link(view, 'shares', pos, 'shares');
+    link(view, 'avgCost', pos, 'avgPrice');
+    link(view, 'totalCost', pos, 'totalCost');
+    return view;
   }
 
   function shortToLegacy(pos) {
@@ -74,7 +111,7 @@
 
   function newsToLegacy(n) {
     return {
-      week: n.week || 1,
+      week: n.week || n.time || 1,
       title: n.title,
       desc: n.message || n.desc || '',
       type: n.type || 'neutral',
@@ -104,20 +141,18 @@
     legacy.news = [];
     legacy.companies = [];
     legacy.agents = s.agents || [];
-    legacy.pendingAssemblies = market.assembliesThisWeek || [];
+    legacy.pendingAssemblies = market.companies.filter(function (c) { return c.assemblyScheduled; }).map(function (c) {
+      return { ticker: c.ticker, week: c.assemblyWeek || player.week, resolved: false, proposals: (c.assemblyProposals || []).map(function (prop) {
+        return { id: prop.id, title: prop.name, desc: prop.desc, votesFor: prop.aiFor || 0, votesAgainst: prop.aiAgainst || 0,
+          playerVoted: prop.playerVoted, playerVote: prop.playerVote === 'for' ? 1 : prop.playerVote === 'against' ? 0 : null, resolved: prop.resolved };
+      }) };
+    });
     legacy.activeSectorBoosts = {};
-    legacy.netWorthHistory = [{ week: 0, value: 10000 }];
-    legacy.stats = {
-      totalTrades: player.stats.totalTrades || 0,
-      wins: 0,
-      losses: 0,
-      bestTrade: 0,
-      worstTrade: 0,
-      bestWinStreak: 0,
-      currentStreak: 0,
-      dividendsReceived: 0,
-      assembliesVoted: player.stats.assembliesVoted || 0
-    };
+    legacy.netWorthHistory = s.netWorthHistory || [{ week: 0, value: 10000 }];
+    legacy.stats = player.stats;
+    ['wins', 'losses', 'bestTrade', 'worstTrade', 'bestWinStreak', 'currentStreak', 'dividendsReceived'].forEach(function (key) {
+      if (typeof player.stats[key] !== 'number') player.stats[key] = 0;
+    });
 
     // Copia companies
     for (var i = 0; i < market.companies.length; i++) {
@@ -150,6 +185,11 @@
         }
       }
     }
+    var extraNews = s.legacyData && s.legacyData.news || [];
+    legacy.news = legacy.news.concat(extraNews).sort(function (a, b) { return b.week - a.week; }).filter(function (note, index, all) {
+      for (var j = 0; j < index; j++) if (all[j].title === note.title && all[j].week === note.week) return false;
+      return true;
+    }).slice(0, 120);
 
     // Sblocchi
     legacy.unlocked = {
@@ -162,7 +202,7 @@
       sectorAnalysis: player.level >= 6,
       margin5x: player.level >= 7
     };
-    legacy.maxMargin = player.level >= 7 ? 5 : (player.level >= 5 ? 3 : (player.level >= 4 ? 2 : 1));
+    legacy.maxMargin = e.hasUnlock('margin5x') ? 5 : e.hasUnlock('margin3x') ? 3 : e.hasUnlock('margin2x') ? 2 : 1;
 
     // Narrative state for UI
     legacy.narrative = s.narrative || null;
@@ -175,17 +215,71 @@
     if (!isBrowser()) return;
     var legacy = legacyStateFromEngine();
     if (legacy) {
-      if (typeof G === 'undefined' || G === null) {
-        try { G = {}; } catch (e) {}
+      var s = getEngine().getState();
+      if (!s.legacyData) s.legacyData = {};
+      if (linkedState !== s || !root.G) { root.G = {}; linkedState = s; }
+      for (var k in legacy) {
+        var descriptor = Object.getOwnPropertyDescriptor(root.G, k);
+        if (!descriptor || !descriptor.get) root.G[k] = legacy[k];
       }
-      if (typeof G !== 'undefined' && G !== null) {
-        for (var k in legacy) G[k] = legacy[k];
+      ['cash', 'week', 'year', 'xp', 'ethics'].forEach(function (key) { link(root.G, key, s.player, key); });
+      link(root.G, 'level', s.player, 'level', function (v) { return Math.max(0, v - 1); }, function (v) { return v + 1; });
+      link(root.G, 'realizedPnL', s.portfolio, 'realizedPnL');
+      link(root.G, 'sentiment', s.market, 'sentiment');
+      link(root.G, 'rep', s.player.reputation, 'wallStreet');
+      link(root.G, 'netWorthHistory', s, 'netWorthHistory');
+      if (!s.netWorthHistory) s.netWorthHistory = legacy.netWorthHistory;
+      ['brokerCareer', 'playerLife', 'brokerStory', 'stakeholderInteractions', 'brokerName', 'storyEthics', 'storyAct', 'worldState'].forEach(function (key) {
+        link(root.G, key, s.legacyData, key);
+      });
+    }
+  }
+
+  // Legacy management modules share cash/company objects; reconcile structural
+  // portfolio changes (deletions, block trades, mergers) before save or tick.
+  function commitLegacyChanges() {
+    var e = getEngine();
+    var s = e.getState();
+    var g = root.G;
+    if (!g || s !== linkedState) return;
+    var next = {};
+    var companies = s.market.companies;
+    for (var ci = 0; ci < g.companies.length; ci++) {
+      var lc = g.companies[ci];
+      if (!e.getCompany(lc.ticker)) {
+        companies.push(canonicalCompany(lc));
       }
     }
+    function addPosition(ticker, lp, type) {
+      var c = e.getCompany(ticker);
+      if (!c || !(lp.shares > 0)) return;
+      var key = c.id + (type === 'short' ? '_short' : '');
+      var pos = s.portfolio.positions[key] || {};
+      pos.companyId = c.id; pos.ticker = ticker; pos.name = c.name; pos.type = type;
+      pos.shares = lp.shares; pos.avgPrice = type === 'short' ? lp.entryPrice : lp.avgCost;
+      pos.currentPrice = c.price; pos.totalCost = lp.totalCost || pos.avgPrice * pos.shares;
+      pos.isPenny = c.isPenny; pos.openedWeek = pos.openedWeek || s.player.week;
+      next[key] = pos;
+    }
+    for (var ticker in g.positions) addPosition(ticker, g.positions[ticker], 'long');
+    for (var sh = 0; sh < g.shorts.length; sh++) addPosition(g.shorts[sh].ticker, g.shorts[sh], 'short');
+    s.portfolio.positions = next;
+    s.legacyData.news = (g.news || []).slice(0, 120);
+    // Transactions created by management features use the same canonical ledger.
+    if (g.transactions.length > s.portfolio.history.length) {
+      for (var ti = s.portfolio.history.length; ti < g.transactions.length; ti++) {
+        var tx = g.transactions[ti];
+        s.portfolio.history.push({ type: tx.type, ticker: tx.ticker, shares: tx.shares, price: tx.price, value: tx.total, week: tx.week, year: s.player.year });
+      }
+    }
+    e._updateUnrealizedPnL();
+    if (e._competitorEngine && e._competitorEngine.getFullState) s.competitorState = e._competitorEngine.getFullState().competitors;
   }
 
   function install() {
     if (!isBrowser()) return;
+    if (installed) return;
+    installed = true;
     var e = getEngine();
     var saved = null;
     try { saved = localStorage.getItem('sbt_autosave'); } catch (err) {}
@@ -209,7 +303,7 @@
       e.createInitialState('Trader', 'normal');
     }
 
-    legacyStateFromEngine();
+    syncEngineToLegacy();
     exposeLegacyGlobals();
     installEventListeners();
 
@@ -240,10 +334,17 @@
     var s = e.getState();
     if (!s || !legacy) return;
 
-    s.player.cash = legacy.cash || s.player.cash;
+    s.player.cash = typeof legacy.cash === 'number' ? legacy.cash : s.player.cash;
     s.player.week = legacy.week || s.player.week;
     s.player.year = legacy.year || s.player.year;
-    s.player.level = legacy.level + 1;
+    s.player.level = (legacy.level || 0) + 1;
+    if (legacy.companies && legacy.companies.length) s.market.companies = legacy.companies.map(canonicalCompany);
+    if (legacy.narrative) s.narrative = legacy.narrative;
+    s.netWorthHistory = legacy.netWorthHistory || [{ week: 0, value: 10000 }];
+    s.legacyData = { news: legacy.news || [] };
+    ['brokerCareer', 'playerLife', 'brokerStory', 'stakeholderInteractions', 'brokerName', 'storyEthics', 'storyAct', 'worldState'].forEach(function (key) {
+      if (legacy[key] !== undefined) s.legacyData[key] = legacy[key];
+    });
 
     // Azzera e ricostruisce posizioni
     s.portfolio.positions = {};
@@ -273,7 +374,7 @@
       };
     }
 
-    for (var sh = 0; sh < legacy.shorts.length; sh++) {
+    for (var sh = 0; sh < (legacy.shorts || []).length; sh++) {
       var sht = legacy.shorts[sh];
       var c2 = tickerMap[sht.ticker];
       if (!c2) continue;
@@ -291,7 +392,7 @@
       };
     }
 
-    for (var tx = 0; tx < legacy.transactions.length; tx++) {
+    for (var tx = 0; tx < (legacy.transactions || []).length; tx++) {
       var ltx = legacy.transactions[tx];
       s.portfolio.history.push({
         type: ltx.type,
@@ -303,6 +404,7 @@
         year: s.player.year
       });
     }
+    e._updateUnrealizedPnL();
   }
 
   function readTradeModal() {
@@ -310,7 +412,7 @@
     var c = getCompany(tradeModalState.ticker);
     if (!c) return null;
     var sharesEl = document.getElementById('trade-shares');
-    var shares = sharesEl ? (parseInt(sharesEl.value) || 0) : 0;
+    var shares = sharesEl ? Number(sharesEl.value) : 0;
     var price = c.price;
     if (tradeModalState.orderType === 'limit') {
       var lpEl = document.getElementById('trade-limit-price');
@@ -335,6 +437,7 @@
       getEngine: getEngine,
       sync: syncEngineToLegacy,
       getLegacyState: legacyStateFromEngine,
+      commit: commitLegacyChanges,
       wrappers: {
         newGame: root.newGame,
         advanceTurn: root.advanceTurn,
@@ -348,11 +451,13 @@
 
 
     wolfBridge.resolveAssembly = function (ticker) {
+      if (root.DeskDirector && DeskDirector.isBusy()) return { success: false, error: 'Settimana in elaborazione' };
       var result = engine.resolveAssembly(ticker);
-      if (result.success) syncEngineToLegacy();
+      if (result.success) { engine._updateUnrealizedPnL(); syncEngineToLegacy(); root.saveAuto(); }
       return result;
     };
     wolfBridge.voteAssembly = function (ticker, proposalIndex, vote) {
+      if (root.DeskDirector && DeskDirector.isBusy()) return { success: false, error: 'Settimana in elaborazione' };
       var result = engine.voteAssembly(ticker, proposalIndex, vote);
       if (result.success) syncEngineToLegacy();
       return result;
@@ -364,6 +469,8 @@
       var e = getEngine();
       e.createInitialState('Trader', 'normal');
       syncEngineToLegacy();
+      if (root.WorldEngine && WorldEngine.bindGame) WorldEngine.bindGame(root.G, true);
+      if (root.DeskDirector && DeskDirector.reset) DeskDirector.reset();
       if (typeof saveAuto === 'function') saveAuto();
       if (typeof renderAll === 'function') renderAll();
       if (typeof updateTicker === 'function') updateTicker();
@@ -374,6 +481,10 @@
       var e = getEngine();
       var s = e.getState();
       if (!s) { e.createInitialState('Trader', 'normal'); }
+      if (root.DeskDirector && DeskDirector.isBusy()) return DeskDirector.currentTurn();
+      if (root.PlayerLife && !PlayerLife.canAct()) { PlayerLife.showGameOver(); return null; }
+      commitLegacyChanges();
+      var before = e.getState().player.netWorth;
       var result = e.advanceWeek();
       syncEngineToLegacy();
       if (result && result.ending) {
@@ -382,12 +493,14 @@
       renderAll();
       if (typeof updateTicker === 'function') updateTicker();
       if (typeof saveAuto === 'function') saveAuto();
+      if (root.DeskDirector && result && !result.ending) result.completion = DeskDirector.finishTurn(result, before);
       return result;
     };
 
     // Sovrascrivi saveAuto/loadAuto per usare GameEngine
     root.saveAuto = function () {
       var e = getEngine();
+      commitLegacyChanges();
       try {
         localStorage.setItem('sbt_autosave', JSON.stringify(e._serializeState()));
       } catch (err) {}
@@ -408,12 +521,15 @@
           return false;
         }
         syncEngineToLegacy();
+        if (root.WorldEngine && WorldEngine.bindGame) WorldEngine.bindGame(root.G);
+        if (root.DeskDirector && DeskDirector.reset) DeskDirector.reset();
         return true;
       } catch (err) { return false; }
     };
 
     root.saveSlot = function (n) {
       var e = getEngine();
+      commitLegacyChanges();
       try {
         var data = e._serializeState();
         localStorage.setItem('sbt_save_' + n, JSON.stringify(data));
@@ -441,6 +557,8 @@
           syncLegacyToEngine(data);
         }
         syncEngineToLegacy();
+        if (root.WorldEngine && WorldEngine.bindGame) WorldEngine.bindGame(root.G);
+        if (root.DeskDirector && DeskDirector.reset) DeskDirector.reset();
         if (typeof updateUnlocks === 'function') updateUnlocks();
         renderAll();
         toast('success', 'Caricato slot ' + n);
@@ -453,14 +571,19 @@
       if (!d) { closeTradeModal(); return; }
       if (!canTradeAtBrokerage()) { closeTradeModal(); return; }
       var e = getEngine();
+      if (root.DeskDirector && DeskDirector.isBusy()) return;
+      commitLegacyChanges();
       var result = null;
       var realized = 0;
+      var mode = tradeModalState.mode;
       if (tradeModalState.mode === 'buy') {
         var options = {};
-        if (tradeModalState.orderType === 'limit') options.limitPrice = d.price;
+        if (d.shares * d.c.price > e.getState().player.cash && root.G.maxMargin > 1) options.margin = root.G.maxMargin;
+        if (tradeModalState.orderType === 'limit') { options.limit = true; options.limitPrice = d.price; }
         result = e.buy(d.c.ticker, d.shares, options);
       } else if (tradeModalState.mode === 'sell') {
-        result = e.sell(d.c.ticker, d.shares, {});
+        var sellOptions = tradeModalState.orderType === 'limit' ? { limit: true, limitPrice: d.price } : {};
+        result = e.sell(d.c.ticker, d.shares, sellOptions);
         realized = result.success ? (result.profit || 0) : 0;
       } else if (tradeModalState.mode === 'cover') {
         return root.coverShort();
@@ -470,10 +593,10 @@
         return;
       }
       syncEngineToLegacy();
-      if (realized !== 0 && typeof updateTradeStats === 'function') updateTradeStats(realized);
+      if (mode === 'sell' && realized !== 0 && typeof updateTradeStats === 'function') updateTradeStats(realized);
       saveAuto();
       closeTradeModal();
-      toast((tradeModalState.mode === 'sell' && realized < 0) ? 'warning' : 'success', result.message);
+      toast((mode === 'sell' && realized < 0) ? 'warning' : 'success', result.message);
       renderAll();
     };
 
@@ -482,8 +605,10 @@
       if (!d) { closeTradeModal(); return; }
       if (!canTradeAtBrokerage()) { closeTradeModal(); return; }
       var e = getEngine();
+      if (root.DeskDirector && DeskDirector.isBusy()) return;
+      commitLegacyChanges();
       var options = { short: true };
-      if (tradeModalState.orderType === 'limit') options.limitPrice = d.price;
+      if (tradeModalState.orderType === 'limit') { options.limit = true; options.limitPrice = d.price; }
       var result = e.buy(d.c.ticker, d.shares, options);
       if (!result || !result.success) {
         toast('error', result ? result.error : 'Short fallito');
@@ -501,7 +626,9 @@
       if (!d) { closeTradeModal(); return; }
       if (!canTradeAtBrokerage()) { closeTradeModal(); return; }
       var e = getEngine();
-      var result = e.sell(d.c.ticker, d.shares, {});
+      if (root.DeskDirector && DeskDirector.isBusy()) return;
+      commitLegacyChanges();
+      var result = e.sell(d.c.ticker, d.shares, { cover: true });
       if (!result || !result.success) {
         toast('error', result ? result.error : 'Cover fallito');
         return;
@@ -512,6 +639,36 @@
       closeTradeModal();
       toast((result.profit >= 0) ? 'success' : 'warning', result.message);
       renderAll();
+    };
+    root.exportSave = function () {
+      commitLegacyChanges();
+      var blob = new Blob([JSON.stringify(e._serializeState())], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.href = url; a.download = 'wolf-save.json'; a.click(); URL.revokeObjectURL(url);
+    };
+    root.importSave = function (event) {
+      var file = event.target.files[0]; if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var data = JSON.parse(reader.result);
+          if (data.player && data.market && data.portfolio) e.setState(e._deserializeState(data));
+          else if (data.positions && data.companies) { e.createInitialState('Trader', 'normal'); syncLegacyToEngine(data); }
+          else throw new Error('Formato non valido');
+          syncEngineToLegacy();
+          if (root.WorldEngine && WorldEngine.bindGame) WorldEngine.bindGame(root.G);
+          if (root.DeskDirector) DeskDirector.reset();
+          saveAuto(); renderAll(); toast('success', 'Partita importata');
+        } catch (err) { toast('error', 'File non valido'); }
+      };
+      reader.readAsText(file);
+    };
+    root.addTransaction = function (type, ticker, shares, price, total) {
+      var company = e.getCompany(ticker);
+      if (!company) return;
+      e._recordTrade(type, company, shares, price, total);
+      e.getState().player.stats.totalTrades++;
+      root.G.transactions.push(txToLegacy(e.getState().portfolio.history[e.getState().portfolio.history.length - 1]));
     };
   }
 
@@ -528,7 +685,7 @@
   root.wolfBridgeInstall = install;
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { install: install, getEngine: getEngine, legacyStateFromEngine: legacyStateFromEngine, syncLegacyToEngine: syncLegacyToEngine };
+    module.exports = { install: install, getEngine: getEngine, legacyStateFromEngine: legacyStateFromEngine, syncLegacyToEngine: syncLegacyToEngine, commit: commitLegacyChanges };
   }
 
 })(typeof window !== 'undefined' ? window : this);

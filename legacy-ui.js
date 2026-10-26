@@ -1,0 +1,2912 @@
+// ======================== CONSTANTS ========================
+var COMMISSION_RATE = 0.001;
+var SECTOR_NAMES = {
+  tech: 'Tech',
+  energy: 'Energia',
+  finance: 'Finanza',
+  health: 'Sanita',
+  consumer: 'Consumi',
+  industrial: 'Industriale',
+  materials: 'Materiali',
+  utilities: 'Utilities',
+  realestate: 'Immobiliare',
+  communications: 'Comunicazioni'
+};
+var SECTOR_COLORS = {
+  tech: '#3b82f6',
+  energy: '#f5a623',
+  finance: '#00d68f',
+  health: '#ff5371',
+  consumer: '#a855f7',
+  industrial: '#6b7280',
+  materials: '#d4a373',
+  utilities: '#06b6d4',
+  realestate: '#ec4899',
+  communications: '#eab308'
+};
+var COMPANIES = [{
+  ticker: 'NXPL',
+  name: 'Nexora Platforms',
+  sector: 'tech',
+  price: 184.50,
+  cap: 285000,
+  vol: 0.025,
+  div: 0.8
+}, {
+  ticker: 'QBIT',
+  name: 'QuantumBit Systems',
+  sector: 'tech',
+  price: 92.30,
+  cap: 42000,
+  vol: 0.035,
+  div: 0.3
+}, {
+  ticker: 'AURA',
+  name: 'Aurora AI',
+  sector: 'tech',
+  price: 312.75,
+  cap: 158000,
+  vol: 0.04,
+  div: 0.0
+}, {
+  ticker: 'CLOD',
+  name: 'CloudFlux Inc',
+  sector: 'tech',
+  price: 67.40,
+  cap: 89000,
+  vol: 0.028,
+  div: 0.5
+}, {
+  ticker: 'SILX',
+  name: 'SiliconX Corp',
+  sector: 'tech',
+  price: 145.20,
+  cap: 210000,
+  vol: 0.022,
+  div: 1.2
+}, {
+  ticker: 'CYBR',
+  name: 'Cyberon Security',
+  sector: 'tech',
+  price: 78.90,
+  cap: 55000,
+  vol: 0.03,
+  div: 0.0
+}, {
+  ticker: 'DATR',
+  name: 'DataRealm',
+  sector: 'tech',
+  price: 113.60,
+  cap: 72000,
+  vol: 0.032,
+  div: 0.4
+}, {
+  ticker: 'NEOX',
+  name: 'NeoX Robotics',
+  sector: 'tech',
+  price: 49.80,
+  cap: 31000,
+  vol: 0.038,
+  div: 0.0
+}, {
+  ticker: 'SOLR',
+  name: 'Solaris Energy',
+  sector: 'energy',
+  price: 38.20,
+  cap: 45000,
+  vol: 0.035,
+  div: 2.5
+}, {
+  ticker: 'PETX',
+  name: 'PetrolX Oil',
+  sector: 'energy',
+  price: 85.60,
+  cap: 180000,
+  vol: 0.028,
+  div: 3.5
+}, {
+  ticker: 'WNDG',
+  name: 'WindGrid Power',
+  sector: 'energy',
+  price: 52.30,
+  cap: 38000,
+  vol: 0.032,
+  div: 1.8
+}, {
+  ticker: 'GEOX',
+  name: 'GeoTherm Holdings',
+  sector: 'energy',
+  price: 24.70,
+  cap: 18000,
+  vol: 0.04,
+  div: 1.0
+}, {
+  ticker: 'NUCL',
+  name: 'NucleaRX',
+  sector: 'energy',
+  price: 96.40,
+  cap: 110000,
+  vol: 0.025,
+  div: 2.8
+}, {
+  ticker: 'GBNK',
+  name: 'GlobalBank',
+  sector: 'finance',
+  price: 128.40,
+  cap: 320000,
+  vol: 0.018,
+  div: 3.2
+}, {
+  ticker: 'INSP',
+  name: 'InsurePro',
+  sector: 'finance',
+  price: 72.30,
+  cap: 95000,
+  vol: 0.02,
+  div: 2.6
+}, {
+  ticker: 'CAPX',
+  name: 'CapitalX Group',
+  sector: 'finance',
+  price: 215.80,
+  cap: 88000,
+  vol: 0.022,
+  div: 2.0
+}, {
+  ticker: 'FINT',
+  name: 'FinTech Wave',
+  sector: 'finance',
+  price: 56.90,
+  cap: 42000,
+  vol: 0.03,
+  div: 0.5
+}, {
+  ticker: 'TRST',
+  name: 'Trust Savings',
+  sector: 'finance',
+  price: 91.50,
+  cap: 140000,
+  vol: 0.016,
+  div: 4.0
+}, {
+  ticker: 'ASSX',
+  name: 'AssicuraX',
+  sector: 'finance',
+  price: 163.20,
+  cap: 78000,
+  vol: 0.019,
+  div: 3.1
+}, {
+  ticker: 'MEDX',
+  name: 'MediX Pharma',
+  sector: 'health',
+  price: 187.30,
+  cap: 220000,
+  vol: 0.025,
+  div: 1.5
+}, {
+  ticker: 'BIOX',
+  name: 'BioGenix',
+  sector: 'health',
+  price: 94.60,
+  cap: 68000,
+  vol: 0.035,
+  div: 0.0
+}, {
+  ticker: 'CARE',
+  name: 'CarePlus Health',
+  sector: 'health',
+  price: 68.40,
+  cap: 52000,
+  vol: 0.022,
+  div: 1.8
+}, {
+  ticker: 'NEUR',
+  name: 'NeuroLink',
+  sector: 'health',
+  price: 142.80,
+  cap: 41000,
+  vol: 0.04,
+  div: 0.0
+}, {
+  ticker: 'VITA',
+  name: 'VitaLife',
+  sector: 'health',
+  price: 37.50,
+  cap: 25000,
+  vol: 0.038,
+  div: 0.8
+}, {
+  ticker: 'RETL',
+  name: 'RetailMax',
+  sector: 'consumer',
+  price: 54.30,
+  cap: 120000,
+  vol: 0.022,
+  div: 2.2
+}, {
+  ticker: 'FOOD',
+  name: 'FoodChain Co',
+  sector: 'consumer',
+  price: 81.20,
+  cap: 95000,
+  vol: 0.018,
+  div: 2.8
+}, {
+  ticker: 'BRND',
+  name: 'BrandLux',
+  sector: 'consumer',
+  price: 43.70,
+  cap: 48000,
+  vol: 0.025,
+  div: 1.5
+}, {
+  ticker: 'HOME',
+  name: 'HomeEssentials',
+  sector: 'consumer',
+  price: 29.80,
+  cap: 35000,
+  vol: 0.02,
+  div: 1.2
+}, {
+  ticker: 'LUXO',
+  name: 'LuxOut Group',
+  sector: 'consumer',
+  price: 112.40,
+  cap: 38000,
+  vol: 0.03,
+  div: 1.0
+}, {
+  ticker: 'INDU',
+  name: 'IndustriaCorp',
+  sector: 'industrial',
+  price: 95.30,
+  cap: 140000,
+  vol: 0.02,
+  div: 2.5
+}, {
+  ticker: 'AERO',
+  name: 'AeroDynamics',
+  sector: 'industrial',
+  price: 178.60,
+  cap: 85000,
+  vol: 0.028,
+  div: 1.8
+}, {
+  ticker: 'SHIP',
+  name: 'ShipGlobal',
+  sector: 'industrial',
+  price: 41.20,
+  cap: 32000,
+  vol: 0.032,
+  div: 2.0
+}, {
+  ticker: 'BUIL',
+  name: 'BuildTech',
+  sector: 'industrial',
+  price: 63.80,
+  cap: 58000,
+  vol: 0.024,
+  div: 2.2
+}, {
+  ticker: 'MINX',
+  name: 'MineX Resources',
+  sector: 'materials',
+  price: 72.40,
+  cap: 68000,
+  vol: 0.03,
+  div: 1.5
+}, {
+  ticker: 'STEL',
+  name: 'SteelForge',
+  sector: 'materials',
+  price: 48.60,
+  cap: 52000,
+  vol: 0.026,
+  div: 2.8
+}, {
+  ticker: 'CHEM',
+  name: 'ChemiCore',
+  sector: 'materials',
+  price: 115.30,
+  cap: 48000,
+  vol: 0.028,
+  div: 1.2
+}, {
+  ticker: 'GOLD',
+  name: 'GoldMine Corp',
+  sector: 'materials',
+  price: 138.70,
+  cap: 75000,
+  vol: 0.025,
+  div: 0.5
+}, {
+  ticker: 'UTIL',
+  name: 'UtiliCorp',
+  sector: 'utilities',
+  price: 62.30,
+  cap: 130000,
+  vol: 0.012,
+  div: 4.5
+}, {
+  ticker: 'WATR',
+  name: 'AquaPure',
+  sector: 'utilities',
+  price: 45.80,
+  cap: 42000,
+  vol: 0.015,
+  div: 3.8
+}, {
+  ticker: 'GASX',
+  name: 'GasGrid',
+  sector: 'utilities',
+  price: 38.40,
+  cap: 55000,
+  vol: 0.018,
+  div: 3.5
+}, {
+  ticker: 'REAL',
+  name: 'RealEstate Holdings',
+  sector: 'realestate',
+  price: 87.50,
+  cap: 65000,
+  vol: 0.02,
+  div: 3.0
+}, {
+  ticker: 'PROP',
+  name: 'PropTrust REIT',
+  sector: 'realestate',
+  price: 53.20,
+  cap: 38000,
+  vol: 0.018,
+  div: 4.2
+}, {
+  ticker: 'TELE',
+  name: 'Telecom Italia X',
+  sector: 'communications',
+  price: 31.50,
+  cap: 78000,
+  vol: 0.022,
+  div: 4.0
+}, {
+  ticker: 'MEDA',
+  name: 'MediaWorld',
+  sector: 'communications',
+  price: 58.70,
+  cap: 42000,
+  vol: 0.028,
+  div: 1.5
+}];
+var CAREER_LEVELS = [{
+  name: 'Principiante',
+  minNetWorth: 10000,
+  minTrades: 0,
+  minROI: 0,
+  features: ['Mercato base', 'Compravendita azioni']
+}, {
+  name: 'Apprendista',
+  minNetWorth: 15000,
+  minTrades: 10,
+  minROI: 50,
+  features: ['Ordini limite', 'Grafico dettagli']
+}, {
+  name: 'Trader',
+  minNetWorth: 25000,
+  minTrades: 30,
+  minROI: 150,
+  features: ['Short selling', 'Filtri avanzati']
+}, {
+  name: 'Senior Trader',
+  minNetWorth: 50000,
+  minTrades: 60,
+  minROI: 400,
+  features: ['Margin 2x', 'Storia estesa']
+}, {
+  name: 'Portfolio Manager',
+  minNetWorth: 100000,
+  minTrades: 100,
+  minROI: 900,
+  features: ['Margin 3x', 'Multi-slot', 'Assemblee avanzate']
+}, {
+  name: 'Hedge Fund Manager',
+  minNetWorth: 250000,
+  minTrades: 200,
+  minROI: 2400,
+  features: ['Short multipli', 'Analisi settore']
+}, {
+  name: 'Market Wizard',
+  minNetWorth: 500000,
+  minTrades: 400,
+  minROI: 4900,
+  features: ['Tutto sbloccato', 'Margin 5x', 'Accesso completo']
+}];
+var EVENT_TEMPLATES = [{
+  id: 'earn_beat',
+  scope: 'ticker',
+  impact: 0.06,
+  vol: 0.015,
+  title: function title(a) {
+    return a.name + ' batte stime utili';
+  },
+  desc: function desc(a) {
+    return '+' + (a.price * 0.06).toFixed(2) + '€ - utili trimestrali superiori al previsto';
+  },
+  type: 'positive'
+}, {
+  id: 'earn_miss',
+  scope: 'ticker',
+  impact: -0.07,
+  vol: 0.018,
+  title: function title(a) {
+    return a.name + ' manca stime utili';
+  },
+  desc: function desc(a) {
+    return '-' + (a.price * 0.07).toFixed(2) + '€ - utili inferiori alle attese';
+  },
+  type: 'negative'
+}, {
+  id: 'product_launch',
+  scope: 'ticker',
+  impact: 0.08,
+  vol: 0.02,
+  title: function title(a) {
+    return a.name + ' lancia nuovo prodotto';
+  },
+  desc: function desc(a) {
+    return a.name + ' annuncia il lancio di un prodotto innovativo';
+  },
+  type: 'positive'
+}, {
+  id: 'product_fail',
+  scope: 'ticker',
+  impact: -0.09,
+  vol: 0.022,
+  title: function title(a) {
+    return a.name + ' ritira prodotto';
+  },
+  desc: function desc(a) {
+    return a.name + ' ritira un prodotto per problemi tecnici';
+  },
+  type: 'negative'
+}, {
+  id: 'scandal',
+  scope: 'ticker',
+  impact: -0.12,
+  vol: 0.03,
+  title: function title(a) {
+    return 'Scandalo coinvolge ' + a.name;
+  },
+  desc: function desc(a) {
+    return a.name + ' coinvolta in scandalo, indagine in corso';
+  },
+  type: 'negative'
+}, {
+  id: 'ceo_change',
+  scope: 'ticker',
+  impact: -0.04,
+  vol: 0.025,
+  title: function title(a) {
+    return a.name + ' cambia CEO';
+  },
+  desc: function desc(a) {
+    return a.name + ' annuncia cambio leadership';
+  },
+  type: 'neutral'
+}, {
+  id: 'lawsuit',
+  scope: 'ticker',
+  impact: -0.06,
+  vol: 0.02,
+  title: function title(a) {
+    return a.name + ' face a causa legale';
+  },
+  desc: function desc(a) {
+    return a.name + ' citata in giudizio';
+  },
+  type: 'negative'
+}, {
+  id: 'partnership',
+  scope: 'ticker',
+  impact: 0.05,
+  vol: 0.012,
+  title: function title(a) {
+    return a.name + ' firma partnership';
+  },
+  desc: function desc(a) {
+    return a.name + ' stringe accordo strategico';
+  },
+  type: 'positive'
+}, {
+  id: 'acquisition',
+  scope: 'ticker',
+  impact: 0.1,
+  vol: 0.025,
+  title: function title(a) {
+    return a.name + ' acquisita';
+  },
+  desc: function desc(a) {
+    return a.name + ' oggetto di OPA';
+  },
+  type: 'positive'
+}, {
+  id: 'buyback',
+  scope: 'ticker',
+  impact: 0.04,
+  vol: 0.008,
+  title: function title(a) {
+    return a.name + ' annuncia buyback';
+  },
+  desc: function desc(a) {
+    return a.name + ' programma riacquisto azioni';
+  },
+  type: 'positive'
+}, {
+  id: 'dividend_up',
+  scope: 'ticker',
+  impact: 0.03,
+  vol: 0.005,
+  title: function title(a) {
+    return a.name + ' aumenta dividendo';
+  },
+  desc: function desc(a) {
+    return a.name + ' innalza dividendo trimestrale';
+  },
+  type: 'positive'
+}, {
+  id: 'dividend_cut',
+  scope: 'ticker',
+  impact: -0.05,
+  vol: 0.01,
+  title: function title(a) {
+    return a.name + ' taglia dividendo';
+  },
+  desc: function desc(a) {
+    return a.name + ' riduce il dividendo';
+  },
+  type: 'negative'
+}, {
+  id: 'split_announce',
+  scope: 'ticker',
+  impact: 0.02,
+  vol: 0.01,
+  title: function title(a) {
+    return a.name + ' annuncia split';
+  },
+  desc: function desc(a) {
+    return a.name + ' split azioni 2:1';
+  },
+  type: 'positive'
+}, {
+  id: 'recall',
+  scope: 'ticker',
+  impact: -0.04,
+  vol: 0.015,
+  title: function title(a) {
+    return 'Richiamo prodotto ' + a.name;
+  },
+  desc: function desc(a) {
+    return a.name + ' richiamo volontario';
+  },
+  type: 'negative'
+}, {
+  id: 'contract',
+  scope: 'ticker',
+  impact: 0.06,
+  vol: 0.012,
+  title: function title(a) {
+    return a.name + ' vince appalto';
+  },
+  desc: function desc(a) {
+    return a.name + ' aggiudica contratto importante';
+  },
+  type: 'positive'
+}, {
+  id: 'sector_boom',
+  scope: 'sector',
+  impact: 0.05,
+  vol: 0.015,
+  title: function title(s) {
+    return 'Boom settore ' + SECTOR_NAMES[s];
+  },
+  desc: function desc(s) {
+    return ' forte crescita nel settore ' + SECTOR_NAMES[s];
+  },
+  type: 'positive'
+}, {
+  id: 'sector_crisis',
+  scope: 'sector',
+  impact: -0.06,
+  vol: 0.02,
+  title: function title(s) {
+    return 'Crisi settore ' + SECTOR_NAMES[s];
+  },
+  desc: function desc(s) {
+    return ' difficolta nel settore ' + SECTOR_NAMES[s];
+  },
+  type: 'negative'
+}, {
+  id: 'sector_regulation',
+  scope: 'sector',
+  impact: -0.04,
+  vol: 0.015,
+  title: function title(s) {
+    return 'Nuova regolamentazione ' + SECTOR_NAMES[s];
+  },
+  desc: function desc(s) {
+    return ' nuova normativa impatta ' + SECTOR_NAMES[s];
+  },
+  type: 'negative'
+}, {
+  id: 'sector_innovation',
+  scope: 'sector',
+  impact: 0.07,
+  vol: 0.018,
+  title: function title(s) {
+    return 'Innovazione nel settore ' + SECTOR_NAMES[s];
+  },
+  desc: function desc(s) {
+    return ' breakthrough tecnologico in ' + SECTOR_NAMES[s];
+  },
+  type: 'positive'
+}, {
+  id: 'rate_hike',
+  scope: 'macro',
+  impact: -0.03,
+  vol: 0.008,
+  title: function title() {
+    return 'Banca centrale alza tassi';
+  },
+  desc: function desc() {
+    return 'Rendimento obbligazionario in aumento';
+  },
+  type: 'negative'
+}, {
+  id: 'rate_cut',
+  scope: 'macro',
+  impact: 0.04,
+  vol: 0.008,
+  title: function title() {
+    return 'Banca centrale taglia tassi';
+  },
+  desc: function desc() {
+    return 'Tassi di interesse ridotti';
+  },
+  type: 'positive'
+}, {
+  id: 'inflation_up',
+  scope: 'macro',
+  impact: -0.02,
+  vol: 0.006,
+  title: function title() {
+    return 'Inflazione in aumento';
+  },
+  desc: function desc() {
+    return 'Pressioni sui prezzi in salita';
+  },
+  type: 'negative'
+}, {
+  id: 'inflation_down',
+  scope: 'macro',
+  impact: 0.02,
+  vol: 0.005,
+  title: function title() {
+    return 'Inflazione sotto controllo';
+  },
+  desc: function desc() {
+    return 'Prezzi stabili';
+  },
+  type: 'positive'
+}, {
+  id: 'recession',
+  scope: 'macro',
+  impact: -0.06,
+  vol: 0.015,
+  title: function title() {
+    return 'Timori recessione';
+  },
+  desc: function desc() {
+    return 'Economia in rallentamento';
+  },
+  type: 'negative'
+}, {
+  id: 'boom',
+  scope: 'macro',
+  impact: 0.05,
+  vol: 0.01,
+  title: function title() {
+    return 'Economia in boom';
+  },
+  desc: function desc() {
+    return 'Crescita superiore alle attese';
+  },
+  type: 'positive'
+}, {
+  id: 'geopolitical',
+  scope: 'macro',
+  impact: -0.03,
+  vol: 0.012,
+  title: function title() {
+    return 'Tensioni geopolitiche';
+  },
+  desc: function desc() {
+    return 'Incertezza nei mercati globali';
+  },
+  type: 'negative'
+}, {
+  id: 'trade_deal',
+  scope: 'macro',
+  impact: 0.04,
+  vol: 0.008,
+  title: function title() {
+    return 'Accordo commerciale';
+  },
+  desc: function desc() {
+    return 'Nuovo trattato tra potenze';
+  },
+  type: 'positive'
+}, {
+  id: 'natural_disaster',
+  scope: 'macro',
+  impact: -0.02,
+  vol: 0.01,
+  title: function title() {
+    return 'Disastro naturale';
+  },
+  desc: function desc() {
+    return 'Eventi climatici estremi';
+  },
+  type: 'negative'
+}, {
+  id: 'pandemic',
+  scope: 'macro',
+  impact: -0.05,
+  vol: 0.015,
+  title: function title() {
+    return 'Allarme sanitario';
+  },
+  desc: function desc() {
+    return 'Preoccupazioni sanitarie globali';
+  },
+  type: 'negative'
+}, {
+  id: 'tech_breakthrough',
+  scope: 'macro',
+  impact: 0.03,
+  vol: 0.008,
+  title: function title() {
+    return 'Breakthrough tecnologico';
+  },
+  desc: function desc() {
+    return 'Innovazione disruptive';
+  },
+  type: 'positive'
+}, {
+  id: 'currency',
+  scope: 'macro',
+  impact: -0.02,
+  vol: 0.006,
+  title: function title() {
+    return 'Volatilita valutaria';
+  },
+  desc: function desc() {
+    return 'Movimenti cambi';
+  },
+  type: 'neutral'
+}, {
+  id: 'oil_shock',
+  scope: 'macro',
+  impact: -0.03,
+  vol: 0.012,
+  title: function title() {
+    return 'Shock petrolifero';
+  },
+  desc: function desc() {
+    return 'Prezzi petrolio in volata';
+  },
+  type: 'negative'
+}, {
+  id: 'consumer_confidence',
+  scope: 'macro',
+  impact: 0.025,
+  vol: 0.006,
+  title: function title() {
+    return 'Fiducia consumatori alta';
+  },
+  desc: function desc() {
+    return 'Consumatori ottimisti';
+  },
+  type: 'positive'
+}, {
+  id: 'housing_boom',
+  scope: 'macro',
+  impact: 0.02,
+  vol: 0.005,
+  title: function title() {
+    return 'Boom immobiliare';
+  },
+  desc: function desc() {
+    return 'Mercato case in crescita';
+  },
+  type: 'positive'
+}, {
+  id: 'housing_bust',
+  scope: 'macro',
+  impact: -0.03,
+  vol: 0.008,
+  title: function title() {
+    return 'Crisi immobiliare';
+  },
+  desc: function desc() {
+    return 'Mercato case in calo';
+  },
+  type: 'negative'
+}, {
+  id: 'merger_wave',
+  scope: 'macro',
+  impact: 0.02,
+  vol: 0.006,
+  title: function title() {
+    return 'Onda fusioni';
+  },
+  desc: function desc() {
+    return 'M&A in aumento';
+  },
+  type: 'positive'
+}, {
+  id: 'regulation_tech',
+  scope: 'macro',
+  impact: -0.04,
+  vol: 0.01,
+  title: function title() {
+    return 'Regulation tech';
+  },
+  desc: function desc() {
+    return 'Nuove regole per big tech';
+  },
+  type: 'negative'
+}];
+var ASSEMBLY_PROPOSALS = [{
+  id: 'dividend_increase',
+  title: 'Aumento Dividendo',
+  desc: 'Aumentare il dividendo trimestrale del 25%',
+  effect: function effect(c) {
+    c.div *= 1.25;
+    return 'Dividendo aumentato a ' + c.div.toFixed(1) + '%';
+  },
+  vote: 'positive'
+}, {
+  id: 'dividend_cut',
+  title: 'Riduzione Dividendo',
+  desc: 'Ridurre il dividendo per reinvestire',
+  effect: function effect(c) {
+    c.div *= 0.6;
+    return 'Dividendo ridotto a ' + c.div.toFixed(1) + '%';
+  },
+  vote: 'neutral'
+}, {
+  id: 'dividend_capitalization',
+  title: 'Capitalizzazione Dividendo',
+  desc: 'Capitalizzare utili per espansione',
+  effect: function effect(c) {
+    c.div = 0;
+    return 'Dividendi azzerati per reinvestimento';
+  },
+  vote: 'neutral'
+}, {
+  id: 'stock_split',
+  title: 'Split Azioni 2:1',
+  desc: 'Dimezzare prezzo, raddoppiare azioni',
+  effect: function effect(c) {
+    c.price /= 2;
+    c.cap *= 2;
+    return 'Split 2:1 effettuato, prezzo: ' + c.price.toFixed(2);
+  },
+  vote: 'positive'
+}, {
+  id: 'merger_proposal',
+  title: 'Proposta Fusione',
+  desc: 'Fondersi con un partner strategico',
+  effect: function effect(c) {
+    c.vol *= 1.3;
+    return 'Fusione in esame, volatilita aumentata';
+  },
+  vote: 'neutral'
+}, {
+  id: 'acquisition_target',
+  title: 'Acquisizione',
+  desc: 'Acquisire una societa minore',
+  effect: function effect(c) {
+    c.price *= 1.06;
+    c.vol *= 1.2;
+    return 'Acquisizione completata, prezzo +6%';
+  },
+  vote: 'positive'
+}, {
+  id: 'ceo_change',
+  title: 'Cambio CEO',
+  desc: 'Sostituire il CEO con uno nuovo',
+  effect: function effect(c) {
+    c.vol *= 1.4;
+    return 'Nuovo CEO, volatilita +40%';
+  },
+  vote: 'neutral'
+}, {
+  id: 'ceo_keep',
+  title: 'Conferma CEO',
+  desc: 'Confermare l\'attuale CEO',
+  effect: function effect(c) {
+    c.vol *= 0.85;
+    return 'CEO confermato, stabilita aumentata';
+  },
+  vote: 'positive'
+}, {
+  id: 'expansion',
+  title: 'Espansione',
+  desc: 'Aprire nuove sedi e mercati',
+  effect: function effect(c) {
+    c.price *= 1.05;
+    c.cap *= 1.05;
+    return 'Espansione approvata, prezzo +5%';
+  },
+  vote: 'positive'
+}, {
+  id: 'contraction',
+  title: 'Contrazione',
+  desc: 'Chiudere divisioni non redditizie',
+  effect: function effect(c) {
+    c.price *= 0.96;
+    return 'Contrazione, prezzo -4%';
+  },
+  vote: 'neutral'
+}, {
+  id: 'buyback',
+  title: 'Buyback Azioni',
+  desc: 'Riacquistare azioni proprie',
+  effect: function effect(c) {
+    c.price *= 1.08;
+    return 'Buyback approvato, prezzo +8%';
+  },
+  vote: 'positive'
+}, {
+  id: 'debt_restructure',
+  title: 'Ristrutturazione Debito',
+  desc: 'Rinegoziare il debito',
+  effect: function effect(c) {
+    c.vol *= 1.15;
+    c.price *= 0.97;
+    return 'Debito ristrutturato, prezzo -3%';
+  },
+  vote: 'neutral'
+}, {
+  id: 'dividend_special',
+  title: 'Dividendo Straordinario',
+  desc: 'Distribuire un dividendo speciale una tantum',
+  effect: function effect(c) {
+    return 'Dividendo speciale di 2€ per azione distribuito';
+  },
+  vote: 'positive'
+}, {
+  id: 'investment_ai',
+  title: 'Investimento AI',
+  desc: 'Investire massicciamente in intelligenza artificiale',
+  effect: function effect(c) {
+    c.price *= 1.1;
+    c.vol *= 1.25;
+    return 'Investimento AI, prezzo +10%, volatilita +25%';
+  },
+  vote: 'positive'
+}, {
+  id: 'cost_cutting',
+  title: 'Taglio Costi',
+  desc: 'Ridurre i costi operativi del 15%',
+  effect: function effect(c) {
+    c.price *= 1.04;
+    return 'Taglio costi approvato, prezzo +4%';
+  },
+  vote: 'positive'
+}];
+
+// ======================== GAME STATE ========================
+var G = null;
+var chartNetWorth = null;
+var tradeModalState = null;
+var txFilter = 'all';
+var sortKey = 'cap';
+var sortDir = -1;
+var sectorFilter = 'all';
+var currentView = 'dashboard';
+function newGame() {
+  G = {
+    week: 1,
+    level: 0,
+    cash: 10000,
+    startingCash: 10000,
+    positions: {},
+    shorts: [],
+    transactions: [],
+    news: [],
+    realizedPnL: 0,
+    netWorthHistory: [{
+      week: 0,
+      value: 10000
+    }],
+    stats: {
+      totalTrades: 0,
+      wins: 0,
+      losses: 0,
+      bestTrade: 0,
+      worstTrade: 0,
+      bestWinStreak: 0,
+      currentStreak: 0,
+      dividendsReceived: 0,
+      assembliesVoted: 0
+    },
+    companies: COMPANIES.map(function (c) {
+      return _objectSpread(_objectSpread({}, c), {}, {
+        prevPrice: c.price,
+        change: 0,
+        weekHistory: [c.price]
+      });
+    }),
+    pendingAssemblies: [],
+    activeSectorBoosts: {},
+    maxMargin: 1,
+    unlocked: {
+      limitOrders: false,
+      shortSelling: false,
+      margin2x: false,
+      multiSlot: false,
+      margin3x: false,
+      shortMulti: false,
+      sectorAnalysis: false,
+      margin5x: false
+    }
+  };
+  updateUnlocks();
+  saveAuto();
+}
+function getCompany(t) {
+  return G.companies.find(function (c) {
+    return c.ticker === t;
+  });
+}
+function companySharesOutstanding(c) {
+  return c.sharesOutstanding || Math.max(1, Math.round(c.cap * 1000000 / c.price));
+}
+function getSharesOwned(t) {
+  return G.positions[t] ? G.positions[t].shares : 0;
+}
+function getOwnershipPct(t) {
+  var c = getCompany(t);
+  if (!c) return 0;
+  var owned = getSharesOwned(t);
+  var total = companySharesOutstanding(c);
+  return total > 0 ? owned / total * 100 : 0;
+}
+function computeNetWorth() {
+  var nw = G.cash;
+  for (var t in G.positions) {
+    var c = getCompany(t);
+    if (!c) continue;
+    nw += G.positions[t].shares * c.price;
+  }
+  for (var i = 0; i < G.shorts.length; i++) {
+    var s = G.shorts[i];
+    var c = getCompany(s.ticker);
+    if (!c) continue;
+    nw -= s.shares * c.price - s.shares * s.entryPrice;
+  }
+  return nw;
+}
+function getPortfolioValue() {
+  var v = 0;
+  for (var t in G.positions) {
+    var c = getCompany(t);
+    if (!c) continue;
+    v += G.positions[t].shares * c.price;
+  }
+  return v;
+}
+function getUnrealizedPnL() {
+  var pnl = 0;
+  for (var t in G.positions) {
+    var c = getCompany(t);
+    if (!c) continue;
+    var p = G.positions[t];
+    pnl += (c.price - p.avgCost) * p.shares;
+  }
+  for (var i = 0; i < G.shorts.length; i++) {
+    var s = G.shorts[i];
+    var c = getCompany(s.ticker);
+    if (!c) continue;
+    pnl += (s.entryPrice - c.price) * s.shares;
+  }
+  return pnl;
+}
+function getROI() {
+  var nw = computeNetWorth();
+  return (nw - G.startingCash) / G.startingCash * 100;
+}
+
+// ======================== UNLOCKS ========================
+function updateUnlocks() {
+  var lvl = G.level;
+  G.unlocked.limitOrders = lvl >= 1;
+  G.unlocked.shortSelling = lvl >= 2;
+  G.unlocked.margin2x = lvl >= 3;
+  G.unlocked.multiSlot = lvl >= 4;
+  G.unlocked.margin3x = lvl >= 4;
+  G.unlocked.shortMulti = lvl >= 5;
+  G.unlocked.sectorAnalysis = lvl >= 5;
+  G.unlocked.margin5x = lvl >= 6;
+  G.maxMargin = lvl >= 6 ? 5 : lvl >= 4 ? 3 : lvl >= 3 ? 2 : 1;
+}
+
+// ======================== MARKET ENGINE ========================
+function computeIndices() {
+  var indices = {
+    SPTX: 0,
+    TECH: 0,
+    ENERGY: 0,
+    FINANCE: 0,
+    HEALTH: 0,
+    CONSUMER: 0,
+    INDU: 0
+  };
+  var sums = {
+    SPTX: 0,
+    TECH: 0,
+    ENERGY: 0,
+    FINANCE: 0,
+    HEALTH: 0,
+    CONSUMER: 0,
+    INDU: 0
+  };
+  var counts = {
+    SPTX: 0,
+    TECH: 0,
+    ENERGY: 0,
+    FINANCE: 0,
+    HEALTH: 0,
+    CONSUMER: 0,
+    INDU: 0
+  };
+  G.companies.forEach(function (c) {
+    if (c.listed === false) return;
+    sums.SPTX += c.price;
+    counts.SPTX++;
+    if (c.sector === 'tech') {
+      sums.TECH += c.price;
+      counts.TECH++;
+    }
+    if (c.sector === 'energy') {
+      sums.ENERGY += c.price;
+      counts.ENERGY++;
+    }
+    if (c.sector === 'finance') {
+      sums.FINANCE += c.price;
+      counts.FINANCE++;
+    }
+    if (c.sector === 'health') {
+      sums.HEALTH += c.price;
+      counts.HEALTH++;
+    }
+    if (c.sector === 'consumer') {
+      sums.CONSUMER += c.price;
+      counts.CONSUMER++;
+    }
+    if (c.sector === 'industrial' || c.sector === 'materials' || c.sector === 'utilities') {
+      sums.INDU += c.price;
+      counts.INDU++;
+    }
+  });
+  for (var k in indices) {
+    indices[k] = counts[k] > 0 ? sums[k] / counts[k] : 0;
+  }
+  return indices;
+}
+function advanceTurn() {
+  if (!G) return;
+  if (typeof PlayerLife !== 'undefined' && PlayerLife.canAct && !PlayerLife.canAct()) {
+    PlayerLife.showGameOver();
+    return;
+  }
+  // Save prev prices
+  G.companies.forEach(function (c) {
+    c.prevPrice = c.price;
+    c.change = 0;
+  });
+
+  // Apply sector boosts decay
+  for (var s in G.activeSectorBoosts) {
+    G.activeSectorBoosts[s].turns--;
+    if (G.activeSectorBoosts[s].turns <= 0) delete G.activeSectorBoosts[s];
+  }
+
+  // Generate events (2-4 per turn)
+  var numEvents = 2 + Math.floor(Math.random() * 3);
+  var events = [];
+  for (var i = 0; i < numEvents; i++) {
+    var ev = generateEvent();
+    if (ev) events.push(ev);
+  }
+
+  // Apply price movements
+  G.companies.forEach(function (c) {
+    if (c.listed === false || c.tradingHalted) {
+      c.change = 0;
+      return;
+    }
+    var baseVol = c.vol;
+    // Apply sector boost
+    if (G.activeSectorBoosts[c.sector]) {
+      baseVol *= 1 + G.activeSectorBoosts[c.sector].impact;
+    }
+    var drift = (Math.random() - 0.48) * baseVol;
+    c.price *= 1 + drift;
+    if (c.price < 1) c.price = 1;
+    c.change = (c.price - c.prevPrice) / c.prevPrice * 100;
+    c.weekHistory.push(c.price);
+    if (c.weekHistory.length > 52) c.weekHistory.shift();
+  });
+
+  // Apply event impacts
+  events.forEach(function (ev) {
+    if (ev.scope === 'ticker') {
+      var c = getCompany(ev.ticker);
+      if (c && c.listed !== false && !c.tradingHalted) {
+        c.price *= 1 + ev.impact;
+        if (c.price < 1) c.price = 1;
+        c.change = (c.price - c.prevPrice) / c.prevPrice * 100;
+        if (ev.vol) c.vol = Math.min(0.08, c.vol + ev.vol);
+      }
+    } else if (ev.scope === 'sector') {
+      G.companies.forEach(function (c) {
+        if (c.listed !== false && !c.tradingHalted && c.sector === ev.sector) {
+          c.price *= 1 + ev.impact;
+          if (c.price < 1) c.price = 1;
+          c.change = (c.price - c.prevPrice) / c.prevPrice * 100;
+          if (ev.vol) c.vol = Math.min(0.08, c.vol + ev.vol);
+        }
+      });
+      G.activeSectorBoosts[ev.sector] = {
+        impact: ev.impact * 0.3,
+        turns: 3
+      };
+    } else if (ev.scope === 'macro') {
+      G.companies.forEach(function (c) {
+        if (c.listed === false || c.tradingHalted) return;
+        c.price *= 1 + ev.impact * (0.5 + Math.random() * 0.5);
+        if (c.price < 1) c.price = 1;
+        c.change = (c.price - c.prevPrice) / c.prevPrice * 100;
+      });
+    }
+  });
+
+  // Pay dividends every 4 weeks
+  if (G.week % 4 === 0) payDividends();
+
+  // Check for assemblies
+  checkAssemblies();
+
+  // Update net worth history
+  var nw = computeNetWorth();
+  G.netWorthHistory.push({
+    week: G.week,
+    value: Math.round(nw)
+  });
+  if (G.netWorthHistory.length > 120) G.netWorthHistory.shift();
+  G.week++;
+
+  // Check level up
+  checkLevelUp();
+
+  // Auto-save
+  saveAuto();
+
+  // LLM Game Master + Competitor Engine
+  if (typeof LLMGameMaster !== 'undefined' && LLMGameMaster.isAvailable && LLMGameMaster.isAvailable()) {
+    var gs = {
+      week: G.week,
+      year: G.year || 1987,
+      marketSentiment: G.sentiment || 50,
+      level: G.level || 1,
+      netWorth: computeNetWorth(),
+      reputation: G.rep || 50,
+      companies: G.companies.map(function (c) {
+        return {
+          ticker: c.ticker,
+          name: c.name,
+          sector: c.sector,
+          price: c.price,
+          peRatio: c.pe || 10
+        };
+      }),
+      competitors: window._competitorEngine && window._competitorEngine.competitors ? window._competitorEngine.competitors.map(function (c) {
+        return {
+          nickname: c.nickname,
+          strategy: c.strategy,
+          capital: c.capital,
+          relationship: c.relationship || 'neutral',
+          goal: window.WorldEngine && WorldEngine.getState() && WorldEngine.getState().rivals[c.nickname] ? WorldEngine.getState().rivals[c.nickname].goal : '',
+          worldPlan: c.worldPlan || '',
+          conviction: c.conviction || 50
+        };
+      }) : []
+    };
+    LLMGameMaster.generateCompetitorActions(gs.competitors, gs).then(function (actions) {
+      if (window._competitorEngine) {
+        var res = window._competitorEngine.processWeek(actions);
+        renderCompetitorActivity(res);
+      }
+    }).catch(function () {
+      if (window._competitorEngine) {
+        var res = window._competitorEngine.processWeek();
+        renderCompetitorActivity(res);
+      }
+    });
+  } else if (window._competitorEngine) {
+    var res2 = window._competitorEngine.processWeek();
+    renderCompetitorActivity(res2);
+  }
+
+  // Render
+  renderAll();
+  events.forEach(function (ev) {
+    return showEventToast(ev);
+  });
+  updateTicker();
+}
+function renderCompetitorActivity(res) {
+  var el = document.getElementById('dash-competitor-feed');
+  if (!el || !res || !res.trades) return;
+  el.innerHTML = '';
+  var trades = res.trades || [];
+  if (trades.length === 0) {
+    el.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:8px">Nessuna attivita\' dei competitor questa settimana.</div>';
+    return;
+  }
+  var colors = {
+    buy: '#00d68f',
+    sell: '#ff5371',
+    short: '#ff5371',
+    cover: '#00d68f',
+    hold: '#8a96b0',
+    algorithmic: '#8a96b0'
+  };
+  var labels = {
+    buy: 'COMPRA',
+    sell: 'VENDI',
+    short: 'SHORT',
+    cover: 'COVER',
+    hold: 'HOLD',
+    algorithmic: 'AUTO'
+  };
+  trades.forEach(function (t) {
+    var comp = t.competitor || {};
+    var nick = comp.nickname || 'Bot';
+    var act = (t.action || 'algorithmic').toLowerCase();
+    var reason = t.reason || '';
+    var aggr = t.aggression || 5;
+    var qty = t.quantity || 0;
+    var target = t.target || '';
+    var color = colors[act] || '#8a96b0';
+    var label = labels[act] || act.toUpperCase();
+    var div = document.createElement('div');
+    div.style.cssText = 'padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px';
+    var aggrBar = '';
+    for (var b = 0; b < 10; b++) {
+      aggrBar += '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + (b < aggr ? 'var(--red)' : 'var(--bg4)') + ';margin-right:2px"></span>';
+    }
+    div.innerHTML = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-weight:600;color:var(--text)">' + nick + '</span><span style="background:' + color + '22;color:' + color + ';padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600">' + label + '</span>' + (target ? '<span style="color:var(--text2)">' + target + (qty > 0 ? ' x' + qty : '') + '</span>' : '') + '</div>' + (reason ? '<div style="color:var(--text2);font-size:11px;font-style:italic;margin-bottom:4px">\"' + reason + '\"</div>' : '') + '<div>' + aggrBar + ' <span style="color:var(--text2);font-size:10px;margin-left:4px">Aggr. ' + aggr + '/10</span></div>';
+    el.appendChild(div);
+  });
+}
+function generateEvent() {
+  var template = EVENT_TEMPLATES[Math.floor(Math.random() * EVENT_TEMPLATES.length)];
+  var ev = {
+    scope: template.scope,
+    title: template.title,
+    desc: template.desc,
+    impact: template.impact,
+    vol: template.vol,
+    type: template.type
+  };
+  if (template.scope === 'ticker') {
+    var listed = G.companies.filter(function (item) {
+      return item.listed !== false && !item.tradingHalted;
+    });
+    if (!listed.length) return null;
+    var c = listed[Math.floor(Math.random() * listed.length)];
+    ev.ticker = c.ticker;
+    ev.title = template.title(c);
+    ev.desc = template.desc(c);
+  } else if (template.scope === 'sector') {
+    var sectors = Object.keys(SECTOR_NAMES);
+    var s = sectors[Math.floor(Math.random() * sectors.length)];
+    ev.sector = s;
+    ev.title = template.title(s);
+    ev.desc = template.desc(s);
+  } else {
+    ev.title = template.title();
+    ev.desc = template.desc();
+  }
+  G.news.unshift({
+    week: G.week,
+    title: ev.title,
+    desc: ev.desc,
+    type: ev.type,
+    scope: ev.scope
+  });
+  if (G.news.length > 100) G.news.pop();
+  return ev;
+}
+function payDividends() {
+  var total = 0;
+  for (var t in G.positions) {
+    var c = getCompany(t);
+    if (!c || c.listed === false) continue;
+    var div = c.div * 0.01 * c.price * G.positions[t].shares;
+    if (div > 0) {
+      G.cash += div;
+      total += div;
+      addTransaction('dividend', t, G.positions[t].shares, c.price, div, 0);
+    }
+  }
+  // Special dividends from assembly decisions
+  for (var i = 0; i < G.shorts.length; i++) {
+    var s = G.shorts[i];
+    var c = getCompany(s.ticker);
+    if (!c || c.listed === false) continue;
+    var div = c.div * 0.01 * c.price * s.shares;
+    if (div > 0) {
+      G.cash -= div;
+      total -= div;
+      addTransaction('dividend', s.ticker, -s.shares, c.price, -div, 0);
+    }
+  }
+  if (total !== 0) {
+    G.stats.dividendsReceived += total;
+    toast(total > 0 ? 'success' : 'warning', 'Dividendi ' + (total > 0 ? 'incassati' : 'pagati') + ': ' + formatEur(Math.abs(total)));
+  }
+}
+
+// ======================== ASSEMBLIES ========================
+function checkAssemblies() {
+  for (var t in G.positions) {
+    var c = getCompany(t);
+    if (!c || c.listed === false) continue;
+    var pct = getOwnershipPct(t);
+    if (pct > 0) {
+      // Check if already has pending assembly
+      var existing = G.pendingAssemblies.find(function (a) {
+        return a.ticker === t;
+      });
+      if (!existing && Math.random() < 0.08 + Math.min(0.12, pct / 100)) {
+        // Create assembly
+        var numProps = 2 + Math.floor(Math.random() * 3);
+        var props = [];
+        var pool = [].concat(ASSEMBLY_PROPOSALS).sort(function () {
+          return Math.random() - 0.5;
+        });
+        for (var i = 0; i < numProps && i < pool.length; i++) {
+          props.push({
+            id: pool[i].id,
+            title: pool[i].title,
+            desc: pool[i].desc,
+            effect: pool[i].effect,
+            vote: pool[i].vote,
+            votesFor: 0,
+            votesAgainst: 0,
+            playerVoted: false,
+            playerVote: null
+          });
+        }
+        G.pendingAssemblies.push({
+          ticker: t,
+          week: G.week,
+          proposals: props,
+          resolved: false
+        });
+        toast('info', 'Assemblea disponibile per ' + t + ' (diritti di voto ' + pct.toFixed(2) + '%)');
+      }
+    }
+  }
+}
+function openAssemblyModal(ticker) {
+  var assembly = G.pendingAssemblies.find(function (a) {
+    return a.ticker === ticker && !a.resolved;
+  });
+  if (!assembly) return;
+  var c = getCompany(ticker);
+  var pct = getOwnershipPct(ticker);
+  var total = companySharesOutstanding(c);
+  var body = document.getElementById('assembly-modal-body');
+  var ceoName = c.ceoName || (c.name || 'Societa').split(' ')[0] + ' CEO';
+  var ceoId = 'ceo:' + ceoName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  var firmId = 'firm:' + (c.name || 'societa').toLowerCase().replace(/[^a-z0-9]/g, '_');
+  var climate = (c.sentiment || 50) > 65 ? 'fiducioso' : (c.sentiment || 50) < 35 ? 'nervoso' : 'teso ma composto';
+  var html = '<div style="margin-bottom:14px">';
+  html += '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px"><div><strong>' + c.name + '</strong> (' + ticker + ')</div><div><span class="pill b">Possiedi ' + pct.toFixed(1) + '%</span> <span class="pill y">Clima ' + climate + '</span></div></div>';
+  html += '<div class="gray" style="font-size:12px">Settimana ' + assembly.week + ' • Le tue azioni: ' + getSharesOwned(ticker).toLocaleString() + ' di ' + total.toLocaleString() + '</div>';
+  html += '<div style="margin-top:8px;padding:10px;border-radius:10px;background:linear-gradient(135deg,rgba(59,130,246,.10),rgba(168,85,247,.08));border:1px solid var(--border)"><div style="font-size:11px;letter-spacing:1px;color:var(--text2)">SALA ASSEMBLEA</div><div style="font-size:12px;line-height:1.6;margin-top:4px">Entrando nella sala senti il brusio degli azionisti, il team legale che sussurra, il board che difende la linea e il CEO ' + ceoName + ' che osserva la platea. Ogni delibera qui lascia memoria.</div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" onclick="openCharacterModal(\'' + ceoId + '\')">Apri CEO</button><button class="btn btn-sm" onclick="openCharacterModal(\'' + firmId + '\')">Apri società</button></div></div>';
+  html += '</div>';
+  html += '<div class="brokerage-grid" style="margin-bottom:12px"><div class="brokerage-firm"><div class="gray" style="font-size:10px">Board</div><strong>' + ceoName + '</strong><div class="gray" style="font-size:10px">Guidano la narrativa della seduta</div></div><div class="brokerage-firm"><div class="gray" style="font-size:10px">Azionisti retail</div><strong>' + Math.max(5, Math.round((100 - pct) / 4)) + '</strong><div class="gray" style="font-size:10px">voci sparse e nervose</div></div><div class="brokerage-firm"><div class="gray" style="font-size:10px">Peso del tuo voto</div><strong>' + pct.toFixed(1) + '%</strong><div class="gray" style="font-size:10px">il tavolo ti ascolta</div></div></div>';
+  assembly.proposals.forEach(function (prop, idx) {
+    html += '<div class="proposal-item">';
+    html += '<div class="prop-title">' + prop.title + '</div>';
+    html += '<div class="prop-desc">' + prop.desc + '</div>';
+    var forPct = prop.votesFor + prop.playerVote === 1 ? prop.votesFor + getSharesOwned(ticker) : prop.votesFor;
+    var totalVotes = prop.votesFor + prop.votesAgainst + (prop.playerVoted ? getSharesOwned(ticker) : 0);
+    var forPct2 = totalVotes > 0 ? (prop.votesFor + (prop.playerVote === 1 ? getSharesOwned(ticker) : 0)) / totalVotes * 100 : 0;
+    var againstPct = totalVotes > 0 ? (prop.votesAgainst + (prop.playerVote === 0 ? getSharesOwned(ticker) : 0)) / totalVotes * 100 : 0;
+    html += '<div class="vote-bar"><span class="green" style="font-size:11px">A favore ' + forPct2.toFixed(0) + '%</span><div class="bar"><div class="bar-fill" style="width:' + forPct2 + '%;background:var(--green)"></div></div></div>';
+    html += '<div class="vote-bar"><span class="red" style="font-size:11px">Contro ' + againstPct.toFixed(0) + '%</span><div class="bar"><div class="bar-fill" style="width:' + againstPct + '%;background:var(--red)"></div></div></div>';
+    if (!prop.playerVoted) {
+      html += '<div class="vote-actions"><button class="btn btn-green btn-sm" onclick="castVote(\'' + ticker + '\',' + idx + ',1)">Vota A Favore</button>';
+      html += '<button class="btn btn-red btn-sm" onclick="castVote(\'' + ticker + '\',' + idx + ',0)">Vota Contro</button></div>';
+    } else {
+      html += '<div class="gray" style="font-size:11px;margin-top:6px">Hai votato ' + (prop.playerVote === 1 ? 'a favore' : 'contro') + '</div>';
+    }
+    html += '</div>';
+  });
+  if (typeof StakeholderInteractions !== 'undefined' && StakeholderInteractions.assemblyTools) html += StakeholderInteractions.assemblyTools(ticker);
+  html += '<div style="margin-top:14px;display:flex;gap:8px">';
+  html += '<button class="btn btn-blue" onclick="resolveAssembly(\'' + ticker + '\')">Risolvi Assemblea</button>';
+  html += '</div>';
+  body.innerHTML = html;
+  document.getElementById('assembly-modal-title').textContent = 'Assemblea ' + c.name;
+  document.getElementById('assembly-modal').classList.add('show');
+}
+function closeAssemblyModal() {
+  document.getElementById('assembly-modal').classList.remove('show');
+}
+function castVote(ticker, propIdx, vote) {
+  if (typeof wolfBridge !== 'undefined' && wolfBridge.voteAssembly) {
+    var voteStr = vote === 1 ? 'for' : 'against';
+    wolfBridge.voteAssembly(ticker, propIdx, voteStr);
+  } else {
+    var assembly = G.pendingAssemblies.find(function (a) {
+      return a.ticker === ticker && !a.resolved;
+    });
+    if (!assembly || assembly.proposals[propIdx].playerVoted) return;
+    assembly.proposals[propIdx].playerVoted = true;
+    assembly.proposals[propIdx].playerVote = vote;
+    var c = getCompany(ticker);
+    var total = companySharesOutstanding(c);
+    var playerShares = getSharesOwned(ticker);
+    var aiShares = total - playerShares;
+    var prop = assembly.proposals[propIdx];
+    var aiFavor = Math.random();
+    if (prop.vote === 'positive') aiFavor = 0.55 + Math.random() * 0.3;else if (prop.vote === 'negative') aiFavor = 0.25 + Math.random() * 0.3;else aiFavor = 0.4 + Math.random() * 0.2;
+    if (typeof StakeholderInteractions !== 'undefined' && StakeholderInteractions.applyVoteInfluence) aiFavor = StakeholderInteractions.applyVoteInfluence(ticker, aiFavor);
+    prop.votesFor = Math.round(aiShares * aiFavor);
+    prop.votesAgainst = aiShares - prop.votesFor;
+    G.stats.assembliesVoted++;
+  }
+  saveAuto();
+  openAssemblyModal(ticker);
+  renderAll();
+  toast('success', 'Voto registrato per ' + ticker);
+}
+function resolveAssembly(ticker) {
+  if (typeof wolfBridge !== 'undefined' && wolfBridge.resolveAssembly) {
+    wolfBridge.resolveAssembly(ticker);
+    closeAssemblyModal();
+    renderAll();
+    return;
+  }
+  var assembly = G.pendingAssemblies.find(function (a) {
+    return a.ticker === ticker && !a.resolved;
+  });
+  if (!assembly) return;
+  var c = getCompany(ticker);
+  var playerShares = getSharesOwned(ticker);
+  var total = companySharesOutstanding(c);
+  assembly.proposals.forEach(function (prop) {
+    if (!prop.playerVoted) {
+      // Auto-vote: random AI
+      var aiShares = total - playerShares;
+      var aiFavor = Math.random();
+      if (prop.vote === 'positive') aiFavor = 0.55 + Math.random() * 0.3;else aiFavor = 0.4 + Math.random() * 0.2;
+      if (typeof StakeholderInteractions !== 'undefined' && StakeholderInteractions.applyVoteInfluence) aiFavor = StakeholderInteractions.applyVoteInfluence(ticker, aiFavor);
+      prop.votesFor = Math.round(aiShares * aiFavor);
+      prop.votesAgainst = aiShares - prop.votesFor;
+    }
+    var forVotes = prop.votesFor + (prop.playerVote === 1 ? playerShares : 0);
+    var againstVotes = prop.votesAgainst + (prop.playerVote === 0 ? playerShares : 0);
+    var passed = forVotes > againstVotes;
+    if (passed) {
+      var effectFn = prop.effect;
+      if (typeof effectFn !== 'function') {
+        var template = ASSEMBLY_PROPOSALS.find(function (x) {
+          return x.id === prop.id;
+        });
+        if (template) effectFn = template.effect;
+      }
+      if (typeof effectFn !== 'function' && prop.id === 'shareholder_transparency') effectFn = function effectFn(company) {
+        company.vol *= 0.96;
+        company.price *= 1.025;
+        return 'Governance rafforzata, prezzo +2,5%';
+      };
+      var result = typeof effectFn === 'function' ? effectFn(c) : 'Delibera registrata senza effetto immediato';
+      toast('success', '[' + ticker + '] ' + prop.title + ' APPROVATO: ' + result);
+      // Special dividend
+      if (prop.id === 'dividend_special') {
+        var div = 2 * playerShares;
+        G.cash += div;
+        G.stats.dividendsReceived += div;
+        addTransaction('dividend', ticker, playerShares, c.price, div, 0);
+      }
+    } else {
+      toast('warning', '[' + ticker + '] ' + prop.title + ' RESPINTO');
+    }
+  });
+  assembly.resolved = true;
+  G.pendingAssemblies = G.pendingAssemblies.filter(function (a) {
+    return !a.resolved;
+  });
+  saveAuto();
+  closeAssemblyModal();
+  renderAll();
+}
+
+// ======================== TRADING ========================
+function openTradeModal(ticker) {
+  if (typeof PlayerLife !== 'undefined' && PlayerLife.canAct && !PlayerLife.canAct()) {
+    PlayerLife.showGameOver();
+    return;
+  }
+  if (typeof BrokerageCareer !== 'undefined' && BrokerageCareer.canTrade && !BrokerageCareer.canTrade()) {
+    toast('warning', 'Devi essere assunto da una società di brokeraggio o fondarne una');
+    if (BrokerageCareer.showJobs) BrokerageCareer.showJobs();
+    return;
+  }
+  var c = getCompany(ticker);
+  if (!c) return;
+  if (c.listed === false || c.tradingHalted) {
+    toast('warning', 'Titolo non negoziabile: societa ritirata o contrattazioni sospese');
+    return;
+  }
+  var owned = G.positions[ticker] ? G.positions[ticker].shares : 0;
+  var lvl = G.level;
+  tradeModalState = {
+    ticker: ticker,
+    owned: owned,
+    mode: 'buy',
+    orderType: 'market',
+    shares: 1,
+    limitPrice: c.price
+  };
+  var body = document.getElementById('trade-modal-body');
+  var html = '<div style="margin-bottom:14px">';
+  html += '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><strong>' + c.name + ' (' + ticker + ')</strong><span class="pill b">' + SECTOR_NAMES[c.sector] + '</span></div>';
+  html += '<div style="font-size:12px;color:var(--text2)">Prezzo attuale: <strong style="color:var(--text)">' + formatEur(c.price) + '</strong> • Div: ' + c.div.toFixed(1) + '% • Vol: ' + (c.vol * 100).toFixed(1) + '%</div>';
+  if (c.description) {
+    html += '<div style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.4">' + c.description + '</div>';
+  }
+  if (c.characteristics && c.characteristics.length) {
+    html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">' + c.characteristics.map(function (ch) {
+      return '<span class="pill" style="background:var(--bg3);color:var(--text2);font-size:10px">' + ch + '</span>';
+    }).join('') + '</div>';
+  }
+  html += '</div>';
+
+  // Trade type buttons
+  html += '<div class="trade-row"><label>Tipo:</label>';
+  html += '<button class="btn btn-sm btn-green" id="tt-buy" onclick="setTradeType(\'buy\')">Compra</button>';
+  if (owned > 0) html += '<button class="btn btn-sm btn-red" id="tt-sell" onclick="setTradeType(\'sell\')">Vendi</button>';
+  if (G.unlocked.shortSelling) html += '<button class="btn btn-sm" id="tt-short" onclick="setTradeType(\'short\')">Short</button>';
+  var hasShort = G.shorts.find(function (s) {
+    return s.ticker === ticker;
+  });
+  if (hasShort) html += '<button class="btn btn-sm btn-blue" id="tt-cover" onclick="setTradeType(\'cover\')">Cover</button>';
+  html += '</div>';
+
+  // Order type
+  html += '<div class="trade-row"><label>Ordine:</label>';
+  html += '<button class="btn btn-sm btn-blue" id="ot-market" onclick="setOrderType(\'market\')">Market</button>';
+  if (G.unlocked.limitOrders) html += '<button class="btn btn-sm" id="ot-limit" onclick="setOrderType(\'limit\')">Limite</button>';
+  html += '</div>';
+
+  // Shares input
+  html += '<div class="trade-row"><label>Quantita\':</label>';
+  html += '<input type="number" id="trade-shares" value="1" min="1" oninput="updateTradePreview()" style="width:100%;min-height:48px;font-size:16px;margin-bottom:6px">';
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  html += '<button class="btn btn-sm" style="flex:1;min-height:44px;font-size:14px" onclick="setShares(10)">+10</button>';
+  html += '<button class="btn btn-sm" style="flex:1;min-height:44px;font-size:14px" onclick="setShares(50)">+50</button>';
+  html += '<button class="btn btn-sm" style="flex:1;min-height:44px;font-size:14px" onclick="setShares(100)">+100</button>';
+  if (owned > 0) html += '<button class="btn btn-sm" style="flex:1;min-height:44px;font-size:14px" onclick="setShares(' + owned + ')">Max</button>';
+  html += '</div>';
+  html += '</div>';
+
+  // Limit price
+  html += '<div class="trade-row" id="limit-row" style="display:none"><label>Prezzo limite:</label>';
+  html += '<input type="number" id="trade-limit-price" value="' + c.price.toFixed(2) + '" step="0.01" oninput="updateTradePreview()" style="width:100px"></div>';
+
+  // Info
+  html += '<div class="trade-info" id="trade-info"></div>';
+
+  // Actions
+  html += '<div class="trade-actions" id="trade-actions"></div>';
+  body.innerHTML = html;
+  document.getElementById('trade-modal-title').textContent = 'Trade ' + ticker;
+  document.getElementById('trade-modal').classList.add('show');
+  setTradeType('buy');
+  updateTradePreview();
+}
+function closeTradeModal() {
+  document.getElementById('trade-modal').classList.remove('show');
+  tradeModalState = null;
+}
+function setTradeType(t) {
+  if (!tradeModalState) return;
+  tradeModalState.mode = t;
+  ['tt-buy', 'tt-sell', 'tt-short', 'tt-cover'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.style.opacity = '0.5';
+  });
+  var btnId = 'tt-' + t;
+  var btn = document.getElementById(btnId);
+  if (btn) btn.style.opacity = '1';
+  updateTradePreview();
+}
+function setOrderType(t) {
+  if (!tradeModalState) return;
+  tradeModalState.orderType = t;
+  var mk = document.getElementById('ot-market');
+  var lm = document.getElementById('ot-limit');
+  if (mk) mk.style.opacity = '0.5';
+  if (lm) lm.style.opacity = '0.5';
+  var btn = document.getElementById('ot-' + t);
+  if (btn) btn.style.opacity = '1';
+  document.getElementById('limit-row').style.display = t === 'limit' ? 'flex' : 'none';
+  updateTradePreview();
+}
+function setShares(n) {
+  var el = document.getElementById('trade-shares');
+  if (el) {
+    el.value = n;
+    updateTradePreview();
+  }
+}
+function updateTradePreview() {
+  if (!tradeModalState) return;
+  var c = getCompany(tradeModalState.ticker);
+  var shares = parseInt(document.getElementById('trade-shares').value) || 0;
+  var price = tradeModalState.orderType === 'limit' ? parseFloat(document.getElementById('trade-limit-price').value) || c.price : c.price;
+  var total = shares * price;
+  var fee = total * COMMISSION_RATE;
+  var info = document.getElementById('trade-info');
+  var actions = document.getElementById('trade-actions');
+  var m = tradeModalState.mode;
+  var lvl = G.level;
+  if (m === 'buy') {
+    var maxMargin = G.maxMargin;
+    var buyingPower = G.cash * maxMargin;
+    var canAfford = total + fee <= buyingPower;
+    info.innerHTML = '<div><div class="ti-label">Costo</div><div class="ti-val">' + formatEur(total) + '</div></div><div><div class="ti-label">Commissione</div><div class="ti-val">' + formatEur(fee) + '</div></div><div><div class="ti-label">Totale</div><div class="ti-val">' + formatEur(total + fee) + '</div></div><div><div class="ti-label">Liquidita\'</div><div class="ti-val ' + (canAfford ? '' : 'red') + '">' + formatEur(G.cash) + (maxMargin > 1 ? ' (x' + maxMargin + ')' : '') + '</div></div>';
+    actions.innerHTML = '<button class="btn btn-green" onclick="executeTrade()" ' + (canAfford ? '' : 'disabled') + '>' + canAfford ? 'Esegui Acquisto' : 'Liquidita insufficiente' + '</button>';
+    // Fix button text
+    if (!canAfford) {
+      actions.innerHTML = '<button class="btn" disabled>Liquidita insufficiente</button>';
+    } else {
+      actions.innerHTML = '<button class="btn btn-green" onclick="executeTrade()">Esegui Acquisto</button>';
+    }
+  } else if (m === 'sell') {
+    var owned = tradeModalState.owned;
+    var proceeds = total - fee;
+    var canSell = shares <= owned;
+    info.innerHTML = '<div><div class="ti-label">Ricavo</div><div class="ti-val">' + formatEur(total) + '</div></div><div><div class="ti-label">Commissione</div><div class="ti-val">' + formatEur(fee) + '</div></div><div><div class="ti-label">Netto</div><div class="ti-val">' + formatEur(proceeds) + '</div></div><div><div class="ti-label">Possedute</div><div class="ti-val ' + (canSell ? '' : 'red') + '">' + owned + '</div></div>';
+    if (!canSell) actions.innerHTML = '<button class="btn" disabled>Azioni insufficienti</button>';else actions.innerHTML = '<button class="btn btn-red" onclick="executeTrade()">Esegui Vendita</button>';
+  } else if (m === 'short') {
+    var maxMargin = G.maxMargin;
+    var buyingPower = G.cash * maxMargin;
+    var canAfford = total + fee <= buyingPower;
+    info.innerHTML = '<div><div class="ti-label">Valore Short</div><div class="ti-val">' + formatEur(total) + '</div></div><div><div class="ti-label">Commissione</div><div class="ti-val">' + formatEur(fee) + '</div></div><div><div class="ti-label">Margine Richiesto</div><div class="ti-val">' + formatEur(total + fee) + '</div></div><div><div class="ti-label">Liquidita\'</div><div class="ti-val ' + (canAfford ? '' : 'red') + '">' + formatEur(G.cash) + '</div></div>';
+    if (!canAfford) actions.innerHTML = '<button class="btn" disabled>Margine insufficiente</button>';else actions.innerHTML = '<button class="btn btn-red" onclick="executeShort()">Esegui Short</button>';
+  } else if (m === 'cover') {
+    var s = G.shorts.find(function (x) {
+      return x.ticker === tradeModalState.ticker;
+    });
+    if (!s) {
+      actions.innerHTML = '<button class="btn" disabled>Nessuna posizione short</button>';
+      return;
+    }
+    var coverCost = shares * price + fee;
+    var canCover = shares <= s.shares && coverCost <= G.cash;
+    var profit = s.entryPrice * shares - price * shares - fee;
+    info.innerHTML = '<div><div class="ti-label">Costo Cover</div><div class="ti-val">' + formatEur(shares * price) + '</div></div><div><div class="ti-label">Commissione</div><div class="ti-val">' + formatEur(fee) + '</div></div><div><div class="ti-label">P&L Short</div><div class="ti-val ' + (profit >= 0 ? 'green' : 'red') + '">' + formatEur(profit) + '</div></div><div><div class="ti-label">Short Aperto</div><div class="ti-val">' + s.shares + ' @ ' + formatEur(s.entryPrice) + '</div></div>';
+    if (!canCover) actions.innerHTML = '<button class="btn" disabled>Impossibile coprire</button>';else actions.innerHTML = '<button class="btn btn-blue" onclick="coverShort()">Esegui Cover</button>';
+  }
+}
+function executeTrade() {
+  if (!tradeModalState) return;
+  if (typeof BrokerageCareer !== 'undefined' && BrokerageCareer.canTrade && !BrokerageCareer.canTrade()) {
+    toast('error', 'Non hai un intermediario autorizzato');
+    closeTradeModal();
+    return;
+  }
+  var c = getCompany(tradeModalState.ticker);
+  if (!c || c.listed === false || c.tradingHalted) {
+    toast('error', 'Operazione annullata: titolo non negoziabile');
+    closeTradeModal();
+    return;
+  }
+  var shares = parseInt(document.getElementById('trade-shares').value) || 0;
+  var price = tradeModalState.orderType === 'limit' ? parseFloat(document.getElementById('trade-limit-price').value) || c.price : c.price;
+  var total = shares * price;
+  var fee = total * COMMISSION_RATE;
+  var m = tradeModalState.mode;
+  if (m === 'buy') {
+    var cost = total + fee;
+    if (cost > G.cash * G.maxMargin) {
+      toast('error', 'Liquidita insufficiente');
+      return;
+    }
+    G.cash -= cost;
+    if (!G.positions[c.ticker]) G.positions[c.ticker] = {
+      shares: 0,
+      avgCost: 0
+    };
+    var pos = G.positions[c.ticker];
+    var oldVal = pos.shares * pos.avgCost;
+    pos.shares += shares;
+    pos.avgCost = (oldVal + total) / pos.shares;
+    addTransaction('buy', c.ticker, shares, price, total, fee);
+    toast('success', 'Acquistate ' + shares + ' azioni ' + c.ticker + ' @ ' + formatEur(price));
+  } else if (m === 'sell') {
+    var pos = G.positions[c.ticker];
+    if (!pos || pos.shares < shares) {
+      toast('error', 'Azioni insufficienti');
+      return;
+    }
+    if (typeof StakeholderInteractions !== 'undefined' && StakeholderInteractions.availableShares && shares > StakeholderInteractions.availableShares(c.ticker)) {
+      toast('error', 'Parte delle azioni è già impegnata nel mercato dei blocchi');
+      return;
+    }
+    var proceeds = total - fee;
+    G.cash += proceeds;
+    var realized = (price - pos.avgCost) * shares - fee;
+    G.realizedPnL += realized;
+    updateTradeStats(realized);
+    pos.shares -= shares;
+    if (pos.shares <= 0) delete G.positions[c.ticker];
+    addTransaction('sell', c.ticker, shares, price, total, fee);
+    toast(realized >= 0 ? 'success' : 'warning', 'Vendute ' + shares + ' azioni ' + c.ticker + ' @ ' + formatEur(price) + ' (P&L: ' + formatEur(realized) + ')');
+  }
+  saveAuto();
+  closeTradeModal();
+  renderAll();
+}
+function executeShort() {
+  if (!tradeModalState) return;
+  if (typeof BrokerageCareer !== 'undefined' && BrokerageCareer.canTrade && !BrokerageCareer.canTrade()) {
+    toast('error', 'Non hai un intermediario autorizzato');
+    closeTradeModal();
+    return;
+  }
+  var c = getCompany(tradeModalState.ticker);
+  if (!c || c.listed === false || c.tradingHalted) {
+    toast('error', 'Short non disponibile: titolo non negoziabile');
+    closeTradeModal();
+    return;
+  }
+  var shares = parseInt(document.getElementById('trade-shares').value) || 0;
+  var price = tradeModalState.orderType === 'limit' ? parseFloat(document.getElementById('trade-limit-price').value) || c.price : c.price;
+  var total = shares * price;
+  var fee = total * COMMISSION_RATE;
+  var margin = total + fee;
+  if (margin > G.cash * G.maxMargin) {
+    toast('error', 'Margine insufficiente');
+    return;
+  }
+  if (!G.unlocked.shortSelling) {
+    toast('error', 'Short selling non sbloccato');
+    return;
+  }
+  // Check existing short
+  var existing = G.shorts.find(function (s) {
+    return s.ticker === c.ticker;
+  });
+  if (existing && !G.unlocked.shortMulti) {
+    toast('error', 'Hai gia uno short su ' + c.ticker);
+    return;
+  }
+  G.cash -= fee;
+  if (existing) {
+    existing.shares += shares;
+    existing.entryPrice = (existing.entryPrice * existing.shares + price * shares) / (existing.shares + shares);
+  } else {
+    G.shorts.push({
+      ticker: c.ticker,
+      shares: shares,
+      entryPrice: price
+    });
+  }
+  addTransaction('short', c.ticker, shares, price, total, fee);
+  toast('success', 'Short aperto: ' + shares + ' azioni ' + c.ticker + ' @ ' + formatEur(price));
+  saveAuto();
+  closeTradeModal();
+  renderAll();
+}
+function coverShort() {
+  if (!tradeModalState) return;
+  if (typeof BrokerageCareer !== 'undefined' && BrokerageCareer.canTrade && !BrokerageCareer.canTrade()) {
+    toast('error', 'Non hai un intermediario autorizzato');
+    closeTradeModal();
+    return;
+  }
+  var c = getCompany(tradeModalState.ticker);
+  var shares = parseInt(document.getElementById('trade-shares').value) || 0;
+  var price = tradeModalState.orderType === 'limit' ? parseFloat(document.getElementById('trade-limit-price').value) || c.price : c.price;
+  var total = shares * price;
+  var fee = total * COMMISSION_RATE;
+  var s = G.shorts.find(function (x) {
+    return x.ticker === c.ticker;
+  });
+  if (!s || s.shares < shares) {
+    toast('error', 'Posizione short insufficiente');
+    return;
+  }
+  var coverCost = total + fee;
+  if (coverCost > G.cash) {
+    toast('error', 'Liquidita insufficiente');
+    return;
+  }
+  var realized = (s.entryPrice - price) * shares - fee;
+  G.realizedPnL += realized;
+  G.cash -= coverCost;
+  updateTradeStats(realized);
+  s.shares -= shares;
+  if (s.shares <= 0) G.shorts = G.shorts.filter(function (x) {
+    return x.ticker !== c.ticker;
+  });
+  addTransaction('cover', c.ticker, shares, price, total, fee);
+  toast(realized >= 0 ? 'success' : 'warning', 'Cover ' + shares + ' short ' + c.ticker + ' (P&L: ' + formatEur(realized) + ')');
+  saveAuto();
+  closeTradeModal();
+  renderAll();
+}
+function updateTradeStats(realized) {
+  if (!window.WOLF_MANAGED_TURNS) G.stats.totalTrades++;
+  if (realized >= 0) {
+    G.stats.wins++;
+    G.stats.currentStreak = G.stats.currentStreak >= 0 ? G.stats.currentStreak + 1 : 1;
+  } else {
+    G.stats.losses++;
+    G.stats.currentStreak = G.stats.currentStreak <= 0 ? G.stats.currentStreak - 1 : -1;
+  }
+  if (G.stats.currentStreak > G.stats.bestWinStreak) G.stats.bestWinStreak = G.stats.currentStreak;
+  if (realized > G.stats.bestTrade) G.stats.bestTrade = realized;
+  if (realized < G.stats.worstTrade) G.stats.worstTrade = realized;
+}
+function addTransaction(type, ticker, shares, price, total, fee) {
+  G.transactions.unshift({
+    week: G.week,
+    type: type,
+    ticker: ticker,
+    shares: shares,
+    price: price,
+    total: total,
+    fee: fee
+  });
+  if (G.transactions.length > 500) G.transactions.pop();
+}
+
+// ======================== CAREER ========================
+function checkLevelUp() {
+  var nw = computeNetWorth();
+  var roi = getROI();
+  for (var i = G.level + 1; i < CAREER_LEVELS.length; i++) {
+    var req = CAREER_LEVELS[i];
+    if (nw >= req.minNetWorth && G.stats.totalTrades >= req.minTrades && roi >= req.minROI) {
+      G.level = i;
+      updateUnlocks();
+      toast('success', '⬆ LIVELLO SUPERIORE! Ora sei: ' + req.name);
+      G.news.unshift({
+        week: G.week,
+        title: 'Promozione: ' + req.name,
+        desc: 'Hai raggiunto il livello ' + req.name,
+        type: 'positive',
+        scope: 'macro'
+      });
+    } else break;
+  }
+}
+
+// ======================== SAVE / LOAD ========================
+function saveAuto() {
+  try {
+    localStorage.setItem('sbt_autosave', JSON.stringify(G));
+  } catch (e) {}
+}
+function saveSlot(n) {
+  try {
+    localStorage.setItem('sbt_save_' + n, JSON.stringify(G));
+    localStorage.setItem('sbt_save_' + n + '_meta', JSON.stringify({
+      week: G.week,
+      level: G.level,
+      nw: computeNetWorth(),
+      date: new Date().toISOString()
+    }));
+    toast('success', 'Salvato nello slot ' + n);
+    renderSaveSlots();
+  } catch (e) {
+    toast('error', 'Errore salvataggio');
+  }
+}
+function loadSlot(n) {
+  try {
+    var data = localStorage.getItem('sbt_save_' + n);
+    if (!data) {
+      toast('error', 'Slot vuoto');
+      return;
+    }
+    G = JSON.parse(data);
+    updateUnlocks();
+    renderAll();
+    toast('success', 'Caricato slot ' + n);
+  } catch (e) {
+    toast('error', 'Errore caricamento');
+  }
+}
+function deleteSlot(n) {
+  localStorage.removeItem('sbt_save_' + n);
+  localStorage.removeItem('sbt_save_' + n + '_meta');
+  toast('info', 'Slot ' + n + ' eliminato');
+  renderSaveSlots();
+}
+function loadAuto() {
+  try {
+    var data = localStorage.getItem('sbt_autosave');
+    if (data) {
+      G = JSON.parse(data);
+      updateUnlocks();
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+function exportSave() {
+  var data = JSON.stringify(G);
+  var blob = new Blob([data], {
+    type: 'application/json'
+  });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'sbt_save_' + G.week + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('success', 'Salvataggio esportato');
+}
+function importSave(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function () {
+    try {
+      G = JSON.parse(reader.result);
+      updateUnlocks();
+      saveAuto();
+      renderAll();
+      toast('success', 'Salvataggio importato');
+    } catch (err) {
+      toast('error', 'File non valido');
+    }
+  };
+  reader.readAsText(file);
+}
+function confirmNewGame() {
+  var modal = document.getElementById('confirm-modal');
+  document.getElementById('confirm-title').textContent = 'Nuova Partita';
+  document.getElementById('confirm-msg').textContent = 'Iniziare una nuova partita? Il progresso attuale verra perso se non salvato.';
+  document.getElementById('confirm-yes').onclick = function () {
+    newGame();
+    renderAll();
+    modal.classList.remove('show');
+  };
+  modal.classList.add('show');
+}
+
+// ======================== FORMATTING ========================
+function formatEur(n) {
+  if (n === null || n === undefined || isNaN(n)) return '€0';
+  var sign = n < 0 ? '-' : '';
+  n = Math.abs(n);
+  if (n >= 1e6) return sign + '€' + (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return sign + '€' + (n / 1e3).toFixed(1) + 'k';
+  return sign + '€' + n.toFixed(2);
+}
+function formatNum(n) {
+  return n.toLocaleString('it-IT');
+}
+function formatPct(n) {
+  return (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+}
+
+// ======================== TOAST ========================
+function toast(type, msg) {
+  var c = document.getElementById('toast-container');
+  var t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(function () {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(100%)';
+    setTimeout(function () {
+      return t.remove();
+    }, 300);
+  }, 4000);
+}
+function showEventToast(ev) {
+  var type = ev.type === 'positive' ? 'success' : ev.type === 'negative' ? 'error' : ev.type === 'neutral' ? 'info' : 'info';
+  toast(type, ev.title);
+}
+
+// ======================== TICKER ========================
+function updateTicker() {
+  var el = document.getElementById('ticker-content');
+  if (!el || !G) return;
+  var html = '';
+  G.companies.forEach(function (c) {
+    var ch = c.change || 0;
+    var cls = ch >= 0 ? 'green' : 'red';
+    html += '<div class="ticker-item"><span class="tk">' + c.ticker + '</span><span class="' + cls + '">' + formatPct(ch) + '</span><span class="gray">' + formatEur(c.price) + '</span></div>';
+  });
+  var indices = computeIndices();
+  html += '<div class="ticker-item"><span class="tk" style="color:var(--yellow)">SPTX</span><span class="gray">' + formatEur(indices.SPTX) + '</span></div>';
+  el.innerHTML = html;
+}
+
+// ======================== RENDERING ========================
+function switchView(v) {
+  currentView = v;
+  document.querySelectorAll('.view').forEach(function (el) {
+    return el.classList.remove('active');
+  });
+  document.getElementById('view-' + v).classList.add('active');
+  document.querySelectorAll('.nav button').forEach(function (b) {
+    return b.classList.remove('active');
+  });
+  var navBtn = document.querySelector('.nav button[data-view="' + v + '"]');
+  if (navBtn) navBtn.classList.add('active');
+  if (v === 'settings') llmLoadSettingsUI();
+  renderAll();
+}
+function setSort(key) {
+  if (sortKey === key) sortDir = -sortDir;else {
+    sortKey = key;
+    sortDir = -1;
+  }
+  renderMarket();
+}
+function setTxFilter(f, btn) {
+  txFilter = f;
+  document.querySelectorAll('.tx-filters button').forEach(function (b) {
+    return b.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+  renderTransactions();
+}
+function renderAll() {
+  if (!G) return;
+  // Top bar
+  var nw = computeNetWorth();
+  var pnl = nw - G.startingCash;
+  document.getElementById('stat-cash').textContent = formatEur(G.cash);
+  document.getElementById('stat-networth').textContent = formatEur(nw);
+  document.getElementById('stat-pnl').innerHTML = '<span class="' + (pnl >= 0 ? 'green' : 'red') + '">' + formatEur(pnl) + '</span>';
+  document.getElementById('stat-week').textContent = G.week;
+  document.getElementById('level-badge').textContent = CAREER_LEVELS[G.level].name;
+
+  // Dashboard
+  var pv = getPortfolioValue();
+  var up = getUnrealizedPnL();
+  document.getElementById('dash-cash').textContent = formatEur(G.cash);
+  document.getElementById('dash-portfolio-val').textContent = formatEur(pv);
+  document.getElementById('dash-networth').textContent = formatEur(nw);
+  document.getElementById('dash-realized').innerHTML = '<span class="' + (G.realizedPnL >= 0 ? 'green' : 'red') + '">' + formatEur(G.realizedPnL) + '</span>';
+  document.getElementById('dash-unrealized').innerHTML = '<span class="' + (up >= 0 ? 'green' : 'red') + '">' + formatEur(up) + '</span>';
+  renderIndices();
+  renderTopHoldings();
+  renderDashNews();
+  renderNetWorthChart();
+
+  // Market
+  renderSectorFilters();
+  renderMarket();
+
+  // Portfolio
+  renderPortfolio();
+
+  // Assembly
+  renderAssembly();
+
+  // News
+  renderNews();
+
+  // Narrative
+  renderNarrative();
+
+  // Transactions
+  renderTransactions();
+
+  // Career
+  renderCareer();
+
+  // Save
+  renderSaveSlots();
+  if (typeof BrokerageCareer !== 'undefined' && BrokerageCareer.render) BrokerageCareer.render();
+  if (typeof StakeholderInteractions !== 'undefined' && StakeholderInteractions.render) StakeholderInteractions.render();
+}
+function renderIndices() {
+  var idx = computeIndices();
+  var el = document.getElementById('dash-indices');
+  if (!el) return;
+  var keys = ['SPTX', 'TECH', 'ENERGY', 'FINANCE', 'HEALTH', 'CONSUMER', 'INDU'];
+  var html = '<div style="display:flex;gap:16px;flex-wrap:wrap">';
+  keys.forEach(function (k) {
+    html += '<div style="text-align:center"><div class="gray" style="font-size:10px">' + k + '</div><div style="font-size:16px;font-weight:700">' + formatEur(idx[k]) + '</div></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+function renderTopHoldings() {
+  var el = document.getElementById('dash-top-holdings');
+  if (!el) return;
+  var holdings = [];
+  for (var t in G.positions) {
+    var c = getCompany(t);
+    if (!c) continue;
+    var val = G.positions[t].shares * c.price;
+    holdings.push({
+      ticker: t,
+      name: c.name,
+      shares: G.positions[t].shares,
+      value: val,
+      pnl: (c.price - G.positions[t].avgCost) * G.positions[t].shares,
+      pct: c.change
+    });
+  }
+  if (holdings.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="emoji">📊</div><div class="msg">Nessuna posizione. Vai al Mercato per comprare azioni.</div></div>';
+    return;
+  }
+  holdings.sort(function (a, b) {
+    return b.value - a.value;
+  });
+  var html = '<table><thead><tr><th>Ticker</th><th>Nome</th><th class="num">Qta</th><th class="num">Valore</th><th class="num">P&L</th></tr></thead><tbody>';
+  holdings.slice(0, 8).forEach(function (h) {
+    html += '<tr style="cursor:pointer" onclick="openTradeModal(\'' + h.ticker + '\')"><td class="ticker-cell">' + h.ticker + '</td><td>' + h.name + '</td><td class="num">' + formatNum(h.shares) + '</td><td class="num">' + formatEur(h.value) + '</td><td class="num ' + (h.pnl >= 0 ? 'green' : 'red') + '">' + formatEur(h.pnl) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+function renderDashNews() {
+  var el = document.getElementById('dash-news');
+  if (!el || !G) return;
+  el.innerHTML = G.news.slice(0, 8).map(function (n) {
+    return renderNewsItem(n);
+  }).join('');
+}
+function renderNewsItem(n) {
+  var impactClass = n.type === 'positive' ? 'impact-positive' : n.type === 'negative' ? n.title.includes('Scandalo') || n.title.includes('ritira') || n.title.includes('Crisi') || n.title.includes('recessione') ? 'impact-high' : 'impact-medium' : 'impact-low';
+  return '<div class="news-item ' + impactClass + '"><span class="news-time">Sett.' + n.week + '</span> <span class="news-title">' + wolfEscape(n.title) + '</span><div class="gray" style="font-size:11px">' + wolfEscape(n.desc) + '</div></div>';
+}
+function wolfEscape(value) { return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function renderNetWorthChart() {
+  var ctx = document.getElementById('networth-chart-canvas');
+  if (!ctx || !G) return;
+  var data = G.netWorthHistory.map(function (p) {
+    return p.value;
+  });
+  var labels = G.netWorthHistory.map(function (p) {
+    return 'S' + p.week;
+  });
+  if (typeof Chart !== 'function') {
+    var context = ctx.getContext('2d');
+    if (!context) return;
+    var width = ctx.width = Math.max(260, ctx.parentElement.clientWidth || 500);
+    var height = ctx.height = 180;
+    var min = Math.min.apply(Math, data) * 0.95;
+    var max = Math.max.apply(Math, data) * 1.05;
+    context.clearRect(0, 0, width, height); context.strokeStyle = '#d4b371'; context.lineWidth = 2; context.beginPath();
+    data.forEach(function (value, i) {
+      var x = 16 + i / Math.max(1, data.length - 1) * (width - 32);
+      var y = height - 22 - (value - min) / Math.max(1, max - min) * (height - 44);
+      if (i === 0) context.moveTo(x, y); else context.lineTo(x, y);
+    });
+    context.stroke(); context.fillStyle = '#b4bfd1'; context.font = '12px sans-serif';
+    context.fillText('Patrimonio: ' + formatEur(data[data.length - 1]), 16, 16);
+    return;
+  }
+  if (chartNetWorth) chartNetWorth.destroy();
+  chartNetWorth = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Patrimonio',
+        data: data,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function label(c) {
+              return 'Patrimonio: ' + formatEur(c.raw);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          display: true,
+          grid: {
+            color: '#1c2538'
+          },
+          ticks: {
+            color: '#8a96b0',
+            maxTicksLimit: 8
+          }
+        },
+        y: {
+          grid: {
+            color: '#1c2538'
+          },
+          ticks: {
+            color: '#8a96b0',
+            callback: function callback(v) {
+              return formatEur(v);
+            }
+          }
+        }
+      }
+    }
+  });
+}
+function renderSectorFilters() {
+  var el = document.getElementById('sector-filters');
+  if (!el) return;
+  var sectors = Object.keys(SECTOR_NAMES);
+  var html = '<button class="' + (sectorFilter === 'all' ? 'active' : '') + '" onclick="setSectorFilter(\'all\')">Tutti</button>';
+  sectors.forEach(function (s) {
+    html += '<button class="' + (sectorFilter === s ? 'active' : '') + '" onclick="setSectorFilter(\'' + s + '\')" style="' + (sectorFilter === s ? '' : '') + '">' + SECTOR_NAMES[s] + '</button>';
+  });
+  el.innerHTML = html;
+}
+function setSectorFilter(s) {
+  sectorFilter = s;
+  renderSectorFilters();
+  renderMarket();
+}
+function renderMarket() {
+  if (!G) return;
+  var search = (document.getElementById('market-search') ? document.getElementById('market-search').value : '').toLowerCase();
+  var filtered = G.companies.filter(function (c) {
+    if (sectorFilter !== 'all' && c.sector !== sectorFilter) return false;
+    if (search && !(c.ticker.toLowerCase().includes(search) || c.name.toLowerCase().includes(search))) return false;
+    return true;
+  });
+  filtered.sort(function (a, b) {
+    var va = a[sortKey],
+      vb = b[sortKey];
+    if (sortKey === 'change') {
+      va = (a.price - a.prevPrice) / a.prevPrice * 100;
+      vb = (b.price - b.prevPrice) / b.prevPrice * 100;
+    }
+    if (typeof va === 'string') return va.localeCompare(vb) * sortDir;
+    return (va - vb) * sortDir;
+  });
+  var body = document.getElementById('market-body');
+  if (!body) return;
+  var html = '';
+  filtered.forEach(function (c) {
+    var ch = c.change || 0;
+    var chClass = ch >= 0 ? 'green' : 'red';
+    var tradeable = c.listed !== false && !c.tradingHalted;
+    var status = c.listed === false ? 'RITIRATA' : c.tradingHalted ? 'SOSPESA' : '';
+    html += '<tr style="cursor:' + (tradeable ? 'pointer' : 'default') + ';opacity:' + (tradeable ? '1' : '.55') + '"' + (tradeable ? ' onclick="openTradeModal(\'' + c.ticker + '\')"' : '') + '><td class="ticker-cell">' + c.ticker + '</td><td>' + c.name + (status ? ' <span class="pill r">' + status + '</span>' : '') + '</td><td><span class="pill" style="background:' + SECTOR_COLORS[c.sector] + '22;color:' + SECTOR_COLORS[c.sector] + '">' + SECTOR_NAMES[c.sector] + '</span></td><td class="num">' + formatEur(c.price) + '</td><td class="num ' + chClass + '">' + formatPct(ch) + '</td><td class="num">' + (c.cap / 1000).toFixed(0) + 'M</td><td class="num">' + (c.vol * 100).toFixed(1) + '%</td><td class="num ' + (c.div > 0 ? 'green' : '') + '">' + c.div.toFixed(1) + '%</td><td>' + (tradeable ? '<button class="btn btn-sm btn-blue" onclick="event.stopPropagation();openTradeModal(\'' + c.ticker + '\')">Trade</button>' : '<button class="btn btn-sm" disabled>Non quotata</button>') + '</td></tr>';
+  });
+  body.innerHTML = html;
+}
+function renderPortfolio() {
+  var el = document.getElementById('portfolio-positions');
+  if (!el) return;
+  var hasAny = false;
+  var html = '<div class="pos-header"><div>Ticker</div><div>Nome</div><div class="num">Qta</div><div class="num">Prezzo</div><div class="num">Costo Med</div><div class="num">Valore</div><div class="num">P&L</div></div>';
+  for (var t in G.positions) {
+    hasAny = true;
+    var c = getCompany(t);
+    if (!c) continue;
+    var p = G.positions[t];
+    var val = p.shares * c.price;
+    var pnl = (c.price - p.avgCost) * p.shares;
+    var pnlPct = p.avgCost > 0 ? (c.price - p.avgCost) / p.avgCost * 100 : 0;
+    var own = getOwnershipPct(t);
+    html += '<div class="pos-row" style="cursor:pointer" onclick="openTradeModal(\'' + t + '\')"><div class="ticker-cell">' + t + (own >= 10 ? ' <span class="pill y">ASM</span>' : '') + '</div><div>' + c.name + '</div><div class="num">' + formatNum(p.shares) + '</div><div class="num">' + formatEur(c.price) + '</div><div class="num">' + formatEur(p.avgCost) + '</div><div class="num">' + formatEur(val) + '</div><div class="num ' + (pnl >= 0 ? 'green' : 'red') + '">' + formatEur(pnl) + '<div class="gray" style="font-size:10px">' + formatPct(pnlPct) + '</div></div></div>';
+  }
+  if (!hasAny) {
+    el.innerHTML = '<div class="empty-state"><div class="emoji">📈</div><div class="msg">Nessuna posizione aperta. Vai al Mercato per iniziare.</div></div>';
+    return;
+  }
+  el.innerHTML = html;
+
+  // Shorts
+  var shortsEl = document.getElementById('portfolio-shorts');
+  if (!shortsEl) return;
+  if (G.shorts.length === 0) {
+    shortsEl.innerHTML = '<div class="gray" style="font-size:12px;padding:8px">Nessuna posizione short aperta.</div>';
+    return;
+  }
+  html = '<div class="pos-header" style="grid-template-columns:60px 1fr 80px 80px 80px 80px 80px"><div>Ticker</div><div>Nome</div><div class="num">Qta</div><div class="num">Entry</div><div class="num">Prezzo</div><div class="num">Valore</div><div class="num">P&L</div></div>';
+  G.shorts.forEach(function (s) {
+    var c = getCompany(s.ticker);
+    if (!c) return;
+    var pnl = (s.entryPrice - c.price) * s.shares;
+    var val = s.shares * c.price;
+    html += '<div class="pos-row" style="cursor:pointer;grid-template-columns:60px 1fr 80px 80px 80px 80px 80px" onclick="openTradeModal(\'' + s.ticker + '\')"><div class="ticker-cell">' + s.ticker + '</div><div>' + c.name + '</div><div class="num">' + formatNum(s.shares) + '</div><div class="num">' + formatEur(s.entryPrice) + '</div><div class="num">' + formatEur(c.price) + '</div><div class="num">' + formatEur(val) + '</div><div class="num ' + (pnl >= 0 ? 'green' : 'red') + '">' + formatEur(pnl) + '</div></div>';
+  });
+  shortsEl.innerHTML = html;
+}
+function renderAssembly() {
+  var el = document.getElementById('assembly-list');
+  if (!el) return;
+  if (!G.pendingAssemblies || G.pendingAssemblies.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="emoji">🏛️</div><div class="msg">Nessuna assemblea disponibile. Possiedi almeno l\'1% di una societa per partecipare.</div></div>';
+    return;
+  }
+  var html = '';
+  G.pendingAssemblies.forEach(function (a) {
+    var c = getCompany(a.ticker);
+    var pct = getOwnershipPct(a.ticker);
+    var allResolved = true;
+    var ceoName = c.ceoName || (c.name || 'Societa').split(' ')[0] + ' CEO';
+    var climate = (c.sentiment || 50) > 65 ? 'euforico' : (c.sentiment || 50) < 35 ? 'teso' : 'attento';
+    var boardId = 'ceo:' + ceoName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    for (var i = 0; i < a.proposals.length; i++) {
+      if (!a.proposals[i].playerVoted) {
+        allResolved = false;
+        break;
+      }
+    }
+    html += '<div class="assembly-card"><div class="company-info"><div><strong>' + c.name + '</strong> (' + a.ticker + ')</div><div><span class="pill b">' + pct.toFixed(1) + '%</span> <span class="pill y">Sett.' + a.week + '</span></div></div>';
+    html += '<div class="gray" style="font-size:12px;margin-bottom:8px">' + a.proposals.length + ' proposte in votazione · board guidato da ' + ceoName + '</div>';
+    html += '<div style="padding:8px;border-radius:8px;background:rgba(59,130,246,.08);margin-bottom:8px;font-size:11px">Entri nella sala assemblea: piccoli azionisti, legali, CFO e management osservano ogni mano alzata. Clima: <strong>' + climate + '</strong>.</div>';
+    a.proposals.forEach(function (p) {
+      html += '<div class="prop-desc" style="font-size:11px;color:var(--text2)">• ' + (p.title || p.name) + '</div>';
+    });
+    html += '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm btn-blue" onclick="openAssemblyModal(\'' + a.ticker + '\')">Apri Assemblea</button><button class="btn btn-sm" onclick="openCharacterModal(\'' + boardId + '\')">Apri CEO</button>' + (allResolved ? '<button class="btn btn-sm btn-green" onclick="executeAssemblyResolve(\'' + a.ticker + '\')">Chiudi Votazione</button>' : '') + '</div></div>';
+  });
+  el.innerHTML = html;
+}
+function executeAssemblyResolve(ticker) {
+  if (typeof wolfBridge !== 'undefined' && wolfBridge.resolveAssembly) {
+    wolfBridge.resolveAssembly(ticker);
+  }
+  renderAssembly();
+  renderAll();
+}
+function renderNews() {
+  var el = document.getElementById('news-full-list');
+  if (!el || !G) return;
+  if (G.news.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="emoji">📰</div><div class="msg">Nessuna notizia. Avanza il turno per generare eventi.</div></div>';
+    return;
+  }
+  el.innerHTML = G.news.map(function (n) {
+    return renderNewsItem(n);
+  }).join('');
+}
+function renderNarrative() {
+  if (!G || !G.narrative) return;
+  var ns = G.narrative;
+
+  // Diary
+  var diary = document.getElementById('narrative-diary');
+  if (diary) {
+    var entries = [];
+    var mems = ns.memories || [];
+    for (var i = 0; i < Math.min(5, mems.length); i++) {
+      entries.push('<div class="news-item impact-' + mems[i].impact + '"><span class="news-time">Sett.' + mems[i].week + '</span><div class="news-title">' + mems[i].text + '</div></div>');
+    }
+    if (entries.length === 0) entries.push('<div class="empty-state"><div class="emoji">📖</div><div class="msg">Il diario e\' vuoto. Avanza il turno per scrivere la tua storia.</div></div>');
+    diary.innerHTML = entries.join('');
+  }
+
+  // Characters
+  var charsEl = document.getElementById('narrative-characters');
+  if (charsEl) {
+    var chars = ns.characters || {};
+    var keys = Object.keys(chars);
+    var html = '';
+    for (var k = 0; k < keys.length; k++) {
+      var c = chars[keys[k]];
+      if (!c.active) continue;
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid var(--border)" onclick="openCharacterModal(\'' + c.id + '\')" class="pos-row" style="cursor:pointer">';
+      html += '<div style="font-size:24px">' + (c.namespace === 'player' ? '🧑' : c.namespace === 'client' ? '🤝' : c.namespace === 'agent' ? '🕵️' : c.namespace === 'competitor' ? '🦈' : c.namespace === 'ceo' ? '👔' : c.namespace === 'firm' ? '🏦' : '🎭') + '</div>';
+      html += '<div style="flex:1"><div style="font-weight:700">' + c.name + '</div><div class="gray" style="font-size:11px">' + c.role + ' · ' + c.currentMood + '</div></div>';
+      html += '<div style="text-align:right;font-size:11px">' + (c.trust ? c.trust + '%' : '') + '</div>';
+      html += '</div>';
+    }
+    if (html === '') html = '<div class="gray" style="font-size:12px;padding:8px">Nessun personaggio attivo.</div>';
+    charsEl.innerHTML = html;
+  }
+
+  // Events
+  var eventsEl = document.getElementById('narrative-events');
+  if (eventsEl) {
+    var evs = ns.events || [];
+    var evHtml = '';
+    for (var e = 0; e < Math.min(6, evs.length); e++) {
+      var ev = evs[e];
+      evHtml += '<div class="news-item impact-' + ev.impact + '"><span class="news-time">Sett.' + ev.week + '</span><div class="news-title">' + ev.title + '</div><div class="gray" style="font-size:11px">' + ev.summary + '</div></div>';
+    }
+    if (evHtml === '') evHtml = '<div class="gray" style="font-size:12px;padding:8px">Nessun evento narrativo recente.</div>';
+    eventsEl.innerHTML = evHtml;
+  }
+
+  // Memories
+  var memEl = document.getElementById('narrative-memories');
+  if (memEl) {
+    var allMem = ns.memories || [];
+    var memHtml = '';
+    for (var m = 0; m < Math.min(20, allMem.length); m++) {
+      var mm = allMem[m];
+      memHtml += '<div class="news-item impact-' + mm.impact + '"><span class="news-time">Sett.' + mm.week + '</span><div class="news-title">' + mm.text + '</div></div>';
+    }
+    if (memHtml === '') memHtml = '<div class="gray" style="font-size:12px;padding:8px">Nessuna memoria.</div>';
+    memEl.innerHTML = memHtml;
+  }
+}
+function openCharacterModal(characterId) {
+  if (!G || !G.narrative || !G.narrative.characters) return;
+  var c = G.narrative.characters[characterId];
+  if (!c) return;
+  var body = document.getElementById('character-modal-body');
+  var title = document.getElementById('character-modal-title');
+  if (!body || !title) return;
+  title.textContent = c.name;
+  var rel = 0;
+  if (G.narrative.relationships && G.narrative.relationships[characterId] && G.narrative.relationships[characterId]['player:broker']) {
+    rel = G.narrative.relationships[characterId]['player:broker'].value || 0;
+  }
+  var html = '';
+  html += '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px"><div><strong>' + c.name + '</strong><div class="gray" style="font-size:12px">' + c.role + ' · ' + c.namespace + '</div></div><div><span class="pill b">Mood: ' + (c.currentMood || 'neutrale') + '</span> <span class="pill y">Relazione: ' + rel + '</span></div></div>';
+  html += '<div style="margin-bottom:12px"><div class="gray" style="font-size:11px;margin-bottom:4px">Tratti</div><div>' + (c.traits || []).map(function (t) {
+    return '<span class="pill p" style="margin-right:4px">' + t + '</span>';
+  }).join('') + '</div></div>';
+  if (c.backstory) html += '<div class="card" style="padding:10px;margin-bottom:12px"><h3>Backstory</h3><div style="font-size:12px;line-height:1.5">' + c.backstory + '</div></div>';
+  if (c.namespace === 'agent' && G.agents) {
+    for (var ag = 0; ag < G.agents.length; ag++) {
+      if ('agent:' + G.agents[ag].name.toLowerCase().replace(/[^a-z0-9]/g, '_') === characterId) {
+        html += '<div class="card" style="padding:10px;margin-bottom:12px"><h3>Briefing agente</h3><div style="font-size:12px;line-height:1.5"><strong>Visione di mercato:</strong> ' + (G.agents[ag].marketView || 'Nessuna') + '<br><strong>Consiglio:</strong> ' + (G.agents[ag].lastBriefing || 'Nessuno') + '<br><strong>Obiettivo personale:</strong> ' + (G.agents[ag].personalGoal || 'Nessuno') + '<br><strong>Personalita:</strong> ' + (G.agents[ag].personality || 'n/d') + ' · <strong>Lealta:</strong> ' + Math.round(G.agents[ag].loyalty || 0) + '/100' + (G.agents[ag].wantsMeeting ? ' <span class="pill y">Vuole parlarti</span>' : '') + '</div></div>';
+        break;
+      }
+    }
+  }
+  if (c.namespace === 'firm' && G.brokerCareer) {
+    var bc = G.brokerCareer;
+    var lastMsg = bc.messages && bc.messages.length ? bc.messages[0] : null;
+    html += '<div class="card" style="padding:10px;margin-bottom:12px"><h3>Voce istituzionale</h3><div style="font-size:12px;line-height:1.5"><strong>Mood:</strong> ' + (bc.employerMood || 'neutrale') + '<br><strong>Agenda:</strong> ' + (bc.employerAgenda || 'Nessuna') + '<br><strong>Fiducia:</strong> ' + Math.round(bc.employerTrust || 0) + '/100' + (lastMsg && lastMsg.asksMeeting ? ' <span class="pill y">Vuole parlarti</span>' : '') + '</div>' + (lastMsg ? '<div class="news-item impact-neutral" style="margin-top:8px"><span class="news-time">Sett.' + (lastMsg.week || 0) + '</span><div class="news-title">' + lastMsg.title + '</div><div class="news-desc">' + lastMsg.text + '</div></div>' : '') + '</div>';
+  }
+  html += '<div class="card" style="padding:10px;margin-bottom:12px"><h3>Voce del personaggio</h3><div id="character-live-dialogue" style="font-size:13px;line-height:1.6">Sto pensando...</div><div style="margin-top:8px"><button class="btn btn-blue btn-sm" onclick="refreshCharacterDialogue(\'' + characterId + '\')">Rigenera risposta</button></div></div>';
+  var memHtml = '';
+  var mems = (c.memory || []).slice(0, 5);
+  if (mems.length) {
+    memHtml += '<div class="card" style="padding:10px"><h3>Memorie recenti</h3>';
+    for (var i = 0; i < mems.length; i++) {
+      var memObj = null;
+      var all = G.narrative.memories || [];
+      for (var j = 0; j < all.length; j++) {
+        if (all[j].id === mems[i] || all[j].id === mems[i].id) {
+          memObj = all[j];
+          break;
+        }
+      }
+      if (memObj) memHtml += '<div class="news-item impact-' + (memObj.impact || 'neutral') + '"><span class="news-time">Sett.' + memObj.week + '</span><div class="news-title">' + memObj.text + '</div></div>';
+    }
+    memHtml += '</div>';
+  }
+  html += memHtml;
+  body.innerHTML = html;
+  document.getElementById('character-modal').classList.add('show');
+  refreshCharacterDialogue(characterId);
+}
+function refreshCharacterDialogue(characterId) {
+  var el = document.getElementById('character-live-dialogue');
+  if (!el || !G || !G.narrative || !G.narrative.characters) return;
+  var c = G.narrative.characters[characterId];
+  if (!c) return;
+  el.textContent = 'Sto pensando...';
+  var state = typeof wolfBridge !== 'undefined' && wolfBridge.getEngine ? wolfBridge.getEngine().getState() : null;
+  if (typeof LLMNarrativeEngine !== 'undefined' && LLMNarrativeEngine.generateDynamicDialogue && state) {
+    LLMNarrativeEngine.generateDynamicDialogue(c, state).then(function (line) {
+      el.textContent = line || '...';
+    }).catch(function () {
+      el.textContent = c.backstory || '...';
+    });
+  } else {
+    el.textContent = c.backstory || '...';
+  }
+}
+function closeCharacterModal() {
+  document.getElementById('character-modal').classList.remove('show');
+}
+function renderTransactions() {
+  var el = document.getElementById('tx-body');
+  if (!el || !G) return;
+  var txs = G.transactions.filter(function (t) {
+    if (txFilter === 'all') return true;
+    if (txFilter === 'buy') return t.type === 'buy';
+    if (txFilter === 'sell') return t.type === 'sell';
+    if (txFilter === 'short') return t.type === 'short';
+    if (txFilter === 'cover') return t.type === 'cover';
+    if (txFilter === 'dividend') return t.type === 'dividend';
+    return false;
+  });
+  if (txs.length === 0) {
+    el.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text2)">Nessuna transazione</td></tr>';
+    return;
+  }
+  var html = '';
+  txs.forEach(function (t) {
+    var typeClass = t.type === 'buy' ? 'pill b' : t.type === 'sell' ? 'pill r' : t.type === 'short' ? 'pill p' : t.type === 'cover' ? 'pill y' : 'pill g';
+    var typeLabel = {
+      buy: 'Acquisto',
+      sell: 'Vendita',
+      short: 'Short',
+      cover: 'Cover',
+      dividend: 'Dividendo'
+    }[t.type];
+    html += '<tr><td>' + t.week + '</td><td><span class="' + typeClass + '">' + typeLabel + '</span></td><td class="ticker-cell">' + t.ticker + '</td><td class="num">' + formatNum(Math.abs(t.shares)) + '</td><td class="num">' + formatEur(t.price) + '</td><td class="num">' + formatEur(Math.abs(t.total)) + '</td><td class="num gray">' + formatEur(t.fee) + '</td></tr>';
+  });
+  el.innerHTML = html;
+}
+function renderCareer() {
+  var track = document.getElementById('career-track');
+  if (!track) return;
+  var html = '';
+  CAREER_LEVELS.forEach(function (lvl, i) {
+    var cls = i < G.level ? 'done' : i === G.level ? 'current' : 'locked';
+    html += '<div class="career-step ' + cls + '"><div class="cs-name">' + lvl.name + '</div><div style="font-size:9px;margin-top:2px">' + formatEur(lvl.minNetWorth) + '</div></div>';
+  });
+  track.innerHTML = html;
+
+  // Stats
+  var wr = G.stats.totalTrades > 0 ? (G.stats.wins / G.stats.totalTrades * 100).toFixed(1) : 0;
+  var statsEl = document.getElementById('career-stats');
+  if (statsEl) {
+    statsEl.innerHTML = '<div class="career-stat"><div class="cs-label">Patrimonio</div><div class="cs-val">' + formatEur(computeNetWorth()) + '</div></div>' + '<div class="career-stat"><div class="cs-label">ROI</div><div class="cs-val ' + (getROI() >= 0 ? 'green' : 'red') + '">' + formatPct(getROI()) + '</div></div>' + '<div class="career-stat"><div class="cs-label">Trade Totali</div><div class="cs-val">' + G.stats.totalTrades + '</div></div>' + '<div class="career-stat"><div class="cs-label">Win Rate</div><div class="cs-val">' + wr + '%</div></div>' + '<div class="career-stat"><div class="cs-label">Miglior Trade</div><div class="cs-val green">' + formatEur(G.stats.bestTrade) + '</div></div>' + '<div class="career-stat"><div class="cs-label">Peggiore Trade</div><div class="cs-val red">' + formatEur(G.stats.worstTrade) + '</div></div>' + '<div class="career-stat"><div class="cs-label">Streak Migliore</div><div class="cs-val">' + G.stats.bestWinStreak + '</div></div>' + '<div class="career-stat"><div class="cs-label">Dividendi</div><div class="cs-val green">' + formatEur(G.stats.dividendsReceived) + '</div></div>';
+  }
+
+  // Next goals
+  var goalsEl = document.getElementById('career-next-goals');
+  if (goalsEl) {
+    if (G.level >= CAREER_LEVELS.length - 1) {
+      goalsEl.innerHTML = '<div style="color:var(--green);font-size:14px">★ Livello massimo raggiunto! Sei un Market Wizard.</div>';
+    } else {
+      var next = CAREER_LEVELS[G.level + 1];
+      var nw = computeNetWorth();
+      var roi = getROI();
+      var html = '<div style="display:grid;gap:8px">';
+      html += '<div><span class="gray">Patrimonio:</span> ' + formatEur(nw) + ' / ' + formatEur(next.minNetWorth) + ' <span class="' + (nw >= next.minNetWorth ? 'green' : 'red') + '">' + (nw >= next.minNetWorth ? '✓' : '') + '</span></div>';
+      html += '<div><span class="gray">Trade:</span> ' + G.stats.totalTrades + ' / ' + next.minTrades + ' <span class="' + (G.stats.totalTrades >= next.minTrades ? 'green' : 'red') + '">' + (G.stats.totalTrades >= next.minTrades ? '✓' : '') + '</span></div>';
+      html += '<div><span class="gray">ROI:</span> ' + formatPct(roi) + ' / ' + next.minROI + '% <span class="' + (roi >= next.minROI ? 'green' : 'red') + '">' + (roi >= next.minROI ? '✓' : '') + '</span></div>';
+      html += '</div>';
+      goalsEl.innerHTML = html;
+    }
+  }
+
+  // Features
+  var featEl = document.getElementById('career-features');
+  if (featEl) {
+    var html = '<div style="display:grid;gap:4px">';
+    CAREER_LEVELS[G.level].features.forEach(function (f) {
+      html += '<div class="green" style="font-size:13px">✓ ' + f + '</div>';
+    });
+    if (G.level < CAREER_LEVELS.length - 1) {
+      html += '<div class="gray" style="margin-top:8px;font-size:12px">Prossimo livello sblocca:</div>';
+      CAREER_LEVELS[G.level + 1].features.forEach(function (f) {
+        html += '<div class="gray" style="font-size:13px">• ' + f + '</div>';
+      });
+    }
+    html += '</div>';
+    featEl.innerHTML = html;
+  }
+}
+function renderSaveSlots() {
+  var el = document.getElementById('save-slots');
+  if (!el) return;
+  var html = '';
+  for (var i = 1; i <= 3; i++) {
+    var meta = localStorage.getItem('sbt_save_' + i + '_meta');
+    var hasSave = !!localStorage.getItem('sbt_save_' + i);
+    if (hasSave && meta) {
+      try {
+        meta = JSON.parse(meta);
+      } catch (e) {
+        meta = null;
+      }
+    }
+    html += '<div class="save-slot"><div class="ss-info"><div class="ss-name">Slot ' + i + '</div>';
+    if (meta) {
+      html += '<div class="ss-meta">' + CAREER_LEVELS[meta.level].name + ' • Sett.' + meta.week + ' • ' + formatEur(meta.nw) + ' • ' + new Date(meta.date).toLocaleDateString('it-IT') + '</div>';
+    } else {
+      html += '<div class="ss-meta">Vuoto</div>';
+    }
+    html += '</div><div class="ss-actions">';
+    html += '<button class="btn btn-sm btn-green" onclick="saveSlot(' + i + ')">Salva</button>';
+    if (hasSave) html += '<button class="btn btn-sm btn-blue" onclick="loadSlot(' + i + ')">Carica</button>';
+    if (hasSave) html += '<button class="btn btn-sm btn-red" onclick="deleteSlot(' + i + ')">Elimina</button>';
+    html += '</div></div>';
+  }
+  el.innerHTML = html;
+}
+
+// ======================== LLM SETTINGS PANEL ========================
+function llmLoadSettingsUI() {
+  var s = {};
+  try {
+    s = JSON.parse(localStorage.getItem('sbt_llm_settings') || '{}');
+  } catch (e) {}
+  var ep = document.getElementById('llm-endpoint');
+  var ak = document.getElementById('llm-apikey');
+  var md = document.getElementById('llm-model');
+  var en = document.getElementById('llm-enabled');
+  if (ep) ep.value = s.endpoint || 'https://ollama-cors-proxy.vercel.app/api/chat';
+  if (ak) ak.value = s.apiKey || '';
+  if (md) md.value = s.model || 'glm-5.2';
+  if (en) en.checked = s.enabled === true;
+  llmToggleUpdate();
+  llmUpdateStatus();
+}
+function llmToggleUpdate() {
+  var en = document.getElementById('llm-enabled');
+  var sl = document.getElementById('llm-toggle-slider');
+  var lb = document.getElementById('llm-toggle-label');
+  if (!en) return;
+  if (en.checked) {
+    if (sl) sl.style.background = 'var(--green)';
+    if (lb) lb.textContent = 'Abilitato';
+    if (lb) lb.style.color = 'var(--green)';
+  } else {
+    if (sl) sl.style.background = 'var(--bg4)';
+    if (lb) lb.textContent = 'Disabilitato';
+    if (lb) lb.style.color = 'var(--text2)';
+  }
+}
+function llmUpdateStatus() {
+  var el = document.getElementById('llm-status-info');
+  if (!el) return;
+  var s = {};
+  try {
+    s = JSON.parse(localStorage.getItem('sbt_llm_settings') || '{}');
+  } catch (e) {}
+  var status = s.enabled === true ? 'LLM abilitato' : 'Motore procedurale';
+  var model = s.model || 'glm-5.2';
+  var ep = s.endpoint || 'proxy Vercel';
+  var hasKey = !!(s.apiKey && s.apiKey.length > 0);
+  el.textContent = 'Stato: ' + status + ' | Modello: ' + model + ' | Endpoint: ' + ep + ' | API Key: ' + (hasKey ? 'configurata' : 'non configurata');
+}
+function llmSaveSettings() {
+  var ep = document.getElementById('llm-endpoint');
+  var ak = document.getElementById('llm-apikey');
+  var md = document.getElementById('llm-model');
+  var en = document.getElementById('llm-enabled');
+  var settings = {};
+  if (ep) settings.endpoint = ep.value;
+  if (ak) settings.apiKey = ak.value;
+  if (md) settings.model = md.value;
+  if (en) settings.enabled = en.checked;
+  try {
+    localStorage.setItem('sbt_llm_settings', JSON.stringify(settings));
+  } catch (e) {}
+  if (typeof LLMNewsEngine !== 'undefined' && LLMNewsEngine.saveSettings) LLMNewsEngine.saveSettings(settings);
+  if (typeof LLMGameMaster !== 'undefined' && LLMGameMaster.saveSettings) LLMGameMaster.saveSettings(settings);
+  if (typeof LLMNarrativeEngine !== 'undefined') LLMNarrativeEngine.configure(settings);
+  if (typeof WolfLLM !== 'undefined') WolfLLM.saveSettings(settings);
+  llmUpdateStatus();
+  toast('success', 'Impostazioni LLM salvate');
+}
+function llmTestConnection() {
+  var ep = document.getElementById('llm-endpoint');
+  var ak = document.getElementById('llm-apikey');
+  var md = document.getElementById('llm-model');
+  var res = document.getElementById('llm-test-result');
+  if (!res) return;
+  res.style.display = 'block';
+  res.style.background = 'var(--bg3)';
+  res.style.color = 'var(--text2)';
+  res.textContent = 'Test in corso...';
+  var settings = {};
+  if (ep) settings.endpoint = ep.value;
+  if (ak) settings.apiKey = ak.value;
+  if (md) settings.model = md.value;
+  if (typeof LLMNewsEngine !== 'undefined' && LLMNewsEngine.saveSettings) LLMNewsEngine.saveSettings(settings);
+  if (typeof LLMNewsEngine !== 'undefined' && LLMNewsEngine.testConnection) {
+    LLMNewsEngine.testConnection().then(function (r) {
+      if (r.success) {
+        res.style.background = 'rgba(0,214,143,0.1)';
+        res.style.color = 'var(--green)';
+        res.textContent = 'OK! Modello: ' + r.model + ' - Risposta: ' + (r.response || '').substring(0, 50);
+      } else {
+        res.style.background = 'rgba(255,83,113,0.1)';
+        res.style.color = 'var(--red)';
+        res.textContent = 'Errore: ' + r.error;
+      }
+    });
+  } else {
+    res.style.background = 'rgba(255,83,113,0.1)';
+    res.style.color = 'var(--red)';
+    res.textContent = 'LLMNewsEngine non disponibile';
+  }
+}
+
+
+function wolfStartGame() {
+  document.getElementById('wolfTitleScreen').classList.add('hide');
+  setTimeout(function () {
+    document.getElementById('wolfTitleScreen').style.display = 'none';
+  }, 600);
+  if (typeof newGame === 'function') newGame();
+  syncWolfBottomNav('dashboard');
+}
+function wolfLoadGame() {
+  if (typeof loadAuto === 'function' && loadAuto()) {
+    document.getElementById('wolfTitleScreen').classList.add('hide');
+    setTimeout(function () {
+      document.getElementById('wolfTitleScreen').style.display = 'none';
+    }, 600);
+    if (typeof renderAll === 'function') renderAll();
+    syncWolfBottomNav('dashboard');
+  }
+}
+function syncWolfBottomNav(view) {
+  var btns = document.querySelectorAll('#bottomNav button');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.remove('active');
+  }
+  var map = {
+    dashboard: 0,
+    market: 1,
+    portfolio: 2,
+    brokerage: 3
+  };
+  var idx = map[view];
+  if (typeof idx === 'number' && btns[idx]) btns[idx].classList.add('active');
+}
+function wolfSwitchView(v) {
+  if (typeof switchView === 'function') {
+    switchView(v);
+    syncWolfBottomNav(v);
+    return;
+  }
+  var views = document.querySelectorAll('.view');
+  for (var i = 0; i < views.length; i++) {
+    views[i].classList.remove('active');
+  }
+  var el = document.getElementById('view-' + v);
+  if (el) el.classList.add('active');
+  syncWolfBottomNav(v);
+}
+function toggleMobileMoreMenu() {
+  var m = document.getElementById('mobileMoreMenu');
+  if (m) m.style.display = m.style.display === 'block' ? 'none' : 'block';
+}

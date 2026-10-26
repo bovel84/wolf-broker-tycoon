@@ -205,10 +205,10 @@
   }
 
   function loadState(game, competitors) {
-    var loaded = null;
+    var loaded = game && game.worldState || null;
     try {
       var raw = global.localStorage ? global.localStorage.getItem(STORAGE_KEY) : null;
-      if (raw) loaded = JSON.parse(raw);
+      if (raw && !loaded && !global.WOLF_MANAGED_TURNS) loaded = JSON.parse(raw);
     } catch (e) { loaded = null; }
     state = loaded && loaded.companies && loaded.rivals ? loaded : createState(game, competitors);
     if (!(state.corporateEvents instanceof Array)) state.corporateEvents = [];
@@ -225,6 +225,8 @@
   }
 
   function saveState() {
+    var game = getGame();
+    if (game) game.worldState = state;
     try {
       if (global.localStorage && state) global.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {}
@@ -603,8 +605,10 @@
     var game = getGame();
     if (!game || !game.companies) return Promise.resolve(null);
     processing = true;
+    var sessionGame = game;
     var competitors = getCompetitors();
     if (!state) loadState(game, competitors);
+    var sessionState = state;
     var context = buildContext(game, competitors);
     var fallback = fallbackTurn(context);
     var promise;
@@ -614,6 +618,7 @@
       promise = Promise.resolve(fallback);
     }
     return promise.then(function (raw) {
+      if (sessionGame !== getGame() || sessionState !== state) return null;
       var turn = normalizeTurn(raw, fallback, context);
       state.week = game.week;
       state.lastBriefing = safeText(turn.briefing, 320);
@@ -628,6 +633,7 @@
       if (typeof renderAll === 'function') renderAll();
       return turn;
     }).catch(function () {
+      if (sessionGame !== getGame() || sessionState !== state) return null;
       var turn = fallback;
       applyMacro(turn.macro, game);
       applyCompanyActions(turn.companies, game);
@@ -786,12 +792,12 @@
   function install(game) {
     if (installed) return;
     installed = true;
-    if (game) installedGame = normalizeGame(game);
+    if (game) installedGame = global.WOLF_MANAGED_TURNS && global.G ? global.G : normalizeGame(game);
     var g = getGame();
     loadState(g, getCompetitors());
     ensurePanels();
     render();
-    if (typeof advanceTurn === 'function') {
+    if (!global.WOLF_MANAGED_TURNS && typeof advanceTurn === 'function') {
       var originalAdvance = advanceTurn;
       global.advanceTurn = function () {
         originalAdvance();
@@ -835,6 +841,13 @@
   }
 
   global.WorldEngine = {
+    bindGame: function (game, fresh) {
+      installedGame = game;
+      processing = false;
+      if (fresh) state = null;
+      loadState(game, getCompetitors());
+      render();
+    },
     install: install,
     processWorldTurn: processWorldTurn,
     vote: resolveAssembly,

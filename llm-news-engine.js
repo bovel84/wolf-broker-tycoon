@@ -303,6 +303,7 @@
   // ============================================================
 
   function generateNews(gameState) {
+    CONFIG = _loadSettings();
     // Se LLM disabilitato, usa fallback
     if (CONFIG.enabled === false) {
       console.warn('[LLMNewsEngine] LLM disabilitato, uso fallback statico');
@@ -316,7 +317,7 @@
     }
 
     // Se API key non configurata, usa fallback
-    if (!CONFIG.apiKey || CONFIG.apiKey === 'YOUR_OLLAMA_CLOUD_API_KEY') {
+    if (!global.WolfLLM && (!CONFIG.apiKey || CONFIG.apiKey === 'YOUR_OLLAMA_CLOUD_API_KEY')) {
       console.warn('[LLMNewsEngine] API key non configurata, uso fallback statico');
       return Promise.resolve(_getFallbackNews(gameState));
     }
@@ -325,6 +326,11 @@
     lastCallTime = Date.now();
 
     var userPrompt = _buildUserPrompt(gameState);
+    if (global.WolfLLM) {
+      return global.WolfLLM.request(SYSTEM_PROMPT, userPrompt, CONFIG).then(function (text) {
+        return _parseNewsResponse(text) || _getFallbackNews(gameState);
+      }).catch(function () { return _getFallbackNews(gameState); });
+    }
     var requestBody = {
       model: CONFIG.model,
       messages: [
@@ -495,6 +501,25 @@
     var netWorth = p.netWorth || 10000;
     var darkActions = (gameState && gameState.darkActions) || {};
     var week = p.week || 1;
+    var companies = gameState.market && gameState.market.companies || [];
+    if (companies.length) {
+      var available = companies.filter(function (c) { return c.listed !== false && !c.tradingHalted; });
+      var grounded = [];
+      var themes = [
+        ['ordini industriali in crescita', 'La direzione segnala domanda in miglioramento. Gli analisti attendono conferme dai prossimi conti.', 1.2],
+        ['margini sotto pressione', 'Il rincaro dei costi riduce la visibilità sugli utili. Il management deve spiegare come difendere i margini.', -1.4],
+        ['nuovo piano di investimenti', 'Il consiglio valuta investimenti pluriennali. Più crescita potenziale, ma anche fabbisogno di capitale.', 0.5],
+        ['stime riviste al ribasso', 'I broker riducono le stime sulla crescita. Il prossimo trimestre metterà alla prova la fiducia degli azionisti.', -1.1],
+        ['discussione sul dividendo', 'Il consiglio confronta distribuzione degli utili e reinvestimenti. Gli azionisti chiedono una strategia chiara.', 0]
+      ];
+      for (var gi = 0; gi < Math.min(3, available.length); gi++) {
+        var company = available[(week * 7 + gi * 13) % available.length];
+        var theme = themes[(week + gi) % themes.length];
+        grounded.push({ title: company.name + ': ' + theme[0], content: theme[1], company: company.ticker, sector: company.sector,
+          impact: theme[2] > 0 ? 'positive' : theme[2] < 0 ? 'negative' : 'neutral', priceChangePct: theme[2], source: 'procedural' });
+      }
+      return grounded;
+    }
 
     var pool = STATIC_NEWS_POOL.slice();
     var playerNews = _generatePlayerNews(gameState);
@@ -626,13 +651,13 @@
     news.forEach(function (n) {
       if (!n.priceChangePct || n.priceChangePct === 0) return;
 
-      var changeFraction = n.priceChangePct / 100;
+      var changeFraction = Math.max(-3, Math.min(3, Number(n.priceChangePct) || 0)) / 100;
 
       if (n.company) {
         var company = companies.find(function (c) {
           return c.name === n.company || c.ticker === n.company;
         });
-        if (company && company.price) {
+        if (company && company.price && company.listed !== false && !company.tradingHalted) {
           company.price = Math.max(0.01, company.price * (1 + changeFraction));
           company.price = Math.round(company.price * 100) / 100;
         }
@@ -668,9 +693,9 @@
 
     // Preferisci LLM Narrative Engine per notizie coerenti con la storia
     if (typeof LLMNarrativeEngine !== 'undefined' && LLMNarrativeEngine.processTurn) {
-      return LLMNarrativeEngine.processTurn(gameState).then(function () {
-        var news = (market.generatedNews && market.generatedNews.length)
-          ? market.generatedNews.slice(-config.newsPerTurn)
+      return LLMNarrativeEngine.processTurn(gameState).then(function (result) {
+        var news = (result && result.news && result.news.length)
+          ? result.news.slice(-3)
           : _getFallbackNews(gameState);
         return finalizeNews(gameState, news, 'narrative');
       }).catch(function () {
@@ -688,7 +713,10 @@
   function finalizeNews(gameState, news, source) {
     var market = gameState.market || {};
     var companies = market.companies || [];
-    for (var i = 0; i < news.length; i++) news[i].source = source;
+    var turnKey = gameState.player.year + ':' + gameState.player.week;
+    if (market.lastNewsTurn === turnKey) return [];
+    market.lastNewsTurn = turnKey;
+    for (var i = 0; i < news.length; i++) news[i].source = news[i].source || source;
 
     applyNewsImpact(news, companies);
 
@@ -723,6 +751,12 @@
   // ============================================================
 
   function testConnection() {
+    if (global.WolfLLM) {
+      var settings = global.WolfLLM.getSettings(); settings.enabled = true;
+      return global.WolfLLM.request('Rispondi brevemente in italiano.', 'Rispondi OK.', settings).then(function (text) {
+        return { success: !!text, response: text, model: settings.model, endpoint: settings.endpoint };
+      }).catch(function (err) { return { success: false, error: err.message }; });
+    }
     var body = JSON.stringify({
       model: CONFIG.model,
       messages: [{ role: 'user', content: 'Rispondi con la parola: OK' }],

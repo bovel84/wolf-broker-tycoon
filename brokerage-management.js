@@ -439,7 +439,7 @@
     if (installed) return;
     installed = true;
     ensureUI();
-    if (typeof advanceTurn === 'function') {
+    if (!global.WOLF_MANAGED_TURNS && typeof advanceTurn === 'function') {
       originalAdvance = advanceTurn;
       global.advanceTurn = function () {
         var result = originalAdvance.apply(this, arguments);

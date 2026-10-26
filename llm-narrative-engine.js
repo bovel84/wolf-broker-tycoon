@@ -35,7 +35,7 @@
     firmMessagesPerTurn: 1
   };
 
-  var STORAGE_KEY = 'sbt_llm_narrative_settings';
+  var STORAGE_KEY = 'sbt_llm_settings';
 
   // ============================================================
   // STATE
@@ -135,6 +135,7 @@
   // CHARACTER REGISTRY
   // ============================================================
   function makeCharacterId(namespace, name) {
+    if (namespace === 'player') return 'player:broker';
     return namespace + ':' + (name || 'unknown').toLowerCase().replace(/[^a-z0-9]/g, '_');
   }
 
@@ -543,13 +544,15 @@
   }
 
   function callLLM(systemPrompt, userPrompt) {
-    if (CONFIG.enabled === false || !config.endpoint || !config.apiKey) {
+    config = loadSettings();
+    if (config.enabled === false || !config.endpoint) {
       return Promise.resolve(null);
     }
     if (callsThisTurn >= config.maxCallsPerTurn) {
       return Promise.resolve(null);
     }
     callsThisTurn++;
+    if (global.WolfLLM) return global.WolfLLM.request(systemPrompt, userPrompt, config).catch(function () { return null; });
 
     var body = {
       model: config.model,
@@ -655,7 +658,7 @@
       impact: (raw.impact || raw.impatto || 'neutral').toLowerCase(),
       sector: raw.sector || raw.settore || null,
       company: raw.company || raw.societa || null,
-      priceChangePct: Number(raw.priceChangePct || raw.priceChange || raw.cambioPrezzoPct || 0)
+      priceChangePct: clamp(raw.priceChangePct || raw.priceChange || raw.cambioPrezzoPct || 0, -3, 3)
     };
   }
 
@@ -741,41 +744,58 @@
     if (!p) return Promise.resolve(null);
 
     // Reset rate limiter on new turn
-    if (lastTurn !== p.week) {
+    var turnKey = p.year + ':' + p.week;
+    config = loadSettings();
+    if (lastTurn !== turnKey) {
       callsThisTurn = 0;
-      lastTurn = p.week;
+      lastTurn = turnKey;
     }
 
     var ns = ensureNarrativeState(gameState);
-    if (ns.lastGeneratedWeek >= p.week) return Promise.resolve(null);
+    if (ns.lastGeneratedTurn === turnKey) return Promise.resolve(null);
+    ns.lastGeneratedTurn = turnKey;
     ns.lastGeneratedWeek = p.week;
 
     // Pre-populate characters from current game state
     ensureKeyCharacters(gameState);
 
     // Se LLM disabilitato, aggiungi solo memorie di fallback basate sullo stato
-    if (!config.enabled || !config.endpoint || !config.apiKey) {
+    if (!config.enabled || !config.endpoint) {
       addStateBasedMemories(gameState);
       return Promise.resolve({ news: [], notes: [], events: [] });
     }
 
-    // Parallel LLM calls (up to 5)
-    var agentPrompt = buildAgentPrompt(gameState);
-    var firmPrompt = buildFirmPrompt(gameState);
-    var promises = [
-      callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildNewsPrompt(gameState)),
-      callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildCharacterPrompt(gameState)),
-      callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', buildEventsPrompt(gameState)),
-      agentPrompt ? callLLM('Sei un senior broker e desk head. Rispondi solo con JSON.', agentPrompt) : Promise.resolve(null),
-      firmPrompt ? callLLM('Sei la voce di una società di brokeraggio viva e con memoria. Rispondi solo con JSON.', firmPrompt) : Promise.resolve(null)
-    ];
-
-    return Promise.all(promises).then(function (results) {
-      var newsRaw = parseJsonArray(results[0]) || [];
-      var notesRaw = parseJsonArray(results[1]) || [];
-      var eventsRaw = parseJsonArray(results[2]) || [];
-      var agentRaw = parseJsonArray(results[3]) || [];
-      var firmRaw = parseJsonObject(results[4]) || null;
+    // A single grounded packet keeps news, people and consequences consistent.
+    var focusedTickers = Object.keys(gameState.portfolio.positions).map(function (id) { return gameState.portfolio.positions[id].ticker; });
+    if (gameState.desk) {
+      if (gameState.desk.opportunity) focusedTickers.push(gameState.desk.opportunity.ticker);
+      focusedTickers = focusedTickers.concat(gameState.desk.watchlist || []);
+    }
+    var focusedCompanies = gameState.market.companies.filter(function (c) { return c.listed !== false; }).sort(function (a, b) {
+      return (focusedTickers.indexOf(b.ticker) >= 0 ? 1 : 0) - (focusedTickers.indexOf(a.ticker) >= 0 ? 1 : 0);
+    }).slice(0, 12);
+    var context = {
+      week: p.week, year: p.year, cash: Math.round(p.cash), netWorth: Math.round(p.netWorth), ethics: p.ethics,
+      companies: focusedCompanies.map(function (c) {
+        return { ticker: c.ticker, name: c.name, sector: c.sector, price: c.price, change: Math.round((c.price / c.prevClose - 1) * 10000) / 100 };
+      }),
+      holdings: Object.keys(gameState.portfolio.positions).map(function (key) { return gameState.portfolio.positions[key].ticker; }),
+      memories: getRecentMemories(gameState, 5).map(function (memory) { return memory.text; }),
+      characters: ensureKeyCharacters(gameState).slice(0, 10).map(function (character) { return { name: character.name, role: character.role, mood: character.currentMood }; }),
+      desk: gameState.desk ? { decision: gameState.desk.lastDecision, recap: gameState.desk.recap } : null,
+      career: gameState.legacyData && gameState.legacyData.brokerCareer ? { employer: gameState.legacyData.brokerCareer.employerId, trust: gameState.legacyData.brokerCareer.employerTrust } : null
+    };
+    var prompt = 'Descrivi una settimana di questo gioco usando solo i titoli e i fatti forniti. Le voci restano incerte; non promettere rendimenti. ' +
+      'Richiama le scelte del desk e le esposizioni del giocatore. Genera massimo 3 notizie, 2 note e 1 evento. ' +
+      'JSON: {"news":[{"title":"...","content":"...","impact":"positive|negative|neutral","company":"ticker ammesso","sector":null,"priceChangePct":0}],"notes":[{"characterName":"...","note":"...","mood":"..."}],"events":[{"title":"...","summary":"...","consequence":"..."}],"agentBriefings":[],"firmMessage":null}. ' +
+      'Impatto aggiuntivo sui prezzi tra -3 e +3 percento. Contesto: ' + JSON.stringify(context);
+    return callLLM('Sei il narratore di un videogioco di finanza. Rispondi solo con JSON.', prompt).then(function (text) {
+      var packet = parseJsonObject(text) || {};
+      var newsRaw = Array.isArray(packet.news) ? packet.news.slice(0, 3) : [];
+      var notesRaw = Array.isArray(packet.notes) ? packet.notes.slice(0, 2) : [];
+      var eventsRaw = Array.isArray(packet.events) ? packet.events.slice(0, 1) : [];
+      var agentRaw = Array.isArray(packet.agentBriefings) ? packet.agentBriefings.slice(0, 2) : [];
+      var firmRaw = packet.firmMessage || null;
 
       var news = [];
       for (var n = 0; n < newsRaw.length; n++) {
@@ -831,7 +851,7 @@
   }
 
   function generateDynamicDialogue(character, gameState, promptStyle) {
-    if (!config.enabled || !config.endpoint || !config.apiKey) {
+    if (!config.enabled || !config.endpoint) {
       return Promise.resolve('"' + (character.backstory || 'Non ho nulla da dire in questo momento.') + '"');
     }
     if (callsThisTurn >= config.maxCallsPerTurn) {

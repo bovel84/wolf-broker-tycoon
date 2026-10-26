@@ -5,7 +5,7 @@ REM Apre il file HTML compilato nel browser predefinito
 set SCRIPT_DIR=%~dp0
 
 REM Verifica che il build esista, altrimenti lo genera
-if not exist "%SCRIPT_DIR%wolf-broker-tycoon.html" (
+if not exist "%SCRIPT_DIR%index.html" (
     echo Build non trovato. Esecuzione di npm run build...
     call npm run build
     if errorlevel 1 (
@@ -17,7 +17,7 @@ if not exist "%SCRIPT_DIR%wolf-broker-tycoon.html" (
 
 REM Apri il gioco nel browser predefinito
 echo Avvio di Wolf Broker Tycoon...
-start "" "%SCRIPT_DIR%wolf-broker-tycoon.html"
+start "" "%SCRIPT_DIR%index.html"
 
 REM Lascia la finestra aperta per eventuali messaggi di errore
 echo.

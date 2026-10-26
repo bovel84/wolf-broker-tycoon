@@ -15,6 +15,9 @@ var fs = require('fs');
 var path = require('path');
 
 var TARGETS = [
+  'llm-client.js',
+  'desk-director.js',
+  'legacy-ui.js',
   'market-engine.js',
   'game-engine.js',
   'ui-bridge.js',

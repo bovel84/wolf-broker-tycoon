@@ -416,8 +416,8 @@
 
   function install() {
     if (installed) return; installed = true; ensureState(); ensureUI();
-    if (typeof advanceTurn === 'function') { originalAdvance = advanceTurn; global.advanceTurn = function () { originalAdvance(); global.setTimeout(processWeek, 180); }; }
-    if (typeof newGame === 'function') { originalNewGame = newGame; global.newGame = function () { originalNewGame(); var g = game(); if (g) g.stakeholderInteractions = createState(); render(); }; }
+    if (!global.WOLF_MANAGED_TURNS && typeof advanceTurn === 'function') { originalAdvance = advanceTurn; global.advanceTurn = function () { originalAdvance(); global.setTimeout(processWeek, 180); }; }
+    if (!global.WOLF_MANAGED_TURNS && typeof newGame === 'function') { originalNewGame = newGame; global.newGame = function () { originalNewGame(); var g = game(); if (g) g.stakeholderInteractions = createState(); render(); }; }
     render();
   }
 

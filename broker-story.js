@@ -263,6 +263,7 @@
     var g = getGame();
     effects = effects || {};
     state.ethics = clamp(state.ethics + (effects.ethics || 0), 0, 100);
+    if (g && global.WOLF_MANAGED_TURNS) g.ethics = clamp(g.ethics + (effects.ethics || 0), 0, 100);
     state.nerve = clamp(state.nerve + (effects.nerve || 0), 0, 100);
     state.loyalty = clamp(state.loyalty + (effects.loyalty || 0), 0, 100);
     state.ambition = clamp(state.ambition + (effects.ambition || 0), 0, 100);
@@ -307,11 +308,15 @@
     state.unlocked.prologue = true;
     addJournal('Prologo — La chiamata delle 6:17', 'Hai attraversato le porte della sala operativa con diecimila euro, un debito di famiglia e una promessa che il mercato metterà alla prova.', 'prologue');
     save();
+    var prologueState = state;
     if (originalStart) originalStart();
+    state = prologueState;
     var g = getGame();
     if (g) {
       g.brokerName = state.name;
+      if (global.wolfBridge) wolfBridge.getEngine().getState().player.name = state.name;
       g.storyEthics = state.ethics;
+      g.ethics = state.ethics;
       g.storyAct = state.act;
       saveGameIfPossible();
     }
@@ -354,7 +359,7 @@
       body.innerHTML = '<div class="broker-eyebrow">LA BUSTA</div><h1>Il primo segreto</h1><p>La trovi nel doppio fondo della scatola. Dentro ci sono ordini firmati, nomi di società e una nota: <em>Non è stato il mercato. Qualcuno ha scelto chi doveva cadere.</em></p><div class="broker-choice-grid"><button onclick="BrokerStory.envelope(\'return\')"><strong>Restituiscila chiusa</strong><span>Vuoi risposte, ma non a qualsiasi prezzo.</span></button><button onclick="BrokerStory.envelope(\'use\')"><strong>Usa quei nomi</strong><span>Se sono colpevoli, il loro denaro pagherà il debito.</span></button><button onclick="BrokerStory.envelope(\'copy\')"><strong>Copiala e restituiscila</strong><span>La fiducia è utile. Una copia lo è di più.</span></button></div>';
       return;
     }
-    body.innerHTML = '<div class="broker-eyebrow">ATTO I · IL PREZZO DI UN NOME</div><h1>Fuori dalla sala operativa</h1><p>' + safe(state.name, 40) + ', nessuna scrivania porta ancora il tuo nome. Sei disoccupato, hai diecimila euro di risparmi e sei società ricevono candidature. Elena Valli può presentarti a un recruiter. Victor Kane osserva chi è disposto a vendersi pur di entrare. Da qualche parte, l’ispettore Adrian Cole apre un fascicolo ancora senza titolo.</p><p class="broker-quote">“Il mercato non chiede chi sei. Prima devi convincere qualcuno a lasciarti entrare.”</p><button class="broker-primary" onclick="BrokerStory.begin()">Cerca il primo lavoro</button>';
+    body.innerHTML = '<div class="broker-eyebrow">ATTO I · IL PREZZO DI UN NOME</div><h1>La tua prima scrivania</h1><p>' + safe(state.name, 40) + ', Meridian Capital Markets ti ha assegnato un desk da junior broker. Hai diecimila euro di risparmi, un primo mandato da difendere e colleghi pronti a misurarti. Elena Valli crede che tu possa farcela. Victor Kane osserva quanto sei disposto a rischiare. Da qualche parte, l’ispettore Adrian Cole apre un fascicolo ancora senza titolo.</p><p class="broker-quote">“Ora che sei entrato, ogni scelta lascia una traccia.”</p><button class="broker-primary" onclick="BrokerStory.begin()">Entra in sala operativa</button>';
   }
 
   function originButton(id) {
@@ -568,7 +573,7 @@
         global.setTimeout(evaluateChapters, 100);
       };
     }
-    if (typeof advanceTurn === 'function') {
+    if (!global.WOLF_MANAGED_TURNS && typeof advanceTurn === 'function') {
       originalAdvance = advanceTurn;
       global.advanceTurn = function () {
         originalAdvance();
@@ -583,6 +588,14 @@
   }
 
   global.BrokerStory = {
+    bindGame: function (game) {
+      state = game.brokerStory || createState();
+      game.brokerStory = state;
+      pendingChapter = null;
+      var modal = document.getElementById('broker-chapter-modal');
+      if (modal) modal.style.display = 'none';
+      renderCareerPanel();
+    },
     install: install,
     showPrologue: showPrologue,
     prologueNext: prologueNext,

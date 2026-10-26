@@ -88,7 +88,7 @@ function extractInlineJS(html) {
   return matches.join('\n');
 }
 
-function testHTMLBuild() {
+async function testHTMLBuild() {
   log('Caricamento HTML compilato');
   var html = loadHTML();
   assert(html.length > 100000, 'HTML compilato deve essere significativo');
@@ -137,6 +137,8 @@ function testHTMLBuild() {
   console.log('  advanceTurn result:', result);
   assert(result, 'advanceTurn deve restituire un risultato');
   assert(window.G.week === 2, 'Dopo advanceTurn la settimana deve essere 2');
+  await result.completion;
+  assert(!window.DeskDirector.isBusy(), 'La chiusura settimana deve terminare');
 
   log('Trading via UI legacy bridge');
   if (typeof window.BrokerageCareer !== 'undefined' && window.BrokerageCareer.canTrade) {
@@ -165,12 +167,11 @@ function testHTMLBuild() {
   log('Test completato');
 }
 
-try {
-  console.log('\nRunning HTML build test...');
-  testHTMLBuild();
+console.log('\nRunning HTML build test...');
+testHTMLBuild().then(function () {
   console.log('\nHTML build test passed.\n');
-} catch (e) {
+}).catch(function (e) {
   console.error('\nHTML build test failed: ' + e.message);
   console.error(e.stack);
   process.exit(1);
-}
+});

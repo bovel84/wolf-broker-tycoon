@@ -4,7 +4,7 @@
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-HTML_FILE="$SCRIPT_DIR/wolf-broker-tycoon.html"
+HTML_FILE="$SCRIPT_DIR/index.html"
 
 # Verifica che il build esista, altrimenti lo genera
 if [ ! -f "$HTML_FILE" ]; then

@@ -4,6 +4,8 @@ Gestionale di broker azionario completo e realistico con modalità carriera, ass
 
 ## Caratteristiche principali
 
+- **Desk giocabile** — dossier settimanali, tre scelte, mandati verificati sulle posizioni reali, compensi, fiducia e resoconto delle conseguenze.
+- **Una sola partita** — trading, prezzi, carriera, vita personale, assemblee, notizie e salvataggi condividono lo stato di `GameEngine`.
 - **LLM Narrative Engine** — genera in tempo reale personaggi, memorie, relazioni, eventi e notizie narrative; ogni turno produce una storia coerente con lo stato del giocatore
 - **Dialoghi dinamici** — i personaggi del Diario possono parlare con voce contestuale, basata su umore, relazioni e memorie
 - **Agenti vivi** — ogni agente ha personalità, obiettivi, briefing di mercato, umore e consigli generati dal LLM
@@ -25,8 +27,9 @@ Gestionale di broker azionario completo e realistico con modalità carriera, ass
 
 ## Tecnologia
 
-- **Single-file HTML5**: `wolf-broker-tycoon.html` contiene tutto il codice.
-- **Build Node.js**: `build.js` assembla i moduli JS, li transpila in ES5 con Babel e valida i vincoli.
+- **Distribuzione HTML5**: `index.html` e `wolf-broker-tycoon.html` sono due copie dello stesso gioco compilato. `index.html` è pronto per l'hosting statico.
+- **Sorgenti separati**: `src/game-shell.html` contiene struttura e stili, `legacy-ui.js` le viste esistenti e gli altri file i motori. Modificare questi sorgenti, poi eseguire la build; non modificare direttamente `index.html`.
+- **Build Node.js 24**: `build.js` assembla ogni modulo una sola volta, transpila in ES5 con Babel e attende la minificazione prima di scrivere entrambi gli HTML.
 - **Vincoli di compatibilità ES5**:
   - solo `var` (no `let`/`const`)
   - solo function tradizionali (no arrow functions)
@@ -64,6 +67,9 @@ Il vecchio `build_html.py` è deprecato; la build usa solo Node.js.
 
 | File | Descrizione |
 |------|-------------|
+| `desk-director.js` | Mandati, obiettivi, watchlist, riepilogo e coordinamento della chiusura settimana |
+| `llm-client.js` | Configurazione condivisa, trasporto OpenAI/Ollama, timeout e annullamento richieste |
+| `src/game-shell.html` / `legacy-ui.js` | Sorgenti dell'interfaccia; nessuna copia incorporata dei motori |
 | `market-engine.js` | Generazione realistica di società, settori e fondamentali |
 | `game-engine.js` | Core: trading, livelli, missioni, achievement, SEC, finali |
 | `ui-bridge.js` | Ponte tra `GameEngine` e UI legacy inline |
@@ -86,14 +92,13 @@ Il vecchio `build_html.py` è deprecato; la build usa solo Node.js.
 
 ## Flusso settimanale
 
-1. Aggiornamento prezzi, dividendi e report trimestrali.
-2. Eventi societari (aziendali, settoriali, macro).
-3. Check assemblee e votazioni attive.
-4. World Engine e Corporate Lifecycle.
-5. Competitor Engine: azioni dei rivali.
-6. Processo clienti, agenti e stipendi.
-7. Missioni, achievement, chapter progress e SEC raid.
-8. Salvataggio automatico.
+1. Il giocatore legge il dossier, sceglie un mandato e conferma le operazioni nel normale trading.
+2. `GameEngine` simula ordini, mercato, dividendi, assemblee, rivali e progressione.
+3. `DeskDirector` attende gli eventi del mondo e processa carriera, gestione della firma, scadenze dei mandati e vita personale una sola volta.
+4. Notizie, memorie e inbox leggono lo stesso stato; gli impatti delle notizie si applicano una sola volta per anno/settimana.
+5. Si aggiornano valutazioni, grafico, missioni e resoconto; poi si salva la partita completa e si sblocca il turno successivo.
+
+Il gioco resta utilizzabile senza LLM e senza CDN dei grafici. Un timeout del provider usa contenuti procedurali; le risposte tardive non possono cambiare una nuova partita. Dettagli e verifiche in [docs/game-loop.md](docs/game-loop.md).
 
 ## Configurazione LLM
 
@@ -109,4 +114,4 @@ Le chiavi API non sono incluse nel codice. Inserisci endpoint, modello e chiave 
 
 ## Compatibilità
 
-Testato su Node.js 18+. L'output HTML è ES5 puro e dovrebbe girare su browser moderni e su ambienti con restrizioni JavaScript severe.
+Build e CI usano Node.js 24, come richiesto dalle dipendenze Babel 8. Il codice del gioco viene compilato in ES5.

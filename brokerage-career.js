@@ -80,10 +80,11 @@
   function ensureState() {
     var g = getGame();
     if (!g) return null;
-    if (!g.brokerCareer || typeof g.brokerCareer !== 'object' || g.brokerCareer.status === 'unemployed') {
+    if (!g.brokerCareer || typeof g.brokerCareer !== 'object') {
       g.brokerCareer = createState();
       g.brokerCareer.status = 'employed';
       g.brokerCareer.employerId = 'meridian';
+      g.brokerCareer.employerTrust = 50;
       g.brokerCareer.contract = { firmId: 'meridian', role: 'Junior Broker', salary: FIRMS[0].salary, commission: FIRMS[0].commission, reviewEvery: 4, startWeek: (g.week || 1) };
       g.brokerCareer.cycle = createCycle(firm('meridian'));
     }
@@ -98,6 +99,13 @@
     if (!(s.marketLeague instanceof Array)) s.marketLeague = createLeague();
     if (!s.misconduct) s.misconduct = d.misconduct;
     if (!s.cycle) s.cycle = createCycle(firm(s.employerId));
+    if (s.status === 'employed') {
+      var employer = firm(s.employerId) || FIRMS[0];
+      if (!s.contract) s.contract = {};
+      var contractDefaults = { firmId: employer.id, role: ROLES[s.roleLevel || 0], roleLevel: s.roleLevel || 0,
+        salary: employer.salary, commission: employer.commission, reviewEvery: 4, startWeek: g.week || 1, noticeCost: 0 };
+      for (var field in contractDefaults) if (s.contract[field] === undefined) s.contract[field] = contractDefaults[field];
+    }
     return s;
   }
 
@@ -803,11 +811,11 @@
     if (installed) return;
     installed = true;
     ensureState(); ensureUI();
-    if (typeof advanceTurn === 'function') {
+    if (!global.WOLF_MANAGED_TURNS && typeof advanceTurn === 'function') {
       originalAdvance = advanceTurn;
       global.advanceTurn = function () { originalAdvance(); global.setTimeout(processWeek, 130); };
     }
-    if (typeof newGame === 'function') {
+    if (!global.WOLF_MANAGED_TURNS && typeof newGame === 'function') {
       originalNewGame = newGame;
       global.newGame = function () { originalNewGame(); var g = getGame(); if (g) g.brokerCareer = createState(); render(); /* non aprire modale di lavoro all'avvio */ };
     }
